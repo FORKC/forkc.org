@@ -1,0 +1,84 @@
+/*
+Theme Name: X – Child Theme
+Theme URI: http://theme.co/x/
+Author: Themeco
+Author URI: http://theme.co/
+Description: Make all of your modifications to X in this child theme.
+Version: 1.0.0
+Template: x
+*/
+.one-hundred{
+	position: relative;
+	height: 100%;
+	width: 100%;
+}
+.x-logobar {
+    position: relative;
+    overflow: visible;
+    border-bottom: none!important;
+    text-align: center;
+    background-image: url("http://no-where.net/forkc/wp-content/uploads/2018/02/for-kc-header.jpg")!important;
+	background-repeat: no-repeat;
+	background-size: cover;
+    	z-index: 1030;
+}
+
+#event-box{
+position: absolute; 
+width: 48%; 
+right: 0; 
+top: 275px;
+}
+#event-box-left{
+position: absolute; 
+width: 48%; 
+left: 0; 
+top: 275px;
+}
+@media(max-width: 768px){
+#event-box{
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
+#event-box-left{
+	position: absolute;
+	bottom: 0;
+	width: 100%; 
+	}
+}
+
+footer.x-colophon.bottom {
+color: white; 
+background-image: url("http://no-where.net/forkc/wp-content/uploads/2018/02/mo-river-footer.png");
+	background-repeat: no-repeat;
+	background-size: cover;
+min-height: 300px;
+border-top: 15px solid #f7911e;
+}
+
+#menu-events-footer a{
+	color: #fff;
+	font-weight: bold;
+}
+.x-navbar{
+	border-bottom: 10px solid #f7911e;
+}
+
+footer.x-colophon {
+  	background-image: url("http://no-where.net/forkc/wp-content/uploads/2018/02/bottom-footer-swoosh.png");
+	background-repeat: no-repeat;
+    	background-size: cover;
+    	background-position: center;
+  	box-shadow: none!important;
+		}
+footer.x-colophon.top{
+	padding: 8% 0 5.25%; 
+	border-top: none!important;}
+
+.x-logobar-inner{
+	background-image: url("http://no-where.net/forkc/wp-content/uploads/2018/03/river-fest-ad.png");
+	background-repeat: no-repeat;
+	background-position: center right;
+	background-size: 20%;}
+

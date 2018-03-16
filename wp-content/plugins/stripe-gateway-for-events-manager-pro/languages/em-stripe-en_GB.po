@@ -1,0 +1,135 @@
+# Translation of Stripe in English (UK)
+# This file is distributed under the same license as the Stripe package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2017-04-10 16:39+0530\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Poedit 2.0\n"
+"Project-Id-Version: Stripe 1.3\n"
+"POT-Creation-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en_GB\n"
+
+#: gateway.stripe.php:214
+msgid "Card Number"
+msgstr "Card Number"
+
+#: gateway.stripe.php:220
+msgid "Expiration Date"
+msgstr "Expiration Date"
+
+#: gateway.stripe.php:243
+msgid "CCV"
+msgstr "CCV"
+
+#: gateway.stripe.php:259
+msgid "Please enter credit card number"
+msgstr "Please enter credit card number"
+
+#: gateway.stripe.php:265
+msgid "Please select expire month"
+msgstr "Please select expire month"
+
+#: gateway.stripe.php:271
+msgid "Please select expire year"
+msgstr "Please select expire year"
+
+#: gateway.stripe.php:276
+msgid "Please enter CVV number"
+msgstr "Please enter CVV number"
+
+#: gateway.stripe.php:281
+msgid "Payment Processing Start here"
+msgstr "Payment Processing Start here"
+
+#: gateway.stripe.php:288
+msgid "Payment Processing start after include library"
+msgstr "Payment Processing start after include library"
+
+#: gateway.stripe.php:293
+msgid "Set Secret Key"
+msgstr "Set Secret Key"
+
+#: gateway.stripe.php:299
+msgid "Credit Card token create"
+msgstr "Credit Card token create"
+
+#: gateway.stripe.php:312
+msgid "Token genreated ID : %s"
+msgstr "Token genreated ID : %s"
+
+#: gateway.stripe.php:337
+msgid "Return Response from Stripe: %s"
+msgstr "Return Response from Stripe: %s"
+
+#: gateway.stripe.php:344
+msgid "Payment Received..."
+msgstr "Payment Received..."
+
+#: gateway.stripe.php:356
+msgid "Stripe payment failed. Payment declined."
+msgstr "Stripe payment failed. Payment declined."
+
+#: gateway.stripe.php:369
+msgid "Stripe payment failed. Payment declined. Please Check your Admin settings"
+msgstr "Stripe payment failed. Payment declined. Please Check your Admin settings"
+
+#: gateway.stripe.php:379
+msgid "Connection error:"
+msgstr "Connection error:"
+
+#: gateway.stripe.php:400
+msgid "Success Message"
+msgstr "Success Message"
+
+#: gateway.stripe.php:408
+msgid "Success Free Message"
+msgstr "Success Free Message"
+
+#: gateway.stripe.php:412
+msgid "If some cases if you allow a free ticket (e.g. pay at gate) as well as paid tickets, this message will be shown and the user will not be charged."
+msgstr "If some cases if you allow a free ticket (e.g. pay at gate) as well as paid tickets, this message will be shown and the user will not be charged."
+
+#: gateway.stripe.php:421
+msgid "Stripe Currency"
+msgstr "Stripe Currency"
+
+#: gateway.stripe.php:426
+msgid "Mode"
+msgstr "Mode"
+
+#: gateway.stripe.php:438
+msgid "Test Secret Key"
+msgstr "Test Secret Key"
+
+#: gateway.stripe.php:442
+msgid "Test Publishable Key"
+msgstr "Test Publishable Key"
+
+#: gateway.stripe.php:446
+msgid "Live Secret Key"
+msgstr "Live Secret Key"
+
+#: gateway.stripe.php:450
+msgid "Live Publishable Key"
+msgstr "Live Publishable Key"
+
+#: gateway.stripe.php:454
+msgid "Debug Mode"
+msgstr "Debug Mode"
+
+#: gateway.stripe.php:465
+msgid "Manually approve completed transactions?"
+msgstr "Manually approve completed transactions?"
+
+#: gateway.stripe.php:469
+msgid "By default, when someone pays for a booking, it gets automatically approved once the payment is confirmed. If you would like to manually verify and approve bookings, tick this box."
+msgstr "By default, when someone pays for a booking, it gets automatically approved once the payment is confirmed. If you would like to manually verify and approve bookings, tick this box."
+
+#: gateway.stripe.php:471
+msgid "Approvals must also be required for all bookings in your <a href=\"%s\">settings</a> for this to work properly."
+msgstr "Approvals must also be required for all bookings in your <a href=\"%s\">settings</a> for this to work properly."
