@@ -35,21 +35,25 @@ width: 48%;
 left: 0; 
 top: 275px;
 }
-@media and screen (max-width: 768px){
-#event-box{
-	position: fixed;
-	bottom: 0;
-	left: 0;
-	width: 100%;
-}
-#event-box-left{
-	position: fixed;
-	bottom: 0;
-	left: 0;
-	width: 100%; 
-	}
-}
+@media only screen and (max-width: 768px){
 
+#event-box{
+	position: absolute;
+	top: 490px;
+	width: 100%;
+	height: 225px;
+	}
+#event-box-left{
+	position: absolute;
+	top: 490px;
+	width: 100%;
+	height: 225px;
+	}
+
+#event-box img {display: none;}
+
+#event-box-left img {display: none;}
+}
 
 footer.x-colophon.bottom {
 color: white; 
@@ -68,6 +72,19 @@ border-top: 15px solid #f7911e;
 	border-bottom: 10px solid #f7911e;
 }
 
+/*.swoosh{
+	min-height: 880px;
+}*/
+
+@media only screen and (max-width: 703px){
+footer.x-colophon{
+	background-color: #005d99;
+	box-shadow: none!important;
+	}
+/*.swoosh{
+	padding: 600px!important;
+	}*/
+}
 footer.x-colophon {
   	background-image: url("http://no-where.net/forkc/wp-content/uploads/2018/02/bottom-footer-swoosh.png");
 	background-repeat: no-repeat;
@@ -84,4 +101,3 @@ footer.x-colophon.top{
 	background-repeat: no-repeat;
 	background-position: center right;
 	background-size: 20%;}
-
