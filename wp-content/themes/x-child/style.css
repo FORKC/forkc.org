@@ -7,9 +7,9 @@ Description: Make all of your modifications to X in this child theme.
 Version: 1.0.0
 Template: x
 */
-@media(max-width: 768px;){
-a.riverfest-cta{
-display: none;}
+@media(max-width: 768px){
+.x-logobar-inner{
+background-image: none!important;}
 }
 .one-hundred{
 	position: relative;
