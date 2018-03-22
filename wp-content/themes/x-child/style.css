@@ -7,6 +7,10 @@ Description: Make all of your modifications to X in this child theme.
 Version: 1.0.0
 Template: x
 */
+@media(max-width: 768px;){
+a.riverfest-cta{
+display: none;}
+}
 .one-hundred{
 	position: relative;
 	height: 100%;
