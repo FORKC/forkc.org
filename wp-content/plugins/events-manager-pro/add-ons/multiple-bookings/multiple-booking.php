@@ -92,6 +92,12 @@ class EM_Multiple_Booking extends EM_Booking{
 	function validate( $override_availability = false ){
 	    //reset errors since this is always using sessions and we're about to revalidate
 	    $this->errors = array(); 
+	    //check first that there are even bookings to process, in cases where someone may trick the checkout e.g. via back button on paypal
+	    $this->get_bookings();
+	    if( empty($this->bookings) ){
+	    	$this->add_error( get_option('dbem_multiple_bookings_feedback_no_bookings') );
+	    	return false; //short circuit
+	    }
 	    //let forms etc. do their thing
 	    return apply_filters('em_multiple_booking_validate', true, $this); 
 	}
@@ -151,8 +157,8 @@ class EM_Multiple_Booking extends EM_Booking{
 		    //assign person/registration info to this booking, overwrites any previous value
 		    $EM_Booking->person_id = $this->person_id;
 		    //TODO can probably add more to this, e.g. add everything EXCEPT 'booking', e.g. coupon too
-		    $EM_Booking->booking_meta['registration'] = $this->booking_meta['registration'];
-		    $EM_Booking->booking_meta['gateway'] = $this->booking_meta['gateway'];
+		    if( !empty($this->booking_meta['registration']) ) $EM_Booking->booking_meta['registration'] = $this->booking_meta['registration'];
+		    if( !empty($this->booking_meta['gateway']) ) $EM_Booking->booking_meta['gateway'] = $this->booking_meta['gateway'];
 		    $EM_Booking->booking_status = $this->booking_status;
 		    //save the booking
 		    if( !$EM_Booking->save(false) ){ //no mails please
@@ -250,6 +256,46 @@ class EM_Multiple_Booking extends EM_Booking{
 			return $this->format_price($base_price);
 		}
 		return $base_price;
+	}
+	
+	function get_booking_price( $EM_Booking, $format = true ){
+		$this->get_bookings();
+		if( !empty($this->bookings[$EM_Booking->event_id]) ){
+			//we can show a relative-adjusted price if there's any discounts or surcharges
+			$mb_total = $this->get_price(false); //set booking total here as a shortcut
+			$booking_total = $EM_Booking->get_price(false);
+			//if MB total is > 0 then we need to get any discounts and surcharges and apply them proportionally to each event
+			if( $mb_total > 0 && $booking_total > 0 ){
+				//calculate gross amount of MB value without price adjustments to figure out the true percentage value of this booking wihtin the group
+				$mb_total_gross = $this->get_price_post_taxes(false, false); //get total price without discounts to determing % contribution of this event
+				$booking_percent_value = ($mb_total_gross > 0) ? $booking_total / $mb_total_gross : false;
+				//calculate discounts and surcharges with taxes already included
+				$adjustment = $this->get_booking_price_adjustment();
+				if( !$booking_percent_value ) $bookings_count = count($this->get_bookings());
+				if( $booking_percent_value ){
+					$booking_total = $booking_total + ($adjustment * $booking_percent_value);
+				}else{
+					$booking_total = $booking_total + ($adjustment / $bookings_count);
+				}
+			}
+			return $format ? $this->format_price($booking_total) : $booking_total;
+		}
+		return false;
+	}
+	
+	/**
+	 * Returns the amount the price is adjusted to the total price of this group of bookings after taxes are applied.
+	 * If you got the total price of bookings without discounts and including taxes, adding it with this returned value will provide the final price.
+	 * @return int
+	 */
+	function get_booking_price_adjustment(){
+		$this->get_bookings();
+		$discounts_pre = $this->get_price_adjustments_amount('discounts', 'pre') * (1 + $this->get_tax_rate(true));
+		$discounts = $this->get_price_adjustments_amount('discounts', 'post') + $discounts_pre;
+		$surcharges_pre = $this->get_price_adjustments_amount('surcharges', 'pre') * (1 + $this->get_tax_rate(true));
+		$surcharges = $this->get_price_adjustments_amount('surcharges', 'post') + $surcharges_pre;
+		$adjustment = $surcharges - $discounts;
+		return $adjustment;
 	}
 	
 	function calculate_price(){
@@ -435,12 +481,15 @@ class EM_Multiple_Booking extends EM_Booking{
 
 	//since we're always dealing with a single email
 	function email( $email_admin = true, $force_resend = false, $email_attendee = true ){
+		add_filter('pre_option_dbem_bookings_contact_email', '__return_zero', 100);
 		if( get_option('dbem_multiple_bookings_contact_email') ){ //we also email individual booking emails to the individual event owners
 		    foreach($this->get_bookings() as $EM_Booking){
 		        $EM_Booking->email($email_admin, $force_resend, false);
 		    }
 		}
-		return parent::email( $email_admin, $force_resend );
+		$return = parent::email( $email_admin, $force_resend );
+		remove_filter('pre_option_dbem_bookings_contact_email', '__return_zero');
+		return $return;
 	}
 
 	/**
@@ -456,15 +505,15 @@ class EM_Multiple_Booking extends EM_Booking{
 				$msg['user']['subject'] = get_option('dbem_multiple_bookings_email_pending_subject');
 				$msg['user']['body'] = get_option('dbem_multiple_bookings_email_pending_body');
 				//admins should get something (if set to)
-				$msg['admin']['subject'] = get_option('dbem_multiple_bookings_contact_email_subject');
-				$msg['admin']['body'] = get_option('dbem_multiple_bookings_contact_email_body');
+				$msg['admin']['subject'] = get_option('dbem_multiple_bookings_contact_email_pending_subject');
+				$msg['admin']['body'] = get_option('dbem_multiple_bookings_contact_email_pending_body');
 				break;
 			case 1:
 				$msg['user']['subject'] = get_option('dbem_multiple_bookings_email_confirmed_subject');
 				$msg['user']['body'] = get_option('dbem_multiple_bookings_email_confirmed_body');
 				//admins should get something (if set to)
-				$msg['admin']['subject'] = get_option('dbem_multiple_bookings_contact_email_subject');
-				$msg['admin']['body'] = get_option('dbem_multiple_bookings_contact_email_body');
+				$msg['admin']['subject'] = get_option('dbem_multiple_bookings_contact_email_confirmed_subject');
+				$msg['admin']['body'] = get_option('dbem_multiple_bookings_contact_email_confirmed_body');
 				break;
 			case 2:
 				$msg['user']['subject'] = get_option('dbem_multiple_bookings_email_rejected_subject');

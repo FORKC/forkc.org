@@ -8,7 +8,9 @@ class CS_Social_Sharing extends Cornerstone_Element_Base {
       'title'       => __('Social Sharing', 'cornerstone' ),
       'section'     => 'social',
       'description' => __( 'Social Sharing description.', 'cornerstone' ),
-      'supports'    => array( 'id', 'class', 'style' )
+      'supports'    => array( 'id', 'class', 'style' ),
+      'protected_keys' => array( 'title', 'content' ),
+      'protected_keys' => array( 'heading', 'share_title', 'email_subject' )
     );
   }
 
@@ -104,6 +106,8 @@ class CS_Social_Sharing extends Cornerstone_Element_Base {
   public function render( $atts ) {
 
     extract( $atts );
+
+    $email_subject = cs_clean_shortcode_att( $email_subject );
 
     $shortcode = "[x_share title=\"$heading\" share_title=\"$share_title\" facebook=\"$facebook\" twitter=\"$twitter\" google_plus=\"$google_plus\" linkedin=\"$linkedin\" pinterest=\"$pinterest\" reddit=\"$reddit\" email=\"$email\" email_subject=\"$email_subject\"{$extra}]";
 

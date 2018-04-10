@@ -16,7 +16,7 @@ $is_rtl = is_rtl();
 
     <?php if ( $is_rtl ) : ?>
 
-      $.Isotope.prototype._positionAbs = function( x, y ) {
+      $.xIsotope.prototype._positionAbs = function( x, y ) {
         return { right: x, top: y };
       };
 
@@ -41,7 +41,7 @@ $is_rtl = is_rtl();
       });
       $('#x-isotope-loading').stop(true,true).fadeOut(300);
       $('#x-iso-container > .hentry').each(function(i) {
-        $(this).delay(i * 150).animate({'opacity' : 1}, 500);
+        $(this).delay(i * 150).animate({'opacity' : 1}, 500, 'xEaseOutQuad');
       });
     });
 

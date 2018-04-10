@@ -94,7 +94,7 @@ class EM_User_Fields {
 			if( get_option('dbem_emp_booking_form_reg_input') || !is_user_logged_in() || EM_Bookings::$force_registration ){
 				echo $EM_Form->output_field_input($real_field, $post);
 			}else{
-				echo $post;
+				echo $EM_Form->get_formatted_value($real_field, $post);
 			}
 		}
 	}
@@ -130,6 +130,7 @@ class EM_User_Fields {
 	public static function em_bookings_table_cols_template($template, $EM_Bookings_Table){
 		$EM_Form = self::get_form();
 		foreach($EM_Form->form_fields as $field_id => $field ){
+			$field = $EM_Form->translate_field($field);
 			$template[$field_id] = $field['label'];
 		}
 		return $template;

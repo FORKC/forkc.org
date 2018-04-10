@@ -10,7 +10,8 @@ class CS_Soliloquy extends Cornerstone_Element_Base {
       'description' => __( 'Place an Soliloquy element into your content.', 'cornerstone' ),
       'supports'    => array(),
       'can_preview' => false,
-      'undefined_message' => __('This element can not render because Soliloquy is not active.', 'cornerstone' )
+      'undefined_message' => __('This element can not render because Soliloquy is not active.', 'cornerstone' ),
+      'protected_keys' => array( 'source_id' )
     );
   }
 

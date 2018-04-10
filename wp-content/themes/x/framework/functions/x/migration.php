@@ -27,7 +27,7 @@ function x_version_migration() {
   // ----------------------------------
 
   if ( false === $prior ) {
-    update_option( 'x_version', X_VERSION );
+    update_option( 'x_version', X_VERSION, true );
     update_option( 'x_dismiss_update_notice', true );
     return;
   }

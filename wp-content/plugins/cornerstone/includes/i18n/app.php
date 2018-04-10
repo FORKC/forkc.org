@@ -13,14 +13,21 @@ return array(
   'exit-to-dashboard' => __( 'Exit to Dashboard', 'cornerstone' ),
   'unsaved-warning'   => __( 'You have unsaved changes that will be lost if you continue. Are you sure you wish to leave?', 'cornerstone' ),
 
+  'streamline-nav-unsaved'   => __( 'Would you like to edit this {{context}}? You have unsaved changes that will be lost if you continue.', 'cornerstone' ),
+  'streamline-nav'           => __( 'Would you like to edit this {{context}}? You can safely leave as there are no unsaved changes.', 'cornerstone' ),
+
   // General Purpose
   'copy-of'    => __( 'Copy of {{title}}', 'cornerstone' ),
   'copy-of-numeric'    => __( '{{title}} ({{index}})', 'cornerstone' ),
   'indexed' => __( '{{label}} {{index}}', 'cornerstone'),
   'search' => __( 'Search', 'cornerstone' ),
   'back-to' => __( 'Back to {{to}}', 'cornerstone' ),
-  'add-item' => __( 'Add Item', '__x__' ),
-  'add-label' => __( 'Add {{label}}', '__x__' ),
+  'item' => __( 'Item', 'cornerstone'),
+  'add-item' => __( 'Add Item', 'cornerstone' ),
+  'add-label' => __( 'Add {{label}}', 'cornerstone' ),
+
+  // Formatting
+  'formatting-colon' => __( '{{prefix}}: {{content}}', '__x__'),
 
   // Preview Sizer
   'preview-sizer-abbr-xl' => __( 'XL', 'cornerstone' ),
@@ -35,22 +42,34 @@ return array(
   'preview-sizer-desc-xs'  => __( '480px &amp; Smaller', 'cornerstone' ),
 
   // Titles
-  'home.title'      => __( 'Home', 'cornerstone' ),
-  'options.title'   => __( 'Options', 'cornerstone' ),
-  'headers.title'   => __( 'Headers', 'cornerstone' ),
-  'footers.title'   => __( 'Footers', 'cornerstone' ),
-  'content.title'   => __( 'Content', 'cornerstone' ),
-  'fonts.title'     => __( 'Fonts', 'cornerstone' ),
-  'templates.title' => __( 'Templates', 'cornerstone' ),
-  'layout.title'    => __( 'Layout', 'cornerstone' ),
-  'inspector.title' => __( 'Inspector', 'cornerstone' ),
-  'settings.title'  => __( 'Settings', 'cornerstone' ),
-  'elements.title'  => __( 'Elements', 'cornerstone' ),
+  'home.title'          => __( 'Home', 'cornerstone' ),
+  'options.title'       => __( 'Options', 'cornerstone' ),
+  'headers.title'       => __( 'Headers', 'cornerstone' ),
+  'footers.title'       => __( 'Footers', 'cornerstone' ),
+  'content.title'       => __( 'Content', 'cornerstone' ),
+  'fonts.title'         => __( 'Fonts', 'cornerstone' ),
+  'managers.title'      => __( 'Managers', 'cornerstone' ),
+  'templates.title'     => __( 'Templates', 'cornerstone' ),
+  'layout.title'        => __( 'Layout', 'cornerstone' ),
+  'inspector.title'     => __( 'Inspector', 'cornerstone' ),
+  'settings.title'      => __( 'Settings', 'cornerstone' ),
+  'elements.title'      => __( 'Elements', 'cornerstone' ),
+  'global-blocks.title' => __( 'Global Blocks', 'cornerstone' ),
+
+  'template-manager.title'       => __( 'Template Manager', 'cornerstone' ),
+  'design-cloud.title'           => __( 'Design Cloud', 'cornerstone' ),
+  'font-manager.title'           => __( 'Font Manager', 'cornerstone' ),
+  'color-manager.title'          => __( 'Color Manager', 'cornerstone' ),
+  'element-manager.title'        => __( 'Element Manager', 'cornerstone' ),
+  'template-manager-short.title' => __( 'Template', 'cornerstone' ),
+  'font-manager-short.title'     => __( 'Font', 'cornerstone' ),
+  'color-manager-short.title'    => __( 'Color', 'cornerstone' ),
+  'element-manager-short.title'  => __( 'Element', 'cornerstone' ),
 
   // Inspector
   'inspector.na-title' => __( 'Nothing Selected', 'cornerstone' ),
-  'inspector.search'   => __( 'search inspector...', 'cornerstone' ),
-  'inspector.apply-preset-warning' => __( 'Applying a preset will change all element properties and reset to the preset&apos;s placeholder content. Any changes you&apos;ve made will be overwritten. Would you like to proceed?', 'cornerstone' ),
+  'inspector.search'   => __( 'Search Inspector...', 'cornerstone' ),
+  'inspector.apply-preset-warning' => __( 'This action will replace all element styling. Proceed?', 'cornerstone' ),
 
   // Controls
   'controls-previous-missing'                 => __( 'Previous Value Unavailable', 'cornerstone' ),
@@ -77,7 +96,8 @@ return array(
   // Elements
   'elements-confirm-delete' => __( 'Are you sure you want to delete this {{title}}? This can not be undone.', 'cornerstone' ),
   'elements-confirm-erase' => __( 'Are you sure you want to delete this element&apos;s contents? This can not be undone.', 'cornerstone' ),
-  'elements-undefined-preview' => __( 'This element could not render because it&apos;s definition is missing. You might need to activate a plugin.', 'cornerstone' ),
+  'elements-undefined-preview' => __( 'This element could not render because its definition is missing. You might need to activate a plugin.', 'cornerstone' ),
+  'elements-preview-unavailable' => __( 'No Preview Available (<a href="#">View Live</a>)', 'cornerstone' ),
   'elements-undefined-inspector-title' => __( 'Undefined Element', 'cornerstone' ),
   'elements-undefined-inspector-message' => __( 'The definition for this element could not be located. You may need to activate a plugin. The type declared for this element is: <strong>{{type}}</strong>', 'cornerstone' ),
 
@@ -93,9 +113,46 @@ return array(
   'options.confirm-header-switch-back' => __( 'Are you sure you wish to switch back to Original Headers? This will unassign remove your global Pro Header.', 'cornerstone' ),
   'options.confirm-footer-switch-back' => __( 'Are you sure you wish to switch back to Original Footers? This will unassign remove your global Pro Footer.', 'cornerstone' ),
 
+  // Manage
+  'manage.welcome' => __( 'Manage all of your templates, fonts, and colors from one central location!', 'cornerstone' ),
+
   // Templates
-  'templates.welcome' => __( 'Manage all of your fonts and colors from one central location!', 'cornerstone' ),
   'templates.blank-welcome'   => __( 'Begin with a blank slate.', 'cornerstone'),
+
+  'templates.download-label' => array(
+    'one' => __( 'Download Template', 'cornerstone'),
+    'other' => __( 'Download {{count}} Templates', 'cornerstone'),
+  ),
+
+  'templates.delete-label' => array(
+    'one' => __( 'Delete Template', 'cornerstone'),
+    'other' => __( 'Delete {{count}} Templates', 'cornerstone'),
+  ),
+
+  'templates.delete-popover' => array(
+    'one' => __( 'Are you sure you want to delete the selected template?', 'cornerstone'),
+    'other' => __( 'Are you sure you want to delete the {{count}} selected templates?', 'cornerstone'),
+  ),
+
+  'templates.filter-all' => __( 'All', 'cornerstone'),
+  'templates.filter-header' => __( 'Headers', 'cornerstone'),
+  'templates.filter-footer' => __( 'Footers', 'cornerstone'),
+  'templates.filter-content' => __( 'Content', 'cornerstone'),
+  'templates.filter-preset' => __( 'Presets', 'cornerstone'),
+  'templates.filter-my-templates' => __( 'My Templates', 'cornerstone'),
+  'templates.filter-themeco-templates' => __( 'Themeco Templates', 'cornerstone'),
+  'templates.design-cloud'   => __( 'Design Cloud', 'cornerstone'),
+
+  'templates.type-header'    => __( 'Header', 'cornerstone'),
+  'templates.type-footer'    => __( 'Footer', 'cornerstone'),
+  'templates.type-content'   => __( 'Content', 'cornerstone'),
+  'templates.type-preset'    => __( 'Preset', 'cornerstone'),
+  'templates.subtype-format' => __( '<strong>{{type}}</strong>: {{subtype}}', 'cornerstone'),
+
+  'templates.upload-error'   => __( 'Sorry! Your file is not properly formatted.', 'cornerstone' ),
+
+  'templates.element-defaults-save' => __( 'Element defaults updated!', 'cornerstone' ),
+  'templates.element-defaults-error' => __( 'Unable to save element default.', 'cornerstone' ),
 
   // Fonts
   'fonts.new-title' => __( 'Font {{index}}', 'cornerstone' ),
@@ -127,6 +184,13 @@ return array(
   // Choices
   'choices.menu-named'    => __('Menu: %s', 'cornerstone'),
   'choices.menu-location' => __('Location: %s', 'cornerstone'),
+
+  // Sort
+  'sort.new-old' => __( 'Newest', 'cornerstone' ),
+  'sort.old-new' => __( 'Oldest', 'cornerstone' ),
+  'sort.a-z'     => __( 'A-Z', 'cornerstone' ),
+  'sort.z-a'     => __( 'Z-A', 'cornerstone' ),
+  'sort.popular' => __( 'Popular', 'cornerstone' ),
 
   // Actions
   'duplicate'     => __( 'Duplicate', 'cornerstone' ),

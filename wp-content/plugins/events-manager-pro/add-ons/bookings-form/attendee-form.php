@@ -26,7 +26,11 @@ class EM_Attendee_Form extends EM_Form {
     			if( !is_array($_REQUEST['em_attendee_fields'][$ticket_id][$fieldid][$attendee_index])){
     				$this->field_values[$fieldid] = wp_kses_data(stripslashes($_REQUEST['em_attendee_fields'][$ticket_id][$fieldid][$attendee_index]));
     			}elseif( is_array($_REQUEST['em_attendee_fields'][$ticket_id][$fieldid][$attendee_index])){
-    				$this->field_values[$fieldid] = $_REQUEST['em_attendee_fields'][$ticket_id][$fieldid][$attendee_index];
+    				$array = array();
+    				foreach( $_REQUEST['em_attendee_fields'][$ticket_id][$fieldid][$attendee_index] as $key => $array_value ){
+    					$array[$key] = wp_kses_data(stripslashes($array_value));
+    				}
+    				$this->field_values[$fieldid] = $array;
     			}
     		}
     		//dates and time are special
@@ -50,7 +54,13 @@ class EM_Attendee_Form extends EM_Form {
      * @see EM_Form::output_field_input()
      */
     function output_field_input($field, $post=true){
+    	//fix for previously not escaping arrays during saving and comparing to escaped values before output
+    	if( is_array($post) ){
+    		foreach( $post as $k => $v ) $post[$k] = esc_attr($v);
+    	}
+    	//get the field output
         $output = parent::output_field_input($field, $post);
+        //replace %n with attendee number where appropriate
     	if( in_array($field['type'], array('radio','checkboxes','multiselect')) && is_numeric($this->attendee_number) ){
     	    $output = str_replace('[%n]', '['.$this->attendee_number.']', $output);
     	}

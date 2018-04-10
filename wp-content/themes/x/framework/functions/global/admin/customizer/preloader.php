@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 // =============================================================================
 // FUNCTIONS/GLOBAL/ADMIN/CUSTOMIZER/PRELOADER.PHP
@@ -21,7 +21,7 @@ function x_customizer_preloader() {
 
   ?>
 
-  <style type="text/css" id="x-customizer-preloader-css">
+  <style id="x-customizer-preloader-css">
 
     body {
       overflow: hidden !important;

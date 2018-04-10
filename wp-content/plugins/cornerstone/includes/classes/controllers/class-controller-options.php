@@ -7,7 +7,7 @@ class Cornerstone_Controller_Options extends Cornerstone_Plugin_Component {
     $options = $this->plugin->loadComponent( 'Options_Bootstrap' );
     $response = array( 'updates' => array() );
 
-    if ( current_user_can('manage_options') ) {
+    if ( current_user_can( 'manage_options' ) ) {
 
       do_action('cs_theme_options_before_save');
 

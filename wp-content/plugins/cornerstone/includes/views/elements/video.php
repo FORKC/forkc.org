@@ -9,7 +9,7 @@
 // Data: Partials
 // --------------
 
-$data_video = x_get_partial_data( $_custom_data, array( 'find_data' => array( 'video' => '', 'mejs' => '' ) ) );
+$data_video = x_get_partial_data( $_custom_data, array( 'find_data' => array( 'video' => '', 'mejs' => '' ), 'add_in' => array( 'id' => '', 'class' => '' ) ) );
 $data_frame = x_get_partial_data( $_custom_data, array( 'find_data' => array( 'frame' => '' ) ) );
 
 

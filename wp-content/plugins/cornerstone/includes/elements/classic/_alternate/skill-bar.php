@@ -12,7 +12,8 @@ class CS_Skill_Bar extends Cornerstone_Element_Base {
       'autofocus' => array(
     		'heading' => '.h-skill-bar',
     		'bar_text' => '.x-skill-bar',
-    	)
+    	),
+      'protected_keys' => array( 'heading', 'percent', 'bar_text' )
     );
   }
 

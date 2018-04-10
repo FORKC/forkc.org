@@ -34,6 +34,9 @@ if ( ! empty( $tabs ) ) :
       break;
   }
 
+  $tab_keys      = array_keys( $tabs );
+  $first_tab_key = $tab_keys[0];
+
   ?>
 
   <?php if ( x_get_option( 'x_woocommerce_product_tabs_enable' ) == '1' ) : ?>
@@ -42,12 +45,14 @@ if ( ! empty( $tabs ) ) :
 
       [x_tab_nav type="<?php echo $tab_num_class; ?>"]
         <?php foreach ( $tabs as $key => $tab ) : ?>
-          [x_tab_nav_item class="<?php echo esc_attr( $key ); ?>_tab" title="<?php echo apply_filters( 'woocommerce_product_' . $key . '_tab_title', esc_html( $tab['title'] ), $key ); ?>"]
+          <?php $active = ( $key === $first_tab_key ) ? ' active="true"' : ''; ?>
+          [x_tab_nav_item<?php echo $active; ?> class="<?php echo esc_attr( $key ); ?>_tab" title="<?php echo apply_filters( 'woocommerce_product_' . $key . '_tab_title', esc_html( $tab['title'] ), $key ); ?>"]
         <?php endforeach; ?>
       [/x_tab_nav]
       [x_tabs]
         <?php foreach ( $tabs as $key => $tab ) : ?>
-          [x_tab class="<?php echo esc_attr( $key ); ?>_pane"]<?php call_user_func( $tab['callback'], $key, $tab ); ?>[/x_tab]
+          <?php $active = ( $key === $first_tab_key ) ? ' active="true"' : ''; ?>
+          [x_tab<?php echo $active; ?> class="<?php echo esc_attr( $key ); ?>_pane"]<?php call_user_func( $tab['callback'], $key, $tab ); ?>[/x_tab]
         <?php endforeach; ?>
       [/x_tabs]
 

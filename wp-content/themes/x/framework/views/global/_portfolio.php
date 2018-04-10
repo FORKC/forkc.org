@@ -13,13 +13,13 @@ global $sitepress;
 
 if ( function_exists( 'icl_object_id' ) && is_callable( array( $sitepress, 'get_current_language' ) ) ) {
 	$wpml_post = get_post( icl_object_id( $entry_id, 'page', false, $sitepress->get_current_language() ) );
-	$entry_id = $wpml_post->ID;
+	$entry_id  = $wpml_post->ID;
 }
 
-$paged    = ( is_front_page() ) ? get_query_var( 'page' ) : ( ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1 );
-$cols     = get_post_meta( $entry_id, '_x_portfolio_columns', true );
-$count    = get_post_meta( $entry_id, '_x_portfolio_posts_per_page', true );
-$filters  = get_post_meta( $entry_id, '_x_portfolio_category_filters', true );
+$paged   = ( is_front_page() ) ? get_query_var( 'page' ) : ( ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1 );
+$cols    = get_post_meta( $entry_id, '_x_portfolio_columns', true );
+$count   = get_post_meta( $entry_id, '_x_portfolio_posts_per_page', true );
+$filters = get_post_meta( $entry_id, '_x_portfolio_category_filters', true );
 
 switch ( $cols ) {
   case 'One'   : $cols = 1; break;

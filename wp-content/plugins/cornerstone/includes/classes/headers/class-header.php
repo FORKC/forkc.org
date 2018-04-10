@@ -18,7 +18,21 @@ class Cornerstone_Header {
         $this->create_new( $post );
       }
     } else {
-      $this->load_from_post( $post );
+
+      if ( is_a( $post, 'Cornerstone_Template' ) ) {
+
+        $meta = $post->get_meta();
+
+        $this->create_new( array(
+          'title'   => $post->get_title(),
+          'regions' => isset( $meta['regions'] ) ? $meta['regions'] : array(),
+          'settings' => isset( $meta['settings'] ) ? $meta['settings'] : array()
+        ) );
+
+      } else {
+        $this->load_from_post( $post );
+      }
+
     }
 
   }
@@ -51,7 +65,8 @@ class Cornerstone_Header {
 
     $this->id = $post->ID;
     $this->set_title( $post->post_title ? $post->post_title : '' );
-    $this->set_content( cs_maybe_json_decode( $post->post_content ) );
+    $content = apply_filters('cs_header_load_content', $post->post_content );
+    $this->set_content( cs_maybe_json_decode( $content ) );
 
   }
 
@@ -69,14 +84,28 @@ class Cornerstone_Header {
 
   public function save() {
 
+    if ( ! current_user_can( 'manage_options' ) ) {
+      throw new Exception( 'Unauthorized' );
+    }
+
+    // Expand Template
+    $settings = $this->get_settings();
+
+    if ( isset( $settings['_template'] ) && $settings['_template'] ) {
+      $template = new Cornerstone_Template( $settings['_template'] );
+      $meta = $template->get_meta();
+      $this->set_regions( isset( $meta['regions'] ) ? $meta['regions'] : array() );
+      $this->set_settings( isset( $meta['settings'] ) ? $meta['settings'] : array() );
+    }
+
     $args = array(
       'post_title'   => $this->get_title(),
       'post_type'    => 'cs_header',
       'post_status'  => 'tco-data',
-      'post_content' => wp_slash( cs_json_encode( array(
+      'post_content' => apply_filters('cs_header_update_content', wp_slash( cs_json_encode( array(
         'regions' => $this->get_regions(),
         'settings' => $this->get_settings()
-      ) ) )
+      ) ) ) )
     );
 
     if ( is_int( $this->id ) ) {
@@ -139,7 +168,14 @@ class Cornerstone_Header {
   }
 
   public function delete() {
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+      throw new Exception( 'Unauthorized' );
+    }
+
     do_action('cornerstone_delete_header', $this->id );
+
     return wp_delete_post( $this->id, true );
+
   }
 }

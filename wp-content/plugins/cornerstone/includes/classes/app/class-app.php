@@ -119,6 +119,7 @@ class Cornerstone_App extends Cornerstone_Plugin_Component {
       'dashboardUrl'           => admin_url(),
       'useLegacyAjax'          => $router->use_legacy_ajax(),
       'debug'                  => ( $this->plugin->common()->isDebug() ),
+      'date_format'            => get_option( 'date_format' ),
       'isRTL'                  => is_rtl(),
       'canGzip'                => function_exists('gzdecode'),
       'common_i18n'            => $this->plugin->i18n_group( 'common' ),
@@ -135,15 +136,21 @@ class Cornerstone_App extends Cornerstone_Plugin_Component {
       'keybindings'            => apply_filters('cornerstone_keybindings', $this->plugin->config_group( 'builder/keybindings' ) ),
       'home_url'               => home_url(),
       'helpTextEnabled'        => (bool) $settings['help_text'],
-      'contentBuilerElements'  => $settings['content_builer_elements'],
-      'integration_mode'       => apply_filters('cs_integration_mode', csi18n('app.integration-mode') ),
+      'today'                  => date_i18n( get_option( 'date_format' ), time() ),
+      'contentBuilderElements' => $settings['content_builder_elements'],
       'css_class_map'          => $this->plugin->config_group( 'common/class-map' ),
       'devTools'               => defined('CS_APP_DEV_TOOLS') && CS_APP_DEV_TOOLS,
       'workerURL'              => add_query_arg( array( 'v' => $v), $this->url( "assets/dist/js/admin/worker.js" ) ),
       'workerQueueSize'        => $worker_queue_size,
       'wpmlLanguages'          => $wpml->get_languages(),
       'wpmlDefault'            => $wpml->get_default_language(),
-      'wpmlTranslateableTypes' => $wpml->get_translateable_post_types()
+      'wpmlTranslateableTypes' => $wpml->get_translateable_post_types(),
+      'env'                    => $this->get_env_data(),
+      'featureFlags'           => apply_filters('cs_feature_flags', array() ),
+      'designCloudApiUrl'      => 'https://theme.co/api/design-cloud',
+      'designCloudSubmitUrl'   => 'https://theme.co/apex/api-v2/design-cloud/submit-beta',
+      'validationUrl'          => apply_filters('_cs_validation_url', admin_url( 'admin.php?page=cornerstone-home' ) ),
+      'siteUrl'                => esc_attr( trailingslashit( network_home_url() ) )
     ) ) );
 
   }
@@ -291,6 +298,14 @@ class Cornerstone_App extends Cornerstone_Plugin_Component {
 
   public function font_awesome() {
     return $this->plugin->common()->getFontIcons();
+  }
+
+  public function get_env_data() {
+    return apply_filters('_cornerstone_app_env', array(
+      'product' => 'cornerstone',
+      'version' => CS()->version(),
+      'productKey' => esc_attr( get_option( 'cs_product_validation_key', '' ) )
+    ));
   }
 
 }

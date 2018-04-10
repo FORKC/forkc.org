@@ -33,7 +33,7 @@ $atts_search_form = array(
 
 if ( isset( $id ) && ! empty( $id ) ) {
   if ( $search_type === 'inline' ) {
-    $atts_search_form['id'] = $id . '-search';
+    $atts_search_form['id'] = $id;
   }
 }
 

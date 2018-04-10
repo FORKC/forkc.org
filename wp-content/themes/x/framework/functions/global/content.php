@@ -73,7 +73,7 @@ endif;
 
 if ( ! function_exists( 'x_excerpt_string' ) ) :
   function x_excerpt_string( $more ) {
-    
+
     $stack = x_get_stack();
 
     if ( $stack == 'integrity' ) {
@@ -216,7 +216,7 @@ if ( ! function_exists( 'x_scroll_top_anchor' ) ) :
         sizingUpdate();
 
         scrollTopAnchor.click(function(){
-          $('html, body').animate({ scrollTop: 0 }, 850, 'easeInOutExpo');
+          $('html, body').animate({ scrollTop: 0 }, 850, 'xEaseInOutExpo');
           return false;
         });
 
@@ -246,7 +246,7 @@ if ( ! function_exists( 'x_legacy_header_widget_areas' ) ) :
 
     ?>
 
-    <div class="x-widgetbar collapse">
+    <div id="x-widgetbar" class="x-widgetbar x-collapsed" data-x-toggleable="x-widgetbar" data-x-toggle-collapse="1" aria-hidden="true" aria-labelledby="x-btn-widgetbar">
       <div class="x-widgetbar-inner">
         <div class="x-container max width">
 
@@ -268,7 +268,7 @@ if ( ! function_exists( 'x_legacy_header_widget_areas' ) ) :
       </div>
     </div>
 
-    <a href="#" class="x-btn-widgetbar collapsed" data-toggle="collapse" data-target=".x-widgetbar">
+    <a href="#" id="x-btn-widgetbar" class="x-btn-widgetbar collapsed" data-x-toggle="collapse-b" data-x-toggleable="x-widgetbar" aria-selected="false" aria-expanded="false" aria-controls="x-widgetbar">
       <i class="x-icon-plus-circle" data-x-icon="&#xf055;"><span class="visually-hidden"><?php _e( 'Toggle the Widgetbar', '__x__' ); ?></span></i>
     </a>
 

@@ -89,7 +89,7 @@ class CS_Menu_Item_Custom_Fields_Map {
 
   public static function _save( $menu_id, $menu_item_db_id, $menu_item_args ) {
 
-    if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+    if ( ( defined( 'DOING_AJAX' ) && DOING_AJAX ) || ! isset( $_POST['update-nav-menu-nonce'])) {
       return;
     }
 

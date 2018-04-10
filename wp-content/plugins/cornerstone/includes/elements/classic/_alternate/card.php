@@ -9,7 +9,8 @@ class CS_Card extends Cornerstone_Element_Base {
       'section'     => 'content',
       'description' => __( 'Card description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'autofocus' => array()
+      'autofocus' => array(),
+      'protected_keys' => array( 'front_title', 'front_text', 'front_graphic', 'front_icon', 'front_image', 'back_title', 'back_text', 'back_button_text', 'back_button_link' )
     );
   }
 

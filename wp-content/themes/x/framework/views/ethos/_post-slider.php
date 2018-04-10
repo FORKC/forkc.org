@@ -60,49 +60,53 @@ if ( $is_blog || $is_archive ) :
 
   <?php if ( $is_enabled ) : ?>
 
-    <div class="x-flexslider x-post-slider">
-      <ul class="x-slides">
+    <?php $wp_query = new WP_Query( $args ); ?>
 
-        <?php $wp_query = new WP_Query( $args ); ?>
+    <?php if ( $wp_query->post_count > 0 ) : ?>
 
-        <?php if ( $wp_query->have_posts() ) : ?>
-          <?php while ( $wp_query->have_posts() ) : $wp_query->the_post(); ?>
+      <div class="x-flexslider x-post-slider">
+        <ul class="x-slides">
 
-            <li class="x-slide">
-              <article <?php post_class( 'x-post-slider-entry' ); ?> style="<?php echo x_ethos_entry_cover_background_image_style(); ?>">
-                <a href="<?php the_permalink(); ?>">
-                  <div class="cover">
-                    <div class="middle">
-                      <span class="featured-meta"><?php echo x_ethos_post_categories(); ?> / <?php echo get_the_date( 'F j, Y' ); ?></span>
-                      <h2 class="h-featured"><span><?php x_the_alternate_title(); ?></span></h2>
-                      <span class="featured-view"><?php _e( 'View Post', '__x__' ); ?></span>
+          <?php if ( $wp_query->have_posts() ) : ?>
+            <?php while ( $wp_query->have_posts() ) : $wp_query->the_post(); ?>
+
+              <li class="x-slide">
+                <article <?php post_class( 'x-post-slider-entry' ); ?> style="<?php echo x_ethos_entry_cover_background_image_style(); ?>">
+                  <a href="<?php the_permalink(); ?>">
+                    <div class="cover">
+                      <div class="middle">
+                        <span class="featured-meta"><?php echo x_ethos_post_categories(); ?> / <?php echo get_the_date( 'F j, Y' ); ?></span>
+                        <h2 class="h-featured"><span><?php x_the_alternate_title(); ?></span></h2>
+                        <span class="featured-view"><?php _e( 'View Post', '__x__' ); ?></span>
+                      </div>
                     </div>
-                  </div>
-                </a>
-              </article>
-            </li>
+                  </a>
+                </article>
+              </li>
 
-          <?php endwhile; ?>
-        <?php endif; ?>
+            <?php endwhile; ?>
+          <?php endif; ?>
 
-        <?php wp_reset_query(); ?>
+          <?php wp_reset_query(); ?>
 
-      </ul>
-    </div>
+        </ul>
+      </div>
 
-    <script>
-      jQuery(window).load(function() {
-        jQuery('.x-post-slider').flexslider({
-          controlNav   : false,
-          selector     : '.x-slides > li',
-          prevText     : '<i class="x-icon-chevron-left" data-x-icon="&#xf053;"></i>',
-          nextText     : '<i class="x-icon-chevron-right" data-x-icon="&#xf054;"></i>',
-          animation    : 'fade',
-          smoothHeight : true,
-          slideshow    : true
+      <script>
+        jQuery(window).load(function() {
+          jQuery('.x-post-slider').flexslider({
+            controlNav   : false,
+            selector     : '.x-slides > li',
+            prevText     : '<i class="x-icon-chevron-left" data-x-icon="&#xf053;"></i>',
+            nextText     : '<i class="x-icon-chevron-right" data-x-icon="&#xf054;"></i>',
+            animation    : 'fade',
+            smoothHeight : true,
+            slideshow    : true
+          });
         });
-      });
-    </script>
+      </script>
+
+    <?php endif; ?>
 
   <?php endif; ?>
 

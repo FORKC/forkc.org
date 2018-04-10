@@ -4,13 +4,15 @@ class CS_Accordion_Item extends Cornerstone_Element_Base {
 
   public function data() {
     return array(
-      'name'        => 'accordion-item',
-      'title'       => __( 'Accordion Item', 'cornerstone' ),
-      'section'     => '_content',
-      'description' => __( 'Accordion Item description.', 'cornerstone' ),
-      'supports'    => array( 'id', 'class', 'style' ),
-      'render'      => false,
-      'delegate'    => true
+      'name'           => 'accordion-item',
+      'title'          => __( 'Accordion Item', 'cornerstone' ),
+      'section'        => '_content',
+      'description'    => __( 'Accordion Item description.', 'cornerstone' ),
+      'supports'       => array( 'id', 'class', 'style' ),
+      'render'         => false,
+      'delegate'       => true,
+      'alt_breadcrumb' => __( 'Item', 'cornerstone' ),
+      'protected_keys' => array( 'title', 'content' )
     );
   }
 

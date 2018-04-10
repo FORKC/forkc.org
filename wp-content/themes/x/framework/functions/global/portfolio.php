@@ -9,23 +9,22 @@
 // =============================================================================
 // TABLE OF CONTENTS
 // -----------------------------------------------------------------------------
-//   01. Get the Page Link to First Portfolio Page
-//   02. Get the Page Title to First Portfolio Page
-//   03. Get Parent Portfolio ID
-//   04. Get Parent Portfolio Link
-//   05. Get Parent Portfolio Title
-//   06. Output Portfolio Filters
-//   07. Output Portfolio Item Featured Content
-//   08. Output Portfolio Item Project Link
-//   09. Output Portfolio Item Tags
-//   10. Output Portfolio Item Social
-//   11. Portfolio Page Template Precedence
+//   01. Get first Portfolio Page
+//   02. Get Parent Portfolio Link
+//   03. Get Parent Portfolio Title
+//   04. Output Portfolio Filters
+//   05. Output Portfolio Item Featured Content
+//   06. Output Portfolio Item Project Link
+//   07. Output Portfolio Item Tags
+//   08. Output Portfolio Item Social
+//   09. Portfolio Page Template Precedence
+//   10. Portfolio Filter Shortcode
 // =============================================================================
 
 // Get the Page Link to First Portfolio Page
 // =============================================================================
 
-function x_get_first_portfolio_page_link() {
+function x_get_first_portfolio_page() {
 
   $results = get_pages( array(
     'meta_key'    => '_wp_page_template',
@@ -34,44 +33,11 @@ function x_get_first_portfolio_page_link() {
     'sort_column' => 'ID'
   ) );
 
-  return get_page_link( $results[0]->ID );
-
-}
-
-
-
-// Get the Page Title to First Portfolio Page
-// =============================================================================
-
-function x_get_first_portfolio_page_title() {
-
-  $results = get_pages( array(
-    'meta_key'    => '_wp_page_template',
-    'meta_value'  => 'template-layout-portfolio.php',
-    'sort_order'  => 'ASC',
-    'sort_column' => 'ID'
-  ) );
-
-  if ( is_array($results) && isset( $results[0] ) ) {
-    return $results[0]->post_title;
+  if ( count($results) > 0 && is_a( $results[0], 'WP_Post' ) ) {
+    return $results[0];
   }
 
-  return '';
-
-}
-
-
-
-// Get Parent Portfolio ID
-// =============================================================================
-
-function x_get_parent_portfolio_id() {
-
-  $meta      = get_post_meta( get_the_ID(), '_x_portfolio_parent', true );
-  $parent_id = ( $meta ) ? $meta : 'Default';
-
-  return $parent_id;
-
+  return null;
 }
 
 
@@ -81,10 +47,19 @@ function x_get_parent_portfolio_id() {
 
 function x_get_parent_portfolio_link() {
 
-  $parent_id = x_get_parent_portfolio_id();
-  $link      = ( $parent_id != 'Default' ) ? get_permalink( $parent_id ) : x_get_first_portfolio_page_link();
+  $parent_id = get_post_meta( get_the_ID(), '_x_portfolio_parent', true );
 
-  return $link;
+  if ( $parent_id ) {
+    return get_permalink( $parent_id );
+  }
+
+  $first_portfolio_page = x_get_first_portfolio_page();
+
+  if ( $first_portfolio_page ) {
+    return get_page_link( $first_portfolio_page );
+  }
+
+  return '';
 
 }
 
@@ -95,10 +70,19 @@ function x_get_parent_portfolio_link() {
 
 function x_get_parent_portfolio_title() {
 
-  $parent_id = x_get_parent_portfolio_id();
-  $title     = ( $parent_id != 'Default' ) ? get_the_title( $parent_id ) : x_get_first_portfolio_page_title();
+  $parent_id = get_post_meta( get_the_ID(), '_x_portfolio_parent', true );
 
-  return $title;
+  if ( $parent_id ) {
+    return get_the_title( $parent_id );
+  }
+
+  $first_portfolio_page = x_get_first_portfolio_page();
+
+  if ( $first_portfolio_page ) {
+    return $first_portfolio_page->post_title;
+  }
+
+  return '';
 
 }
 
@@ -114,7 +98,6 @@ function x_portfolio_filters() {
   $disable_filters = get_post_meta( get_the_ID(), '_x_portfolio_disable_filtering', true );
   $one_filter      = count( $filters ) == 1;
   $all_categories  = in_array( 'All Categories', $filters );
-
 
   //
   // 1. If one filter is selected and that filter is "All Categories."
@@ -341,3 +324,22 @@ function x_portfolio_page_template_precedence( $request ) {
 }
 
 add_filter( 'request', 'x_portfolio_page_template_precedence' );
+
+
+
+// Portfolio Filter Shortcode
+// =============================================================================
+
+function x_portfolio_filters_shortcode( $atts ) {
+
+  ob_start();
+
+  if ( get_post_meta( get_the_ID(), '_x_portfolio_category_filters', true ) ) {
+    x_portfolio_filters();
+  }
+
+  return ob_get_clean();
+
+}
+
+add_shortcode( 'x_portfolio_filters', 'x_portfolio_filters_shortcode' );

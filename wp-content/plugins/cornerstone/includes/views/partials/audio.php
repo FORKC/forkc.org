@@ -18,7 +18,7 @@ switch ( $audio_type ) {
   // -----
 
   case 'embed' :
-    $audio_content = ( ! empty( $audio_embed_code ) ) ? $audio_embed_code : '<img src="' . cornerstone_make_placeholder_image_uri( 30, 300, 'rgba(0, 0, 0, 0.35)' ) . '" width="300" height="30" alt="Placeholder">';
+    $audio_content = ( ! empty( $audio_embed_code ) ) ? $audio_embed_code : '<div style="height: 32px;"><img style="object-fit: cover; width: 100%; height: 100%;" src="' . cornerstone_make_placeholder_image_uri( 1, 1, 'rgba(0, 0, 0, 0.35)' ) . '" width="1" height="1" alt="Placeholder"></div>';
     break;
 
 
@@ -89,9 +89,9 @@ switch ( $audio_type ) {
 
     } else {
 
-      $audio_content = '<span class="x-mejs-no-source">'
-                       . '<img src="' . cornerstone_make_placeholder_image_uri( 30, 300, 'rgba(0, 0, 0, 0.35)' ) . '" width="300" height="30" alt="Placeholder">'
-                     . '</span>';
+      $audio_content = '<div style="height: 32px;">'
+                       . '<img style="object-fit: cover; width: 100%; height: 100%;" src="' . cornerstone_make_placeholder_image_uri( 1, 1, 'rgba(0, 0, 0, 0.35)' ) . '" width="1" height="1" alt="Placeholder">'
+                     . '</div>';
 
     }
 

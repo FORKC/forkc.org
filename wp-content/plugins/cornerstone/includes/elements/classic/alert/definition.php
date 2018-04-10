@@ -18,7 +18,11 @@ class CSE_Alert {
 
   public function flags() {
     return array(
-      'attr_keys' => array( 'type' )
+      'attr_keys' => array( 'type' ),
+      'protected_keys' => array(
+        'heading',
+        'content'
+      )
     );
   }
 

@@ -361,13 +361,13 @@ function x_values_cart( $settings = array() ) {
 
   $values = array(
 
-    'cart_title'                           => x_module_value( __( 'Your Items', '__x__' ), 'all' ),
+    'cart_title'                           => x_module_value( __( 'Your Items', '__x__' ), 'all', true ),
     'cart_order_items'                     => x_module_value( '1', 'style' ),
     'cart_order_total'                     => x_module_value( '2', 'style' ),
     'cart_order_buttons'                   => x_module_value( '3', 'style' ),
 
-    'cart_title_font_family'               => x_module_value( 'fw_fallback', 'style:font-family' ),
-    'cart_title_font_weight'               => x_module_value( 'fw_fallback:400', 'style:font-weight' ),
+    'cart_title_font_family'               => x_module_value( 'inherit', 'style:font-family' ),
+    'cart_title_font_weight'               => x_module_value( 'inherit:400', 'style:font-weight' ),
     'cart_title_font_size'                 => x_module_value( '2em', 'style' ),
     'cart_title_letter_spacing'            => x_module_value( '-0.035em', 'style' ),
     'cart_title_line_height'               => x_module_value( '1.1', 'style' ),
@@ -400,8 +400,8 @@ function x_values_cart( $settings = array() ) {
     'cart_thumbs_box_shadow_dimensions'    => x_module_value( '0em 0.15em 1em 0em', 'style' ),
     'cart_thumbs_box_shadow_color'         => x_module_value( 'rgba(0, 0, 0, 0.05)', 'style:color' ),
 
-    'cart_links_font_family'               => x_module_value( 'fw_fallback', 'style:font-family' ),
-    'cart_links_font_weight'               => x_module_value( 'fw_fallback:400', 'style:font-weight' ),
+    'cart_links_font_family'               => x_module_value( 'inherit', 'style:font-family' ),
+    'cart_links_font_weight'               => x_module_value( 'inherit:400', 'style:font-weight' ),
     'cart_links_font_size'                 => x_module_value( '1em', 'style' ),
     'cart_links_letter_spacing'            => x_module_value( '0em', 'style' ),
     'cart_links_line_height'               => x_module_value( '1.4', 'style' ),
@@ -415,8 +415,8 @@ function x_values_cart( $settings = array() ) {
     'cart_links_text_shadow_color'         => x_module_value( 'transparent', 'style:color' ),
     'cart_links_text_shadow_color_alt'     => x_module_value( 'transparent', 'style:color' ),
 
-    'cart_quantity_font_family'            => x_module_value( 'fw_fallback', 'style:font-family' ),
-    'cart_quantity_font_weight'            => x_module_value( 'fw_fallback:400', 'style:font-weight' ),
+    'cart_quantity_font_family'            => x_module_value( 'inherit', 'style:font-family' ),
+    'cart_quantity_font_weight'            => x_module_value( 'inherit:400', 'style:font-weight' ),
     'cart_quantity_font_size'              => x_module_value( '0.85em', 'style' ),
     'cart_quantity_letter_spacing'         => x_module_value( '0em', 'style' ),
     'cart_quantity_line_height'            => x_module_value( '1.9', 'style' ),
@@ -429,8 +429,8 @@ function x_values_cart( $settings = array() ) {
     'cart_quantity_text_shadow_color'      => x_module_value( 'transparent', 'style:color' ),
 
     'cart_total_bg'                        => x_module_value( 'transparent', 'style' ),
-    'cart_total_font_family'               => x_module_value( 'fw_fallback', 'style:font-family' ),
-    'cart_total_font_weight'               => x_module_value( 'fw_fallback:400', 'style:font-weight' ),
+    'cart_total_font_family'               => x_module_value( 'inherit', 'style:font-family' ),
+    'cart_total_font_weight'               => x_module_value( 'inherit:400', 'style:font-weight' ),
     'cart_total_font_size'                 => x_module_value( '1em', 'style' ),
     'cart_total_letter_spacing'            => x_module_value( '0em', 'style' ),
     'cart_total_line_height'               => x_module_value( '1', 'style' ),

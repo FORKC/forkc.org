@@ -22,6 +22,10 @@ function x_demo_content_setup_ajax_callback() {
   // Uncomment to simulate a timeout
   // header("HTTP/1.0 408 Request Timeout"); die();
 
+  if ( function_exists('cs_set_curl_timeout_begin') ) {
+    cs_set_curl_timeout_begin( 30 );
+  }
+
   //
   // Get API data.
   //
@@ -29,17 +33,17 @@ function x_demo_content_setup_ajax_callback() {
   $errorMessage = __( 'We&apos;re sorry, the demo failed to finish importing.', '__x__' );
 
   if ( ! x_tco()->check_ajax_referer( false ) || ! current_user_can( 'manage_options' ) ) {
-    wp_send_json_error( array( 'message' => $errorMessage ) );
+    return wp_send_json_error( array( 'message' => $errorMessage ) );
   }
 
   if ( !isset( $_POST['demo'] ) ) {
-    wp_send_json_error( array( 'message' => $errorMessage, 'debug_message' => 'POST data missing demo.' ) );
+    return wp_send_json_error( array( 'message' => $errorMessage, 'debug_message' => 'POST data missing demo.' ) );
   }
 
   $request = wp_remote_get( $_POST['demo'] );
 
   if ( is_wp_error( $request ) )
-    wp_send_json_error( array( 'message' => $errorMessage, 'debug_message' => $request->get_error_message() ) );
+    return wp_send_json_error( array( 'message' => $errorMessage, 'debug_message' => $request->get_error_message() ) );
 
   //
   // API data.
@@ -48,7 +52,7 @@ function x_demo_content_setup_ajax_callback() {
   $data = json_decode( $request['body'], true );
 
   if ( !is_array( $data ) )
-    wp_send_json_error( array( 'message' => $errorMessage, 'debug_message' => 'Requested demo is improperly formatted.' ) );
+    return wp_send_json_error( array( 'message' => $errorMessage, 'debug_message' => 'Requested demo is improperly formatted.' ) );
 
 
   //
@@ -62,9 +66,13 @@ function x_demo_content_setup_ajax_callback() {
   include_once( 'setup.php' );
 
   if ( $error !== false )
-    wp_send_json_error( array( 'message' => $errorMessage, 'debug_message' => $error, 'buffer' => ob_get_clean() ) );
+    return wp_send_json_error( array( 'message' => $errorMessage, 'debug_message' => $error, 'buffer' => ob_get_clean() ) );
 
   ob_clean();
+
+  if ( function_exists('cs_set_curl_timeout_end') ) {
+    cs_set_curl_timeout_end();
+  }
 
   wp_send_json_success();
 

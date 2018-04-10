@@ -44,9 +44,10 @@ require_once( $cstm_path . '/preloader.php' );
 
 function x_update_native_customizer_functionality( $wp_customize ) {
 
+  $wp_customize->remove_panel( 'themes' );
+
   $wp_customize->remove_section( 'nav' );
   $wp_customize->remove_section( 'colors' );
-  $wp_customize->remove_section( 'themes' );
   $wp_customize->remove_section( 'title_tagline' );
   $wp_customize->remove_section( 'background_image' );
   $wp_customize->remove_section( 'static_front_page' );
@@ -56,16 +57,53 @@ function x_update_native_customizer_functionality( $wp_customize ) {
   $wp_customize->remove_control( 'nav_menu_locations[primary]' );
   $wp_customize->remove_control( 'nav_menu_locations[footer]' );
 
-  // if ( $wp_customize->get_control( 'site_icon' ) ) {
-  //   $wp_customize->get_control( 'site_icon' )->section     = 'x_customizer_section_social';
-  //   $wp_customize->get_control( 'site_icon' )->priority    = '1000';
-  //   $wp_customize->get_control( 'site_icon' )->description = '';
-  // }
+  if ( $wp_customize->get_control( 'site_icon' ) ) {
+    $wp_customize->get_control( 'site_icon' )->section     = 'x_customizer_section_social';
+    $wp_customize->get_control( 'site_icon' )->priority    = '1000';
+    $wp_customize->get_control( 'site_icon' )->description = '';
+  }
 
 }
 
 add_action( 'customize_register', 'x_update_native_customizer_functionality' );
 
+// Add Manage Theme Options Button
+
+function x_customizer_manage_theme_options_button() {
+
+  if ( ! function_exists( 'CS' ) ) {
+    return;
+  }
+
+  $manage_options_url = CS()->common()->get_app_route_url('options');
+
+  ?>
+
+  <script type="text/template" id="x-manage-theme-options-panel">
+    <li class="accordion-section">
+    			<div class="accordion-section customize-info">
+    	<div class="accordion-section-title">
+    		<span class="preview-notice">
+    			<a href="<?php echo $manage_options_url; ?>" class="button change-theme" aria-label="Manage Theme Options">Manage Theme Options</a>
+    		</span>
+    		<button type="button" class="customize-help-toggle dashicons dashicons-editor-help" aria-expanded="false"><span class="screen-reader-text">Help</span></button>
+
+    	</div>
+    	<div class="customize-panel-description"><?php echo x_i18n('dashboard', 'customizer-theme-options-description'); ?></div>
+    </div>
+    		</li>
+  </script>
+
+  <script>
+    jQuery(function($){
+      var $panel = $( $('#x-manage-theme-options-panel').html() );
+      jQuery('#customize-theme-controls .customize-pane-parent').prepend( $panel );
+    });
+  </script> <?php
+
+}
+
+add_action( 'customize_controls_print_scripts', 'x_customizer_manage_theme_options_button' );
 
 
 // Overwrite Cached Options During Customizer Preview

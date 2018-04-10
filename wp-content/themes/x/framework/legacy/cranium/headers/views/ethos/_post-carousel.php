@@ -45,42 +45,46 @@ switch ( $display ) {
 
 <?php if ( $is_enabled ) : ?>
 
-  <ul class="x-post-carousel unstyled">
+  <?php $wp_query = new WP_Query( $args ); ?>
 
-    <?php $wp_query = new WP_Query( $args ); ?>
+  <?php if ( $wp_query->post_count > 0 ) : ?>
 
-    <?php if ( $wp_query->have_posts() ) : ?>
-      <?php while ( $wp_query->have_posts() ) : $wp_query->the_post(); ?>
+    <ul class="x-post-carousel unstyled">
 
-        <li class="x-post-carousel-item">
-          <?php x_ethos_entry_cover( 'post-carousel' ); ?>
-        </li>
+      <?php if ( $wp_query->have_posts() ) : ?>
+        <?php while ( $wp_query->have_posts() ) : $wp_query->the_post(); ?>
 
-      <?php endwhile; ?>
-    <?php endif; ?>
+          <li class="x-post-carousel-item">
+            <?php x_ethos_entry_cover( 'post-carousel' ); ?>
+          </li>
 
-    <?php wp_reset_query(); ?>
+        <?php endwhile; ?>
+      <?php endif; ?>
 
-    <script>
+      <?php wp_reset_query(); ?>
 
-    jQuery(document).ready(function() {
-      jQuery('.x-post-carousel').slick({
-        speed          : 500,
-        slide          : 'li',
-        slidesToShow   : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_extra_large' ); ?>,
-        slidesToScroll : 1,
-        rtl            : <?php echo json_encode( is_rtl() ); ?>,
-        responsive     : [
-          { breakpoint : 1500, settings : { speed : 500, slide : 'li', slidesToShow : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_large' ); ?> } },
-          { breakpoint : 1200, settings : { speed : 500, slide : 'li', slidesToShow : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_medium' ); ?> } },
-          { breakpoint : 979,  settings : { speed : 500, slide : 'li', slidesToShow : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_small' ); ?> } },
-          { breakpoint : 550,  settings : { speed : 500, slide : 'li', slidesToShow : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_extra_small' ); ?> } }
-        ]
+      <script>
+
+      jQuery(document).ready(function() {
+        jQuery('.x-post-carousel').slick({
+          speed          : 500,
+          slide          : 'li',
+          slidesToShow   : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_extra_large' ); ?>,
+          slidesToScroll : 1,
+          rtl            : <?php echo json_encode( is_rtl() ); ?>,
+          responsive     : [
+            { breakpoint : 1500, settings : { speed : 500, slide : 'li', slidesToShow : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_large' ); ?> } },
+            { breakpoint : 1200, settings : { speed : 500, slide : 'li', slidesToShow : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_medium' ); ?> } },
+            { breakpoint : 979,  settings : { speed : 500, slide : 'li', slidesToShow : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_small' ); ?> } },
+            { breakpoint : 550,  settings : { speed : 500, slide : 'li', slidesToShow : <?php echo x_get_option( 'x_ethos_post_carousel_display_count_extra_small' ); ?> } }
+          ]
+        });
       });
-    });
 
-    </script>
+      </script>
 
-  </ul>
+    </ul>
+
+  <?php endif; ?>
 
 <?php endif; ?>

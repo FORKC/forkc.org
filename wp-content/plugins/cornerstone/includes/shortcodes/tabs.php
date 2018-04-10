@@ -2,6 +2,10 @@
 
 // Tab Navigation
 // =============================================================================
+// 01. Assign linked group ID to GLOBAL so it can be accessed by items. This
+//     GLOBAL is reset as each new tab nav is populated on the page.
+// 02. `uniqid()` is used to produce a unique ID for the group ID.
+// 03. Cleanup after ourselves.
 
 function x_shortcode_tab_nav( $atts, $content = null ) {
   extract( shortcode_atts( array(
@@ -11,6 +15,8 @@ function x_shortcode_tab_nav( $atts, $content = null ) {
     'type'  => '',
     'float' => ''
   ), $atts, 'x_tab_nav' ) );
+
+  GLOBAL $x_tabs_group_id; // 01
 
   $id    = ( $id    != '' ) ? 'id="' . esc_attr( $id ) . '"' : '';
   $class = ( $class != '' ) ? 'x-nav x-nav-tabs ' . esc_attr( $class ) : 'x-nav x-nav-tabs';
@@ -24,7 +30,11 @@ function x_shortcode_tab_nav( $atts, $content = null ) {
 
   $data = cs_generate_data_attributes( 'tab_nav', $js_params );
 
-  $output = "<ul {$id} class=\"{$class}{$type}{$float}\" {$data} {$style} >" . do_shortcode( $content ) . "</ul>";
+  $x_tabs_group_id = uniqid(); // 02
+
+  $output = "<ul {$id} class=\"{$class}{$type}{$float}\" {$style} {$data} role=\"tablist\">" . do_shortcode( $content ) . "</ul>";
+
+  $x_tabs_group_id = NULL; // 03
 
   return $output;
 }
@@ -53,7 +63,19 @@ function x_shortcode_tab_nav_item( $atts ) {
 
   static $count = 0; $count++;
 
-  $output = "<li {$id} class=\"{$class}{$active}\" {$style}><a data-cs-tab-toggle=\"{$count}\" >{$title}</a></li>";
+  GLOBAL $x_tabs_group_id;
+
+  $toggleable_id = $count;
+
+  $attr_id            = 'id="x-legacy-tab-' . $toggleable_id . '"';
+  $attr_aria_selected = ( $active == ' active' ) ? ' aria-selected="true"' : ' aria-selected="false"';
+  $attr_aria_controls = ' aria-controls="x-legacy-panel-' . $toggleable_id . '"';
+  $attr_toggleable    = ' data-x-toggleable="' . $toggleable_id . '"';
+  $attr_toggle_group  = ' data-x-toggle-group="' . $x_tabs_group_id . '"';
+
+  $output = "<li {$id} class=\"{$class}{$active}\" {$style} role=\"presentation\">"
+            . "<a {$attr_id}{$attr_aria_selected}{$attr_aria_controls} role=\"tab\" data-x-toggle=\"tab\"{$attr_toggleable}{$attr_toggle_group}>{$title}</a>"
+          . "</li>";
 
   return $output;
 }
@@ -95,13 +117,20 @@ function x_shortcode_tab( $atts, $content = null ) {
     'active' => ''
   ), $atts, 'x_tab' ) );
 
-  $class  = ( $class  != ''     ) ? 'x-tab-pane fade in ' . esc_attr( $class ) : 'x-tab-pane fade in';
+  $class  = ( $class  != ''     ) ? 'x-tab-pane ' . esc_attr( $class ) : 'x-tab-pane';
   $style  = ( $style  != ''     ) ? 'style="' . $style . '"' : '';
   $active = ( $active == 'true' ) ? ' active' : '';
 
   static $count = 0; $count++;
 
-  $output = "<div data-cs-tab-index=\"{$count}\" class=\"{$class}{$active}\" {$style}>" . do_shortcode( $content ) . "</div>";
+  $toggleable_id = $count;
+
+  $attr_id              = 'id="x-legacy-panel-' . $toggleable_id . '"';
+  $attr_aria_hidden     = ( $active == ' active' ) ? ' aria-hidden="false"' : ' aria-hidden="true"';
+  $attr_aria_labelledby = ' aria-labelledby="x-legacy-tab-' . $toggleable_id . '"';
+  $attr_toggleable      = ' data-x-toggleable="' . $toggleable_id . '"';
+
+  $output = "<div {$attr_id} class=\"{$class}{$active}\" {$style}{$attr_aria_hidden}{$attr_aria_labelledby} role=\"tabpanel\"{$attr_toggleable}>" . do_shortcode( $content ) . "</div>";
 
   return $output;
 }

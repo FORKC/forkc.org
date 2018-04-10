@@ -9,7 +9,8 @@ class CS_Contact_Form_7 extends Cornerstone_Element_Base {
       'section'     => 'content',
       'description' => __( 'Contact Form 7 description.', 'cornerstone' ),
       'empty'       => array( 'form_id' => 'none' ),
-      'undefined_message' => __('This element can not render because Contact Form 7 is not active.', 'cornerstone' )
+      'undefined_message' => __('This element can not render because Contact Form 7 is not active.', 'cornerstone' ),
+      'protected_keys' => array( 'form_id' )
     );
   }
 

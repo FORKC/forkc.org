@@ -13,7 +13,8 @@ class CS_Protect extends Cornerstone_Element_Base {
         'message'   => __( 'This element offers simple protection based on being logged in. Logged out users will be prompted to login before viewing the content.', 'cornerstone' ),
       ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'empty'       => array( 'content' => '' )
+      'empty'       => array( 'content' => '' ),
+      'protected_keys' => array( 'heading', 'content' )
     );
   }
 

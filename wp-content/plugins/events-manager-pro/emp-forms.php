@@ -9,7 +9,7 @@ class EM_Forms {
 			if( !empty($_REQUEST['page']) && $_REQUEST['page'] == 'events-manager-forms-editor' ){
 				add_filter('em_wp_localize_script', 'EM_Forms::em_wp_localize_script',10,1);
 				add_filter('admin_enqueue_scripts', 'EM_Forms::admin_enqueue_scripts');
-				add_action('admin_init', 'EM_Forms::max_ini_vars_fix', 10, 1);
+				add_action('admin_init', 'EM_Forms::max_ini_vars_fix', 1, 1);
 			}
 		}
 	}
@@ -165,6 +165,10 @@ class EM_Form extends EM_Object {
 				    $this->field_values[$fieldid] = '';
 				}
 			}
+			//check that user fields were indeed submitted for validation by logged in users, or were not editable, in which case we populate form with previously saved data 
+			if( array_key_exists($field['type'], $this->user_fields) && !self::validate_reg_fields($field) ){
+				$this->field_values[$fieldid] = EM_User_Fields::get_user_meta(get_current_user_id(), $field['type']);
+			}
 		}
 		return true;
 	}
@@ -225,7 +229,7 @@ class EM_Form extends EM_Object {
 			case 'country':
 				if( $field_value != 'n/a' ){ 
 					$countries = em_get_countries();
-					$field_value = $countries[$field_value];
+					if( !empty($countries[$field_value]) ) $field_value = $countries[$field_value];
 				}
 				break;
 			default:
@@ -307,31 +311,14 @@ class EM_Form extends EM_Object {
 				<?php
 				break;
 			case 'captcha':
-			    if( !self::show_reg_fields() ) break;
-			    if( defined('EM_RECAPTCHA_2') && EM_RECAPTCHA_2 ){
-			        if( !class_exists('\ReCaptcha\ReCaptcha') ) { include_once(trailingslashit(plugin_dir_path(__FILE__)).'includes/lib/recaptcha/autoload.php'); }
-    				if( class_exists('\ReCaptcha\ReCaptcha') && !is_user_logged_in() ){
-    					?>
-    					<p class="input-group input-<?php echo $field['type']; ?> input-field-<?php echo $field['fieldid'] ?>">
-    					<?php
-    					echo $this->output_field_input($field, $post);
-    					?>
-    					</p>
-    					<?php
-    				}
-			    }else{
-    				if( !function_exists('recaptcha_get_html') ) { include_once(trailingslashit(plugin_dir_path(__FILE__)).'includes/lib/recaptcha/recaptchalib.php'); }
-    				if( function_exists('recaptcha_get_html') && !is_user_logged_in() ){
-    					?>
-    					<p class="input-group input-<?php echo $field['type']; ?> input-field-<?php echo $field['fieldid'] ?>">
-    					<label for='<?php echo $field['fieldid'] ?>'><?php echo $field['label']. $required  ?></label>
-    					<?php
-    					echo $this->output_field_input($field, $post);
-    					?>
-    					</p>
-    					<?php
-    				}
-			    }
+				if( !self::show_reg_fields() ) break;
+				if( !is_user_logged_in() ){
+					?>
+					<p class="input-group input-<?php echo $field['type']; ?> input-field-<?php echo $field['fieldid'] ?>">
+					<?php echo $this->output_field_input($field, $post); ?>
+					</p>
+					<?php
+				}
 				break;
 			default:
 				if( array_key_exists($field['type'], $this->user_fields) && self::show_reg_fields($field) ){
@@ -533,31 +520,17 @@ class EM_Form extends EM_Object {
     			break;	
 			case 'captcha':
 			    if( !self::show_reg_fields() ) break;
-			    if( defined('EM_RECAPTCHA_2') && EM_RECAPTCHA_2 ){
-			        if( !class_exists('\ReCaptcha\ReCaptcha') ) { include_once(trailingslashit(plugin_dir_path(__FILE__)).'includes/lib/recaptcha/autoload.php'); }
-    				if( class_exists('\ReCaptcha\ReCaptcha') && !is_user_logged_in() ){
-    				    $lang = str_replace('_', '-', get_locale());
-    				    //language list extracted from - https://developers.google.com/recaptcha/docs/language
-    				    $langs = array('ar', 'bn', 'bg', 'ca', 'zh-CN', 'zh-TW', 'hr', 'cs', 'da', 'nl', 'en-GB', 'en', 'et', 'fil', 'fi', 'fr', 'fr-CA', 'de', 'gu', 'de-AT', 'de-CH', 'el', 'iw', 'hi', 'hu', 'id', 'it', 'ja', 'kn', 'ko', 'lv', 'lt', 'ms', 'ml', 'mr', 'no', 'fa', 'pl', 'pt', 'pt-BR', 'pt-PT', 'ro', 'ru', 'sr', 'sk', 'sl', 'es', 'es-419', 'sv', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'vi');
-    				    if( !in_array($lang, $langs) && in_array( substr($lang, 0, 2), $langs) ){
-    				    }elseif( !in_array($lang, $langs) ){
-    				        $lang = 'en';
-    				    }
-    					?>
-						<div class="g-recaptcha" data-sitekey="<?php echo $field['options_captcha_key_pub']; ?>"></div>
-						<script type="text/javascript" src="https://www.google.com/recaptcha/api.js?hl=<?php echo $lang; ?>"></script>
-    					<?php
-    				}
-			    }else{
-    				if( !function_exists('recaptcha_get_html') ) { include_once(trailingslashit(plugin_dir_path(__FILE__)).'includes/lib/recaptcha/recaptchalib.php'); }
-    				if( function_exists('recaptcha_get_html') && !is_user_logged_in() ){
-    					?>
-    					<span> 
-    						<?php echo recaptcha_get_html($field['options_captcha_key_pub'], $field['options_captcha_error'], is_ssl()); ?>
-    					</span>
-    					<?php
-    				}
-			    }
+				$lang = str_replace('_', '-', get_locale());
+				//language list extracted from - https://developers.google.com/recaptcha/docs/language
+				$langs = array('ar', 'bn', 'bg', 'ca', 'zh-CN', 'zh-TW', 'hr', 'cs', 'da', 'nl', 'en-GB', 'en', 'et', 'fil', 'fi', 'fr', 'fr-CA', 'de', 'gu', 'de-AT', 'de-CH', 'el', 'iw', 'hi', 'hu', 'id', 'it', 'ja', 'kn', 'ko', 'lv', 'lt', 'ms', 'ml', 'mr', 'no', 'fa', 'pl', 'pt', 'pt-BR', 'pt-PT', 'ro', 'ru', 'sr', 'sk', 'sl', 'es', 'es-419', 'sv', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'vi');
+				if( !in_array($lang, $langs) && in_array( substr($lang, 0, 2), $langs) ){
+				}elseif( !in_array($lang, $langs) ){
+				$lang = 'en';
+				}
+				?>
+					<div class="g-recaptcha" data-sitekey="<?php echo $field['options_captcha_key_pub']; ?>"></div>
+					<script type="text/javascript" src="https://www.google.com/recaptcha/api.js?hl=<?php echo $lang; ?>"></script>
+				<?php
 				break;
 			default:
 				if( array_key_exists($field['type'], $this->user_fields) && self::show_reg_fields() ){
@@ -762,41 +735,26 @@ class EM_Form extends EM_Object {
 					break;		
 				case 'captcha':
 				    if( !self::validate_reg_fields() || !self::show_reg_fields() ) break;
-					if( !empty($this->ignore_captcha) || defined('EMP_CHECKED_CAPTCHA') ) break;
-    			    if( defined('EM_RECAPTCHA_2') && EM_RECAPTCHA_2 ){
-    			        if( !class_exists('\ReCaptcha\ReCaptcha') ) { include_once(trailingslashit(plugin_dir_path(__FILE__)).'includes/lib/recaptcha/autoload.php'); }
-        				if( class_exists('\ReCaptcha\ReCaptcha') && !is_user_logged_in() ){
-                            $recaptcha_func = create_function('$key','return new \ReCaptcha\ReCaptcha($key);');
-                            $recaptcha = $recaptcha_func(sanitize_text_field($field['options_captcha_key_priv']));
-        			        $resp = $recaptcha->verify($_REQUEST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR']);
-    						$result = $resp->isSuccess();
-    						if(!$result){
-    							$err = !empty($field['options_captcha_error']) ? $field['options_captcha_error']:$err;
-    							$this->add_error($err);
-    						}
-    						define('EMP_CHECKED_CAPTCHA', true); //captchas can only be checked once, and since we only need one captcha per submission....
-        				}
-    			    }else{
-    			        if( !function_exists('recaptcha_check_answer') ) { include_once(trailingslashit(plugin_dir_path(__FILE__)).'includes/lib/recaptcha/recaptchalib.php'); }
-        			    if( function_exists('recaptcha_check_answer') && !is_user_logged_in() ){
-    						if( !empty($_REQUEST['recaptcha_challenge_field']) && !empty($_REQUEST['recaptcha_response_field']) ){
-    							$resp = recaptcha_check_answer($field['options_captcha_key_priv'], $_SERVER['REMOTE_ADDR'], $_REQUEST['recaptcha_challenge_field'], $_REQUEST['recaptcha_response_field']);
-    							$result = $resp->is_valid;
-    						}else{
-    							$result = false; //no request vars submitted
-    						}
-    						if(!$result){
-    							$err = !empty($field['options_captcha_error']) ? $field['options_captcha_error']:$err;
-    							$this->add_error($err);
-    						}
-    						define('EMP_CHECKED_CAPTCHA', true); //captchas can only be checked once, and since we only need one captcha per submission....
-    					}
-    			    }
+					if( !empty($this->ignore_captcha) || defined('EMP_CHECKED_CAPTCHA') || is_user_logged_in() ) break;
+					$response = array('success'=>false);
+					if( !empty($_REQUEST['g-recaptcha-response']) ){
+						$secret = sanitize_text_field($field['options_captcha_key_priv']);
+						$captcha_post_args = array('httpversion'=>'1.1','user-agent'=>'EventsManagerPro/'.EMP_VERSION);
+						$captcha_post_args['body'] = array('secret'=>$secret, 'response'=>$_REQUEST['g-recaptcha-response'], 'remoteip'=>$_SERVER['REMOTE_ADDR']);
+						$captcha_response = wp_remote_post('https://www.google.com/recaptcha/api/siteverify', $captcha_post_args);
+						$response = !is_wp_error($captcha_response) ? json_decode($captcha_response['body'],true) : array('success'=>false);
+					}
+					if( empty($response['success']) ){
+						$err = !empty($field['options_captcha_error']) ? $field['options_captcha_error']:$err;
+						$this->add_error($err);
+						EM_Pro::log(array('Validation error', 'Response'=>$captcha_response, 'POST'=>$_POST), 'recaptcha');
+					}
+					define('EMP_CHECKED_CAPTCHA', true); //captchas can only be checked once, and since we only need one captcha per submission....
 					break;
 				default:
 					//Registration and custom fields
 					$is_manual_booking_new_user = (is_user_logged_in() && !empty($_REQUEST['manual_booking']) && wp_verify_nonce($_REQUEST['manual_booking'], 'em_manual_booking_'.$_REQUEST['event_id']) && $_REQUEST['person_id'] == -1 );
-    			    if( array_key_exists($field['type'], $this->user_fields) && self::validate_reg_fields() && self::show_reg_fields($field) ){
+					if( array_key_exists($field['type'], $this->user_fields) && self::validate_reg_fields($field) ){
 						//preliminary checks/exceptions
 						if( is_user_logged_in() && !get_option('dbem_emp_booking_form_reg_input') ) break;
 						//add field-specific validation
@@ -924,12 +882,13 @@ class EM_Form extends EM_Object {
 				$is_hidden_reg = in_array($field_type, apply_filters('emp_hidden_reg_fields', $hidden_fields));
 			}
 		}
-		return apply_filters('emp_form_show_reg_fields', $show_reg && !$is_hidden_reg); 
+		return apply_filters('emp_form_show_reg_fields', $show_reg && !$is_hidden_reg, $field); 
 	}
 
 	public static function validate_reg_fields( $field = false ){
+		if( EM_Gateways::is_manual_booking(true) ) return true; //short circuit if we're on a manual booking for a new user
 		$validate = is_user_logged_in() ? get_option('dbem_emp_booking_form_reg_show') && get_option('dbem_emp_booking_form_reg_input') : true;
-		return self::show_reg_fields( $field ) && $validate;
+		return $validate && self::show_reg_fields( $field );
 	}
 	
 	function editor($user_fields = true, $custom_fields = true, $captcha_fields = true){
@@ -1394,14 +1353,14 @@ class EM_Form extends EM_Object {
 									$recaptcha_url = "https://www.google.com/recaptcha/admin#list"; 
 								?>
 								<div class="bct-field">
-									<div class="bct-label"><?php _e('Public Key','em-pro'); ?></div>
+									<div class="bct-label"><?php _e('Site Key','em-pro'); ?></div>
 									<div class="bct-input">
 										<input type="text" name="options_captcha_key_pub[]" <?php self::input_default('options_captcha_key_pub',$field_values); ?> />
 										<em><?php echo sprintf(__('Required, get your keys <a href="%s">here</a>','em-pro'),$recaptcha_url); ?></em>
 									</div>
 								</div>
 								<div class="bct-field">
-									<div class="bct-label"><?php _e('Private Key','em-pro'); ?></div>
+									<div class="bct-label"><?php _e('Secret Key','em-pro'); ?></div>
 									<div class="bct-input">
 										<input type="text" name="options_captcha_key_priv[]" <?php self::input_default('options_captcha_key_priv',$field_values); ?> />
 										<em><?php echo sprintf(__('Required, get your keys <a href="%s">here</a>','em-pro'),$recaptcha_url); ?></em>
@@ -1539,7 +1498,4 @@ class EM_Form extends EM_Object {
 		return false;
 	}
 
-}
-if( !defined('EM_RECAPTCHA_2') && defined('PHP_VERSION_ID') ){
-	define('EM_RECAPTCHA_2', PHP_VERSION_ID >= 50300);
 }

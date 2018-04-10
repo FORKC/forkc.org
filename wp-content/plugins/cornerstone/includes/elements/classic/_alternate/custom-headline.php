@@ -13,7 +13,8 @@ class CS_Custom_Headline extends Cornerstone_Element_Base {
       'autofocus' => array(
     		'content' => '.h-custom-headline',
     	),
-      'attr_keys' => array('text_color')
+      'attr_keys' => array('text_color'),
+      'protected_keys' => array( 'content', 'level', 'looks_like' )
     );
   }
 

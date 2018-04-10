@@ -19,18 +19,22 @@ class Cornerstone_Color_Manager extends Cornerstone_Plugin_Component {
   public function default_color_items( $data ) {
     return array(
       array(
+        '_id'     => bin2hex('Brand Primary'),
         'title'   => 'Brand Primary',
         'value'   => 'transparent',
       ),
       array(
+        '_id'     => bin2hex('Brand Secondary'),
         'title'   => 'Brand Secondary',
         'value'   => 'transparent',
       ),
       array(
+        '_id'     => bin2hex('Link'),
         'title'   => 'Link',
         'value'   => 'transparent',
       ),
       array(
+        '_id'     => bin2hex('Link Interaction'),
         'title'   => 'Link Interaction',
         'value'   => 'transparent',
       )
@@ -56,14 +60,17 @@ class Cornerstone_Color_Manager extends Cornerstone_Plugin_Component {
     );
   }
 
-  protected function get_color_items() {
+  public function get_color_items() {
+
     if ( ! $this->color_items ) {
       $this->color_items = $this->plugin->loadComponent('Model_Option')->lookup('cornerstone_color_items');
     }
+
     return $this->color_items;
+
   }
 
-  protected function locate_color( $_id ) {
+  public function locate_color( $_id ) {
     $this->get_color_items();
     foreach ($this->color_items as $color) {
       if ( isset( $color['_id'] ) && $_id === $color['_id'] ) {

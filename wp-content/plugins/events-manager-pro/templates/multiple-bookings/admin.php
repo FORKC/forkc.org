@@ -34,7 +34,7 @@ if( is_object($EM_Multiple_Booking) && !$EM_Multiple_Booking->can_manage() ){
 					<div class="em-booking-person-details">
 						<?php echo $EM_Multiple_Booking->get_person()->display_summary(); ?>
 						<?php if( $EM_Multiple_Booking->is_no_user() ): ?>
-						<input type="button" id="em-booking-person-modify" value="<?php esc_attr_e_emp('Edit Details','events-manager'); ?>" />
+						<input type="button" id="<?php if( is_admin() ) echo 'button-secondary '; ?>em-booking-person-modify" value="<?php esc_attr_e_emp('Edit Details','events-manager'); ?>" />
 						<?php endif; ?>
 					</div>
 					<?php if( $EM_Multiple_Booking->is_no_user() ): ?>
@@ -72,16 +72,16 @@ if( is_object($EM_Multiple_Booking) && !$EM_Multiple_Booking->can_manage() ){
 				<div class="inside">
 					<?php
 					$EM_Event = $EM_Multiple_Booking->get_event();
-					$localised_start_date = date_i18n(get_option('date_format'), $EM_Event->start);
-					$localised_end_date = date_i18n(get_option('date_format'), $EM_Event->end);
+					$localised_start_date = $EM_Event->start()->i18n(get_option('date_format'));
+					$localised_end_date = $EM_Event->end()->i18n(get_option('date_format'));
 					$shown_tickets = array();
 					?>
 					<div>
 						<form action="" method="post" class="em-booking-single-status-info">
 							<strong><?php esc_html_e_emp('Status','events-manager'); ?> : </strong>
 							<?php echo $EM_Multiple_Booking->get_status(); ?>
-							<input type="button" class="em-booking-submit-status-modify" id="em-booking-submit-status-modify" value="<?php esc_attr_e_emp('Change', 'events-manager'); ?>" />
-							<input type="submit" class="em-booking-resend-email" id="em-booking-resend-email" value="<?php esc_attr_e_emp('Resend Email', 'events-manager'); ?>" />
+							<input type="button" class="<?php if( is_admin() ) echo 'button-secondary '; ?>em-booking-submit-status-modify" id="em-booking-submit-status-modify" value="<?php esc_attr_e_emp('Change', 'events-manager'); ?>" />
+							<input type="submit" class="<?php if( is_admin() ) echo 'button-primary '; ?>em-booking-resend-email" id="em-booking-resend-email" value="<?php esc_attr_e_emp('Resend Email', 'events-manager'); ?>" />
 						 	<input type='hidden' name='action' value='booking_resend_email'/>
 						 	<input type='hidden' name='booking_id' value='<?php echo $EM_Multiple_Booking->booking_id; ?>'/>
 						 	<input type='hidden' name='event_id' value='<?php echo $EM_Event->event_id; ?>'/>
@@ -96,8 +96,8 @@ if( is_object($EM_Multiple_Booking) && !$EM_Multiple_Booking->can_manage() ){
 							</select>
 							<input type="checkbox" checked="checked" name="send_email" value="1" />
 							<?php esc_html_e_emp('Send Email','events-manager'); ?>
-							<input type="submit" class="em-booking-submit-status" id="em-booking-submit-status" value="<?php esc_attr_e_emp('Submit Changes', 'events-manager'); ?>" />
-							<input type="button" class="em-booking-submit-status-cancel" id="em-booking-submit-status-cancel" value="<?php esc_attr_e_emp('Cancel', 'events-manager'); ?>" />
+							<input type="submit" class="<?php if( is_admin() ) echo 'button-primary '; ?>em-booking-submit-status" id="em-booking-submit-status" value="<?php esc_attr_e_emp('Submit Changes', 'events-manager'); ?>" />
+							<input type="button" class="<?php if( is_admin() ) echo 'button-secondary '; ?>em-booking-submit-status-cancel" id="em-booking-submit-status-cancel" value="<?php esc_attr_e_emp('Cancel', 'events-manager'); ?>" />
 						 	<input type='hidden' name='action' value='booking_set_status'/>
 						 	<input type='hidden' name='booking_id' value='<?php echo $EM_Multiple_Booking->booking_id; ?>'/>
 						 	<input type='hidden' name='event_id' value='<?php echo $EM_Event->event_id; ?>'/>
@@ -116,11 +116,11 @@ if( is_object($EM_Multiple_Booking) && !$EM_Multiple_Booking->can_manage() ){
 							<?php do_action('em_bookings_single_custom',$EM_Multiple_Booking); //do your own thing, e.g. pro ?>
 						</table>
 						<p class="em-booking-single-info">
-							<input type="button" class="em-booking-submit-modify" id="em-booking-submit-modify" value="<?php _e('Modify Booking Information', 'em-pro'); ?>" />
+							<input type="button" class="<?php if( is_admin() ) echo 'button-primary '; ?>em-booking-submit-modify" id="em-booking-submit-modify" value="<?php _e('Modify Booking Information', 'em-pro'); ?>" />
 						</p>
 						<p class="em-booking-single-edit">
-							<input type="submit" class="em-booking-submit" id="em-booking-submit" value="<?php esc_attr_e_emp('Submit Changes', 'events-manager'); ?>" />
-							<input type="button" class="em-booking-submit-cancel" id="em-booking-submit-cancel" value="<?php esc_attr_e_emp('Cancel', 'events-manager'); ?>" />
+							<input type="submit" class="<?php if( is_admin() ) echo 'button-primary '; ?>em-booking-submit" id="em-booking-submit" value="<?php esc_attr_e_emp('Submit Changes', 'events-manager'); ?>" />
+							<input type="button" class="<?php if( is_admin() ) echo 'button-secondary '; ?>em-booking-submit-cancel" id="em-booking-submit-cancel" value="<?php esc_attr_e_emp('Cancel', 'events-manager'); ?>" />
 						 	<input type='hidden' name='action' value='booking_save'/>
 						 	<input type='hidden' name='booking_id' value='<?php echo $EM_Multiple_Booking->booking_id; ?>'/>
 						 	<input type='hidden' name='event_id' value='<?php echo $EM_Event->event_id; ?>'/>
@@ -171,7 +171,7 @@ if( is_object($EM_Multiple_Booking) && !$EM_Multiple_Booking->can_manage() ){
 					<form method="post" action="" style="padding:5px;">
 						<textarea class="widefat" rows="5" name="booking_note"></textarea>
 						<input type="hidden" name="action" value="bookings_add_note" />
-						<input type="submit" value="Add Note" />
+						<input type="submit" class="<?php if( is_admin() ) echo 'button-primary'; ?>" value="Add Note" />
 						<input type="hidden" name="_wpnonce" value="<?php echo wp_create_nonce('bookings_add_note'); ?>" />
 					</form>
 				</div>

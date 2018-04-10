@@ -201,6 +201,14 @@
 /* Responsive Styling
 // ========================================================================== */
 
+<?php if ( $x_fixed_menu_scroll == 'overflow-scroll' && ( $x_navbar_positioning == 'fixed-left' || $x_navbar_positioning == 'fixed-right' ) ) : ?>
+  @media (min-width: 980px) {
+    .x-navbar {
+      overflow-y: auto;
+    }
+  }
+<?php endif; ?>
+
 @media (max-width: 979px) {
 
   <?php if ( $x_navbar_positioning == 'fixed-left' || $x_navbar_positioning == 'fixed-right' ) : ?>

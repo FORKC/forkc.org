@@ -20,6 +20,6 @@ if( empty($EM_Multiple_Booking->bookings) ){
 		<li><?php echo $EM_Booking->output($instance['format']); ?></li>
 	<?php endforeach; endif; ?>
 	<li class="em-cart-widget-total"><strong><?php _e('Total','em-pro'); ?> : </strong><?php echo sprintf(__('%d Spaces','em-pro'), $EM_Multiple_Booking->get_spaces(true)); ?> - <?php echo $EM_Multiple_Booking->get_price(true); ?></li>
-	<li class="em-cart-widget-cart-link"><a href="<?php echo get_permalink(get_option('dbem_multiple_bookings_cart_page')); ?>"><?php echo $instance['cart_text']; ?></a></li>
+	<?php if(get_option('dbem_multiple_bookings_cart_page')): ?><li class="em-cart-widget-cart-link"><a href="<?php echo get_permalink(get_option('dbem_multiple_bookings_cart_page')); ?>"><?php echo $instance['cart_text']; ?></a></li><?php endif; ?>
 	<li class="em-cart-widget-checkout-link"><a href="<?php echo get_permalink(get_option('dbem_multiple_bookings_checkout_page')); ?>"><?php echo $instance['checkout_text']; ?></a></li>
 </ul>

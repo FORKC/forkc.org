@@ -122,9 +122,9 @@ class EM_Coupon extends EM_Object {
 	 */
 	function is_valid(){
 	    $valid = true;
-		if( !empty($this->coupon_end) && current_time('timestamp') > strtotime($this->coupon_end) ){
+	    if( !empty($this->coupon_end) && current_time('timestamp') > strtotime($this->coupon_end, current_time('timestamp')) ){
 			$valid = false;
-		}elseif( !empty($this->coupon_start) && current_time('timestamp') < strtotime($this->coupon_start) ){
+	    }elseif( !empty($this->coupon_start) && current_time('timestamp') < strtotime($this->coupon_start, current_time('timestamp')) ){
 			$valid = false;
 		}elseif( !empty($this->coupon_max) && $this->get_count() >= $this->coupon_max ){
 			$valid = false;
@@ -173,7 +173,7 @@ class EM_Coupon extends EM_Object {
 		switch($this->coupon_type){
 			case '%':
 				//discount by percent
-				$text = sprintf(__('%s Off','em-pro'), number_format($this->coupon_discount, 0).'%');
+				$text = sprintf(__('%s Off','em-pro'), number_format($this->coupon_discount, 2).'%');
 				break;
 			case '#' :
 				//discount by price

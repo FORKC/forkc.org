@@ -342,11 +342,18 @@ class Cornerstone_Common extends Cornerstone_Plugin_Component {
       return $cap;
     }
 
-		$post_type_object = get_post_type_object( $post->post_type );
+		return $this->get_post_type_capability( $post->post_type, $cap );
+
+	}
+
+  public function get_post_type_capability( $post_type, $cap ) {
+
+    $post_type_object = get_post_type_object( $post_type );
 		$caps = (array) $post_type_object->cap;
 		return $caps[ $cap ];
 
-	}
+  }
+
 
   public function get_app_slug() {
 
@@ -415,6 +422,18 @@ class Cornerstone_Common extends Cornerstone_Plugin_Component {
     } else {
       return sanitize_text_field( $value );
     }
+
+	}
+
+  public function escape_value( $value, $html = false ) {
+
+    // Pass through non string values.
+    // This Preserves data types, but watch out for arrays since we don't handle nested data here.
+    if ( ! is_string( $value ) ) {
+      return $value;
+    }
+
+    return ( $html ) ? $value : esc_html( $value );
 
 	}
 
@@ -492,5 +511,43 @@ class Cornerstone_Common extends Cornerstone_Plugin_Component {
 	public function get_preview_zones() {
 		return apply_filters('cs_preview_zones', array( 'cs_content', 'x_after_masthead_begin', 'x_before_site_begin', 'x_before_site_end', 'x_masthead', 'x_colophon' ));
 	}
+
+  /**
+   * Call inside the template_include filter to replace the global $post
+   */
+  public function override_global_post( $post_id, $args = array() ) {
+
+    $args = array_merge( array(
+      'post_count'    => 1,
+      'found_posts'   => 1,
+      'max_num_pages' => 0,
+      'is_404'        => false,
+      'is_page'       => true,
+      'is_singular'   => true
+    ), $args );
+
+    $target_post = get_post( $post_id );
+
+    if ( ! is_a( $target_post, 'WP_Post' ) ) {
+      return false;
+    }
+
+    global $wp_query;
+    global $post;
+
+    $post = $target_post;
+
+    $wp_query->posts             = array( $post );
+    $wp_query->queried_object_id = $post->ID;
+    $wp_query->queried_object    = $post;
+
+    foreach ($args as $key => $value) {
+      $wp_query->$key = $value;
+    }
+
+    setup_postdata( $post );
+
+    return true;
+  }
 
 }

@@ -9,7 +9,9 @@ class CS_Essential_Grid extends Cornerstone_Element_Base {
       'section'     => 'media',
       'description' => __( 'Place an Essential Grid element into your content.', 'cornerstone' ),
       'supports'    => array(),
-      'undefined_message' => __('This element can not render because Essential Grid is not active.', 'cornerstone' )
+      'can_preview' => false,
+      'undefined_message' => __('This element can not render because Essential Grid is not active.', 'cornerstone' ),
+      'protected_keys' => array( 'alias' )
     );
   }
 

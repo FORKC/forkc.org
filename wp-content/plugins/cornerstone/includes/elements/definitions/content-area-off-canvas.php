@@ -21,7 +21,7 @@ $data = array(
   'title'  => __( 'Content Area Off Canvas', '__x__' ),
   'values' => array_merge(
     array(
-      'off_canvas_content' => x_module_value( __( '<div style="padding: 25px; line-height: 1.4; text-align: center;">Add any HTML or custom content here.</div>', '__x__' ), 'markup:html' ),
+      'off_canvas_content' => x_module_value( __( '<div style="padding: 25px; line-height: 1.4; text-align: center;">Add any HTML or custom content here.</div>', '__x__' ), 'markup:html', true ),
     ),
     x_values_anchor( x_bar_module_settings_anchor( 'toggle' ) ),
     x_values_off_canvas(),

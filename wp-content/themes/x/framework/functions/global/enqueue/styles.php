@@ -85,7 +85,9 @@ if ( ! function_exists( 'x_enqueue_site_styles' ) ) :
       wp_deregister_style( 'contact-form-7' );
     }
 
-    x_enqueue_google_fonts();
+    if ( ! x_get_option( 'x_enable_font_manager' ) ) {
+      x_enqueue_google_fonts();
+    }
 
   }
 endif;
@@ -142,7 +144,7 @@ if ( ! function_exists( 'x_output_generated_styles' ) ) :
 
     do_action('x_before_head_css');
 
-    echo '<style id="x-generated-css" type="text/css">';
+    echo '<style id="x-generated-css">';
     do_action( 'x_head_css' );
     echo '</style>';
 

@@ -10,6 +10,7 @@ class CS_Embedded_Video extends Cornerstone_Element_Base {
       'description' => __( 'Embedded Video description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
       'empty'       => array( 'content' => '' ),
+      'protected_keys' => array( 'content' )
     );
   }
 

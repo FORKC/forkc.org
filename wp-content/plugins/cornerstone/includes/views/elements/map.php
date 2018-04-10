@@ -9,7 +9,7 @@
 // Data: Partials
 // --------------
 
-$data_map   = x_get_partial_data( $_custom_data, array( 'find_data' => array( 'map' => '' ) ) );
+$data_map   = x_get_partial_data( $_custom_data, array( 'find_data' => array( 'map' => '' ), 'add_in' => array( 'id' => '', 'class' => '' ) ) );
 $data_frame = x_get_partial_data( $_custom_data, array( 'find_data' => array( 'frame' => '' ) ) );
 
 

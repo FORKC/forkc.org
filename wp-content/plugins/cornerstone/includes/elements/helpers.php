@@ -33,7 +33,7 @@ function x_element_base( $data ) {
 // Render Bar Module
 // =============================================================================
 
-function x_render_bar_module( $module, $global = array() ) {
+function x_render_bar_module( $module, $global = array(), $parent = null ) {
 
   $module['global'] = $global;
 
@@ -41,7 +41,7 @@ function x_render_bar_module( $module, $global = array() ) {
     $module['_modules'] = array();
   }
 
-  x_get_view( 'elements', $module['_type'], '', x_module_decorate( $module ) );
+  x_get_view( 'elements', $module['_type'], '', x_module_decorate( $module, $parent ) );
 
 }
 
@@ -50,7 +50,13 @@ function x_render_bar_module( $module, $global = array() ) {
 // Render Bar Modules
 // =============================================================================
 
-function x_render_bar_modules( $modules, $global = array() ) {
+function x_render_bar_modules( $modules, $global = array(), $parent = null ) {
+
+  // Used for content when modules are rendered via shortcodes
+  if ( is_string( $modules ) ) {
+    echo $modules;
+    return;
+  }
 
   if ( ! is_array( $modules ) ) {
     return;
@@ -58,19 +64,19 @@ function x_render_bar_modules( $modules, $global = array() ) {
 
   foreach ( $modules as $module ) {
     if ( isset( $module['_type'] ) ) {
-      x_render_bar_module( $module, $global );
+      x_render_bar_module( $module, $global, $parent );
     }
   }
 }
 
 
 
-// Value: Default / Designation
+// Value: Default / Designation / Protected
 // =============================================================================
 
-function x_module_value( $default = null, $designation = 'all' ) {
+function x_module_value( $default = null, $designation = 'all', $protected = false ) {
 
-  return array( 'default' => $default, 'designation' => $designation );
+  return array( 'default' => $default, 'designation' => $designation, 'protected' => $protected );
 
 }
 
@@ -79,16 +85,28 @@ function x_module_value( $default = null, $designation = 'all' ) {
 // Module Decorate
 // =============================================================================
 
-function x_module_decorate( $module ) {
+function x_module_decorate( $module, $parent = null ) {
 
   if ( isset( $module['_type'] ) ) {
 
-    $decorator = 'x_module_decorator_' . str_replace( '-', '_', $module['_type'] );
-    $module    = cornerstone_get_element( $module['_type'] )->apply_defaults( $module );
-    $module    = x_module_decorator_base( $module );
+    $decorator  = 'x_module_decorator_' . str_replace( '-', '_', $module['_type'] );
+    $definition = cornerstone_get_element( $module['_type'] );
+
+    $module     = x_module_decorator_base( $definition->apply_defaults( $module ) );
 
     if ( function_exists( $decorator ) ) {
       $module = call_user_func_array( $decorator, array( $module ) );
+    }
+
+    // Allow shadow elements to get parent keys
+    // This only applies in direct content rendering like headers/footers
+    if ( ! is_null( $parent ) && $definition->is_shadow() ) {
+      $module['p_mod_id'] = $parent['mod_id'];
+      foreach ($parent as $key => $value) {
+        if ( ! isset( $module[$key] ) ) {
+          $module[$key] = $value;
+        }
+      }
     }
 
   }
@@ -163,10 +181,14 @@ function x_get_partial_data( $_custom_data, $args = array() ) {
 
 // Module Conditions
 // =============================================================================
+// Replaced array_keys( $condition, array() ) with array_keys( $condition ) as
+// it was wrapping an extra array too many times. Will need to check this with
+// all elements to ensure that it hasn't adversely affected anything.
 
 function x_module_conditions( $condition ) {
 
-  $condition = ( count( array_keys( $condition, array() ) ) > 0 ) ? $condition : array( $condition );
+  // $condition = ( count( array_keys( $condition ) ) > 0 ) ? $condition : array( $condition ); // 01
+  $condition = ( count( array_keys( $condition, array() ) ) > 0 ) ? $condition : array( $condition ); // 01
 
   return $condition;
 
@@ -325,7 +347,7 @@ class X_Walker_Nav_Menu extends Walker_Nav_Menu {
     $x_anchor_graphic_image_height  = ( isset( $x_item_meta['menu-item-anchor_graphic_image_height'] )  ) ? $x_item_meta['menu-item-anchor_graphic_image_height'][0] : '';
 
     $x_menu_meta_data = array(
-      'anchor_text_primary_content'   => $item->title,
+      'anchor_text_primary_content'   => $title,
       'anchor_text_secondary_content' => $item->description,
       'anchor_graphic_icon'           => $x_anchor_graphic_icon,
       'anchor_graphic_icon_alt'       => $x_anchor_graphic_icon_alt,

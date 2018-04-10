@@ -45,8 +45,8 @@ $front_page_cs_settings  = $data['cs-settings'];
 //
 
 $customizer_settings     = is_array( $data['xcs'] ) ? $data['xcs'] : array();
-$include_posts           = $_POST['standard_posts'] == 'yes';
-$include_portfolio_items = $_POST['standard_portfolio_items'] == 'yes';
+$include_posts           = true;
+$include_portfolio_items = true;
 $content_url             = X_TEMPLATE_URL . '/framework/functions/global/admin/addons/demo/standard/content';
 
 // Demo Content Helper Functions

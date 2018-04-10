@@ -262,16 +262,9 @@ class Cornerstone_Element_Wrapper {
 
 	protected function get_applied_defaults() {
 
-		if ( !isset( $this->applied_defaults ) ) {
+		if ( ! isset( $this->applied_defaults ) ) {
 
-			$option = get_option( 'cs_element_' . $this->name, array() );
-
-			if ( !is_array( $option ) ) {
-				trigger_error( "Cornerstone. Customizer data for 'cs_element_{$this->name}' is malformed. Recommend deleting that option key so it can be saved again.", E_USER_WARNING );
-				return $this->defaults();
-			}
-
-			$this->applied_defaults = $this->controls()->backfill_content( wp_parse_args( $option, $this->defaults() ) );
+			$this->applied_defaults = $this->controls()->backfill_content( $this->defaults() );
 
 		}
 

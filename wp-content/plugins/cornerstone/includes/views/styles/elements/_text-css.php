@@ -312,6 +312,7 @@ $text_selector = ( isset( $text_selector ) && $text_selector != '' ) ? $text_sel
 
     <?php
 
+    $graphic_no_base  = false;
     $graphic_selector = $text_selector;
     $graphic_k_pre    = 'text';
 

@@ -19,7 +19,12 @@ class CSE_Section {
 			'dynamic_child' => true,
 			'elements' => array(
 				'floor' => 1
-			)
+			),
+      'protected_keys' => array(
+        'bg_image',
+        'bg_video',
+        'bg_video_poster',
+      )
 		);
 	}
 

@@ -75,6 +75,7 @@ function x_controls_gap( $settings = array() ) {
           array(
             'key'     => 'gap_size',
             'type'    => 'unit-slider',
+            'label'   => __( 'Gap Size', '__x__' ),
             'options' => array(
               'available_units' => array( 'px', 'em', 'rem', '%', 'vw', 'vh' ),
               'valid_keywords'  => array( 'calc' ),

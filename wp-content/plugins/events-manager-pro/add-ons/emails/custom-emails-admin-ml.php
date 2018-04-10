@@ -12,6 +12,8 @@ class EM_Custom_Emails_Admin_ML{
 	    $gateway_email_values_ml = maybe_unserialize($EM_Gateway->get_option('emails_ml'));
 	    foreach( EM_ML::$langs as $lang => $language ){
 	        if( $lang != EM_ML::$wplang ){
+	        	EM_ML::switch_to_lang($lang); //trick EM_ML to load the default options of this language
+	        	$default_email_values = EM_Custom_Emails_Admin::get_default_email_values($EM_Gateway); //get default email values again after our 'trick'
 	            $default_emails = $original_default_emails;
     		    $gateway_email_values = !empty($gateway_email_values_ml[$lang]) ? $gateway_email_values_ml[$lang] : array();
     		    $email_values = EM_Custom_Emails_Admin::merge_gateway_default_values($gateway, $default_email_values, $gateway_email_values);
@@ -30,7 +32,7 @@ class EM_Custom_Emails_Admin_ML{
         			$default_emails = EM_Custom_Emails_Admin::add_gateway_mb_default_emails($default_emails, $EM_Gateway);
 		            $default_emails[$gateway.'-mb']['title'] = "[$language] ". $original_default_emails[$gateway.'-mb']['title'];
         			//get default mb values and merge them into email values
-        			$mb_default_email_values = EM_Custom_Emails_Admin::get_gateway_mb_default_values($EM_Gateway);
+		            $mb_default_email_values = EM_Custom_Emails_Admin::get_default_email_values($EM_Gateway, true);
             		//get custom values if applicable
             		$mb_email_values = EM_Custom_Emails_Admin::merge_gateway_default_values($gateway, $mb_default_email_values, $gateway_email_values);
         			//merge them all together
@@ -40,6 +42,7 @@ class EM_Custom_Emails_Admin_ML{
 		        EM_Custom_Emails_Admin::emails_editor($email_values, $default_emails, $admin_emails, 'em_custom_email_'.$lang);
 	        }
 	    }
+	    EM_ML::restore_current_lang();
     }
     
     public static function em_custom_emails_admin_gateway_update( $EM_Gateway, $default_emails, $custom_booking_emails, $custom_admin_emails ){

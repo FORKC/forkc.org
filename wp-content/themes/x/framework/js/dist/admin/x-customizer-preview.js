@@ -213,6 +213,10 @@
 
   if ( x_customizer_preview_data.x_woocommerce_is_active && 'sessionStorage' in window && window.sessionStorage !== null ) {
 
+    // Uses `sessionStorage[window.wc_cart_fragments_params.fragment_name]`
+    // instead of `sessionStorage.wc_fragments` now, need to look into updating
+    // to ensure fragments update properly.
+
     var fragments = jQuery.parseJSON(window.sessionStorage.wc_fragments);
     delete fragments['div.x-cart'];
     window.sessionStorage.wc_fragments = JSON.stringify(fragments);

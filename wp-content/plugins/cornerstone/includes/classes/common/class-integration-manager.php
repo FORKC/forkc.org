@@ -61,7 +61,7 @@ class Cornerstone_Integration_Manager extends Cornerstone_Plugin_Component {
 	}
 
 	/**
-	 * Directly add a class for theme integration by it's stylesheet
+	 * Directly add a class for theme integration by its stylesheet
 	 */
 	public function load_theme() {
 

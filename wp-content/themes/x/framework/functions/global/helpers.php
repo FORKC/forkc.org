@@ -49,14 +49,16 @@ function x_is_validated() {
 
 //
 // Accepts a string and replaces any instances of "http://" and "https://" with
-// the protocol relative "//" instead.
+// the protocol relative "//" instead. Only applied when the host matches.
 //
 
-function x_make_protocol_relative( $string ) {
+function x_make_protocol_relative( $url ) {
 
-  $output = str_replace( array( 'http://', 'https://' ), '//', $string );
+  if ( false !== strpos( $url, $_SERVER['HTTP_HOST'] ) ) {
+    $url = str_replace( array( 'http://', 'https://' ), '//', $url );
+  }
 
-  return $output;
+  return $url;
 
 }
 

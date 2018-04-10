@@ -52,6 +52,17 @@ class EM_Gateway {
 	 * @var boolean
 	 */
 	var $count_pending_spaces = false;
+	
+	/**
+	 * Associated array containing counts for pending spaces of specific events, which can be reused when called again later on.
+	 * @var array
+	 */
+	protected $event_pending_spaces = array();
+	/**
+	 * Multidimensional associated containing pending spaces for specific tickets, within eacy array item is an array of event id keys and corresponding counts. 
+	 * @var array
+	 */
+	protected $ticket_pending_spaces = array();
 
 	/**
 	 * Adds some basic actions and filters to hook into the EM_Gateways class and Events Manager bookings interface. 
@@ -71,8 +82,8 @@ class EM_Gateway {
 		}
 		if( $this->count_pending_spaces ){
 			//Modify spaces calculations, required even if inactive, due to previously made bookings whilst this may have been active
-			add_filter('em_bookings_get_pending_spaces', array(&$this, 'em_bookings_get_pending_spaces'),1,2);
-			add_filter('em_ticket_get_pending_spaces', array(&$this, 'em_ticket_get_pending_spaces'),1,2);
+			add_filter('em_bookings_get_pending_spaces', array(&$this, 'em_bookings_get_pending_spaces'),1,3);
+			add_filter('em_ticket_get_pending_spaces', array(&$this, 'em_ticket_get_pending_spaces'),1,3);
 			add_filter('em_booking_is_reserved', array(&$this, 'em_booking_is_reserved'),1,2);
 			add_filter('em_booking_is_pending', array(&$this, 'em_booking_is_pending'),1,2);
 		}
@@ -105,7 +116,7 @@ class EM_Gateway {
 	 * @param EM_Booking $EM_Booking
 	 * @return array
 	 */
-	function booking_form_feedback( $return, $EM_Booking ){
+	function booking_form_feedback( $return, $EM_Booking = false ){
 		return $return; //remember this, it's a filter!	
 	}
 
@@ -225,13 +236,15 @@ class EM_Gateway {
 	 * @param EM_Bookings $EM_Bookings
 	 * @return integer
 	 */
-	function em_bookings_get_pending_spaces($count, $EM_Bookings){
-		foreach($EM_Bookings->bookings as $EM_Booking){
-			if($EM_Booking->booking_status == $this->status && $this->uses_gateway($EM_Booking)){
-				$count += $EM_Booking->get_spaces();
-			}
+	function em_bookings_get_pending_spaces($count, $EM_Bookings, $force_refresh = false){
+		global $wpdb;
+		if( !array_key_exists($EM_Bookings->event_id, $this->event_pending_spaces) || $force_refresh ){
+			$sql = 'SELECT SUM(booking_spaces) FROM '.EM_BOOKINGS_TABLE. ' WHERE booking_status=%d AND event_id=%d AND booking_meta LIKE %s';
+			$gateway_filter = '%s:7:"gateway";s:'.strlen($this->gateway).':"'.$this->gateway.'";%';
+			$pending_spaces = $wpdb->get_var( $wpdb->prepare($sql, array($this->status, $EM_Bookings->event_id, $gateway_filter)) );
+			$this->event_pending_spaces[$EM_Bookings->event_id] = $pending_spaces > 0 ? $pending_spaces : 0;
 		}
-		return $count;
+		return $count + $this->event_pending_spaces[$EM_Bookings->event_id];
 	}
 	
 	/**
@@ -260,17 +273,17 @@ class EM_Gateway {
 	 * @param EM_Ticket $EM_Ticket
 	 * @return integer
 	 */
-	function em_ticket_get_pending_spaces($count, $EM_Ticket){
-		foreach( $EM_Ticket->get_bookings()->bookings as $EM_Booking ){ //get_bookings() is used twice so we get the confirmed (or all if confirmation disabled) bookings of this ticket's total bookings.
-			if($EM_Booking->booking_status == $this->status && $this->uses_gateway($EM_Booking)){
-				foreach($EM_Booking->get_tickets_bookings()->tickets_bookings as $EM_Ticket_Booking){
-					if( $EM_Ticket_Booking->ticket_id == $EM_Ticket->ticket_id ){
-						$count += $EM_Ticket_Booking->get_spaces();
-					}
-				}
-			}
+	function em_ticket_get_pending_spaces($count, $EM_Ticket, $force_refresh = false){
+		global $wpdb;
+		if( empty($this->ticket_pending_spaces[$EM_Ticket->ticket_id]) || !array_key_exists($EM_Ticket->event_id, $this->ticket_pending_spaces[$EM_Ticket->ticket_id]) || $force_refresh ){
+			if( empty($this->ticket_pending_spaces[$EM_Ticket->ticket_id]) ) $this->ticket_pending_spaces[$EM_Ticket->ticket_id] = array();
+			$gateway_filter = '%s:7:"gateway";s:'.strlen($this->gateway).':"'.$this->gateway.'";%';
+			$booking_ids_sql = $wpdb->prepare('SELECT booking_id FROM '.EM_BOOKINGS_TABLE.' WHERE event_id=%d AND booking_status=%d AND booking_meta LIKE %s', $EM_Ticket->event_id, $this->status, $gateway_filter);
+			$sql = 'SELECT SUM(ticket_booking_spaces) FROM '.EM_TICKETS_BOOKINGS_TABLE. ' WHERE ticket_id='.absint($EM_Ticket->ticket_id).' AND booking_id IN ('.$booking_ids_sql.')';
+			$pending_spaces = $wpdb->get_var( $sql );
+			$this->ticket_pending_spaces[$EM_Ticket->ticket_id][$EM_Ticket->event_id] = $pending_spaces > 0 ? $pending_spaces : 0;
 		}
-		return $count;
+		return $count + $this->ticket_pending_spaces[$EM_Ticket->ticket_id][$EM_Ticket->event_id];
 	}
 	
 		

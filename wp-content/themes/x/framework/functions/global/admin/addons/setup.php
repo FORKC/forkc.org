@@ -81,6 +81,7 @@ require_once( $addn_path . '/demo/class-x-demo-import-processor.php' );
 
 require_once( $addn_path . '/modules/class-addons-home.php' );
 require_once( $addn_path . '/modules/class-addons-updates.php' );
+require_once( $addn_path . '/modules/class-addons-theme-options-manager.php' );
 require_once( $addn_path . '/modules/class-addons-validation.php' );
 require_once( $addn_path . '/modules/class-addons-extensions.php' );
 
@@ -91,12 +92,11 @@ require_once( $addn_path . '/page-home.php' );
 // =============================================================================
 
 function x_addons_add_menu() {
-  add_menu_page( 'Overview', X_TITLE, 'manage_options', 'x-addons-home', 'x_addons_page_home', 'dashicons-arrow-right-alt2', 3 );
-  add_submenu_page( 'x-addons-home', 'Overview', 'Overview', 'manage_options', 'x-addons-home', 'x_addons_page_home' );
+  add_menu_page( 'Validation', X_TITLE, 'manage_options', 'x-addons-home', 'x_addons_page_home', 'dashicons-arrow-right-alt2', 3 );
+  add_submenu_page( 'x-addons-home', 'Validation', 'Validation', 'manage_options', 'x-addons-home', 'x_addons_page_home' );
 }
 
 add_action( 'admin_menu', 'x_addons_add_menu' );
-
 
 
 // Activation Redirect
@@ -119,10 +119,9 @@ add_action( 'admin_init', 'x_addons_theme_activation_redirect' );
 
 if ( is_admin() ) {
 
-  // var_dump( did_action('admin_init') ); die();
-
   X_Addons_Home::instance();
   X_Addons_Updates::instance();
+  X_Addons_Theme_Options_Manager::instance();
   X_Addons_Extensions::instance();
   X_Addons_Validation::instance();
 

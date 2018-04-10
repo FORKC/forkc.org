@@ -202,7 +202,11 @@ add_filter( 'woocommerce_product_tabs', 'x_woocommerce_add_remove_product_tabs',
 
 function x_get_cart_link() {
 
-  $link = WC()->cart->get_cart_url();
+  if ( function_exists( 'wc_get_cart_url' ) ) {
+    $link = wc_get_cart_url();
+  } else {
+    $link = WC()->cart->get_cart_url();
+  }
 
   return $link;
 

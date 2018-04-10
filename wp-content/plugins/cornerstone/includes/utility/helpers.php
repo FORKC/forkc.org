@@ -173,11 +173,15 @@ function cs_element_js_atts( $element, $params = array() ) {
   $atts = array( 'data-x-element' => esc_attr( $element ) );
 
   if ( ! empty( $params ) ) {
-    $atts['data-x-params'] = htmlspecialchars( wp_json_encode( $params ), ENT_QUOTES, 'UTF-8' );
+    $atts['data-x-params'] = cs_prepare_json_att( $params );
   }
 
   return $atts;
 
+}
+
+function cs_prepare_json_att( $atts ) {
+  return htmlspecialchars( wp_json_encode( $atts ), ENT_QUOTES, 'UTF-8' );
 }
 
 
@@ -286,7 +290,7 @@ function cs_att( $attribute, $content, $echo = false ) {
 function cs_atts( $atts, $echo = false ) {
 	$result = '';
 	foreach ( $atts as $att => $content) {
-		$result .= cs_att( $att, $content, false ) . ' ';
+		$result .= cs_att( $att, $content, false );
 	}
 	if ( $echo ) {
 		echo $result;
@@ -551,7 +555,7 @@ function cs_derive_excerpt( $content, $store = false ) {
 
 /**
  * Allows HTML to be passed through shortcode attributes by decoding entities.
- * We apply the cornerstone_decode_shortcode_attribute filter to allow other
+ * We apply the cs_decode_shortcode_attribute filter to allow other
  * components to process and expand directives if needed.
  * @param  string $content Original content from shortcode attribute.
  * @return string          HTML ready to use in shortcode output
@@ -560,7 +564,7 @@ function cs_decode_shortcode_attribute( $content ) {
   if ( ! is_string( $content ) ) {
     return $content;
   }
-	return apply_filters( 'cornerstone_decode_shortcode_attribute', wp_specialchars_decode( $content, ENT_QUOTES ) );
+	return apply_filters( 'cs_decode_shortcode_attribute', wp_specialchars_decode( $content, ENT_QUOTES ) );
 }
 
 /**
@@ -572,11 +576,16 @@ function cs_tco() {
 }
 
 
-function cs_update_serialized_post_meta( $post_id, $meta_key, $meta_value, $prev_value = '', $allow_revision_updates = false ) {
+function cs_update_serialized_post_meta( $post_id, $meta_key, $meta_value, $prev_value = '', $allow_revision_updates = false, $filter = '' ) {
+
 
 	if ( is_array( $meta_value ) && apply_filters( 'cornerstone_store_as_json', true ) ) {
 		$meta_value = wp_slash( cs_json_encode( $meta_value ) );
 	}
+
+  if ( $filter ) {
+    $meta_value = apply_filters( $filter, $meta_value );
+  }
 
   if ( $allow_revision_updates ) {
     return update_metadata('post', $post_id, $meta_key, $meta_value, $prev_value );
@@ -589,7 +598,7 @@ function cs_update_serialized_post_meta( $post_id, $meta_key, $meta_value, $prev
 
 function cs_json_encode( $value ) {
 
-  if ( defined('JSON_UNESCAPED_SLASHES') && apply_filters( 'cornerstone_json_unescaped_slashes', false ) ) {
+  if ( defined('JSON_UNESCAPED_SLASHES') && apply_filters( 'cornerstone_json_unescaped_slashes', true ) ) {
     return wp_json_encode( $value, JSON_UNESCAPED_SLASHES );
   }
 
@@ -597,8 +606,12 @@ function cs_json_encode( $value ) {
 
 }
 
-function cs_get_serialized_post_meta( $post_id, $key = '', $single = false ) {
-	return cs_maybe_json_decode( get_post_meta( $post_id, $key, $single ) );
+function cs_get_serialized_post_meta( $post_id, $key = '', $single = false, $filter = '' ) {
+  $meta_value = get_post_meta( $post_id, $key, $single );
+  if ( $filter ) {
+    $meta_value = apply_filters( $filter, $meta_value );
+  }
+  return cs_maybe_json_decode( $meta_value );
 }
 
 function cs_maybe_json_decode( $value ) {
@@ -618,4 +631,16 @@ function is_cs_error( $error ) {
 
 function cs_to_component_name( $name ) {
   return str_replace( ' ', '_', ucwords( strtolower( preg_replace('/[-_:\/]/', ' ', str_replace(' ', '', $name ) ) ) ) );
+}
+
+function cs_debug( $message ) {
+  CS()->loadComponent('Debug')->add_message($message);
+}
+
+function cs_set_curl_timeout_begin( $timeout ) {
+  CS()->loadComponent('Networking')->set_curl_timeout_begin( $timeout );
+}
+
+function cs_set_curl_timeout_end() {
+  CS()->loadComponent('Networking')->set_curl_timeout_end();
 }

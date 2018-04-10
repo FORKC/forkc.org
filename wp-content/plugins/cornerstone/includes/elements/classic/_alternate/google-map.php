@@ -9,7 +9,8 @@ class CS_Google_Map extends Cornerstone_Element_Base {
       'section'     => 'media',
       'description' => __( 'Google Map description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'renderChild' => true
+      'renderChild' => true,
+      'protected_keys' => array( 'api_key', 'lat', 'lng' )
     );
   }
 

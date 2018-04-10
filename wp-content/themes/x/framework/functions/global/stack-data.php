@@ -306,7 +306,7 @@ $customizer_settings_data = array(
   'x_footer_menu_display'                               => '1',
   'x_footer_social_display'                             => '1',
   'x_footer_content_display'                            => '1',
-  'x_footer_content'                                    => '<p>POWERED BY THE <a href="//theme.co/x/" title="X &ndash; The Ultimate WordPress Theme">X THEME</a></p>',
+  'x_footer_content'                                    => x_i18n( 'data', 'footer-powered-by'),
   'x_footer_scroll_top_display'                         => '',
   'x_footer_scroll_top_position'                        => 'right',
   'x_footer_scroll_top_display_unit'                    => '75',
@@ -411,7 +411,7 @@ $customizer_settings_data = array(
 
   'x_fixed_menu_scroll'                                 => 'overflow-visible',
 
-  'x_enable_font_manager'                               => '0',
+  'x_enable_font_manager'                               => false,
   'x_body_font_family_selection'                        => 'inherit',
   'x_body_font_weight_selection'                        => 'inherit:400',
   'x_headings_font_family_selection'                    => 'inherit',

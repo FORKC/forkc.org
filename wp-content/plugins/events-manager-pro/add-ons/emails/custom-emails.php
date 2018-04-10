@@ -115,14 +115,15 @@ class EM_Custom_Emails{
 	    $msg = array(); //emails that could be used to override
 		//set both admin and user email messages according to settings in custom emails defined above
 		foreach( $groups_to_check as $user => $email_type ){
-		    if( !empty($custom_emails[$user][$EM_Booking->booking_status]) ){
-    			if( $custom_emails[$user][$EM_Booking->booking_status]['status'] == 1 ){
+			$booking_status = $EM_Booking->booking_status;
+		    if( !empty($custom_emails[$user][$booking_status]) ){
+    			if( $custom_emails[$user][$booking_status]['status'] == 1 ){
     				//override default email with custom email
-    		    	$msg[$email_type]['subject'] = $custom_emails[$user][$EM_Booking->booking_status]['subject'];
-    		    	$msg[$email_type]['body'] = $custom_emails[$user][$EM_Booking->booking_status]['message'];
-    			}elseif( !empty($custom_emails[$user][$EM_Booking->booking_status]) && $custom_emails[$user][$EM_Booking->booking_status]['status'] == 2 ){
+    		    	$msg[$email_type]['subject'] = $custom_emails[$user][$booking_status]['subject'];
+    		    	$msg[$email_type]['body'] = $custom_emails[$user][$booking_status]['message'];
+    			}elseif( !empty($custom_emails[$user][$booking_status]) && $custom_emails[$user][$booking_status]['status'] == 2 ){
     				//disable the email entirely
-        			$msg[$email_type]['subject'] = $msg[$user]['body'] = '';		
+    				$msg[$email_type]['subject'] = $msg[$email_type]['body'] = '';		
     			}
 		    }
 		}
@@ -166,8 +167,15 @@ class EM_Custom_Emails{
 		$EM_Gateway = EM_Gateways::get_gateway($EM_Booking->booking_meta['gateway']);
 		//create set of groups to check against $custom_emails
 		$groups_to_check = apply_filters('em_custom_emails_gateway_groups', array($EM_Gateway->gateway.'-admin' => 'admin', $EM_Gateway->gateway.'-user' => 'user'), $EM_Booking, $EM_Gateway);
-		//get custom gateway email messages and determine which should be used
+		//get custom gateway email messages
 		$custom_emails = apply_filters('em_custom_emails_gateway_messages', maybe_unserialize($EM_Gateway->get_option('emails')), $EM_Booking, $EM_Gateway);
+		//if we have an 'awaiting payment' status and only a 'pending' status template, default to 'pending' so we don't skip to the general default pending template
+		foreach( $groups_to_check as $key => $val ){
+			if( $EM_Booking->booking_status == 5 && empty($custom_emails[$key][5]) && !empty($custom_emails[$key][0]) ){
+				$custom_emails[$key][5] = $custom_emails[$key][0];
+			}
+		}
+		//determine which will be used
 		$gateway_emails = self::get_booking_messages($custom_emails, $groups_to_check, $EM_Booking);
 		//merge into default $msg and return
 		return array_merge($msg, $gateway_emails);

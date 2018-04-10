@@ -67,11 +67,11 @@ if ( ! function_exists( 'x_post_thumbnail_width' ) ) :
     // Adjust settings.
     //
 
-    $site_layout    = ( $a == '' ) ? 'full-width'      : $a;
-    $content_layout = ( $b == '' ) ? 'content-sidebar' : $b;
-    $site_width     = ( $c == '' ) ? 88 / 100          : $c / 100;
-    $site_max_width = ( $d == '' ) ? 1200              : $d;
-    $content_width  = ( $e == '' ) ? 72 - $m           : $e - $m;
+    $site_layout    = ( $a == '' ) ? 'full-width'                 : $a;
+    $content_layout = ( $b == '' ) ? 'content-sidebar'            : $b;
+    $site_width     = ( $c == '' && is_numeric( $c ) ) ? 88 / 100 : $c / 100;
+    $site_max_width = ( $d == '' ) ? 1200                         : $d;
+    $content_width  = ( $e == '' && is_numeric( $e ) ) ? 72 - $m  : $e - $m;
 
 
     //

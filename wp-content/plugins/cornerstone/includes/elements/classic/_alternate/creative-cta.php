@@ -11,7 +11,8 @@ class CS_Creative_CTA extends Cornerstone_Element_Base {
       'supports'    => array( 'id', 'class', 'style' ),
       'autofocus' => array(
     		'text' => '.x-creative-cta',
-    	)
+    	),
+      'protected_keys' => array( 'icon_type', 'image', 'link', 'href_target' )
     );
   }
 

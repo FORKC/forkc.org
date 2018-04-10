@@ -259,7 +259,7 @@ class TCO_Coalescence_Expression {
   }
 
   /**
-   * Used by the evalate function to bring an operand to it's final value before
+   * Used by the evalate function to bring an operand to its final value before
    * running the operation. Recursively calls evaluate on child TCO_Coalescence_Expression
    * objects. Expands any detected variables using $data
    * @param  mixed $operand Content of the operand being processed

@@ -55,9 +55,22 @@ function x_shortcode_share( $atts ) {
   $linkedin    = ( $linkedin    == 'true' ) ? "<a href=\"#share\" {$tooltip_attr} class=\"x-share\" title=\"" . csi18n('shortcodes.share-linkedin') . "\" onclick=\"window.open('http://www.linkedin.com/shareArticle?mini=true&amp;url={$share_url}&amp;title={$share_title}&amp;summary={$share_content}&amp;source={$share_source}', 'popupLinkedIn', 'width=610, height=480, resizable=0, toolbar=0, menubar=0, status=0, location=0, scrollbars=0'); return false;\"><i class=\"x-icon-linkedin-square\" data-x-icon=\"&#xf08c;\"></i></a>" : '';
   $pinterest   = ( $pinterest   == 'true' ) ? "<a href=\"#share\" {$tooltip_attr} class=\"x-share\" title=\"" . csi18n('shortcodes.share-pinterest') . "\" onclick=\"window.open('http://pinterest.com/pin/create/button/?url={$share_url}&amp;media={$share_image}&amp;description={$share_title}', 'popupPinterest', 'width=750, height=265, resizable=0, toolbar=0, menubar=0, status=0, location=0, scrollbars=0'); return false;\"><i class=\"x-icon-pinterest-square\" data-x-icon=\"&#xf0d3;\"></i></a>" : '';
   $reddit      = ( $reddit      == 'true' ) ? "<a href=\"#share\" {$tooltip_attr} class=\"x-share\" title=\"" . csi18n('shortcodes.share-reddit') . "\" onclick=\"window.open('http://www.reddit.com/submit?url={$share_url}', 'popupReddit', 'width=875, height=450, resizable=0, toolbar=0, menubar=0, status=0, location=0, scrollbars=0'); return false;\"><i class=\"x-icon-reddit-square\" data-x-icon=\"&#xf1a2;\"></i></a>" : '';
-  $email_subject = ( $email_subject != '' ) ? esc_attr( $email_subject ) : csi18n('shortcodes.share-email-subject');
-  $mail_to     = esc_url( "mailto:?subject=" . get_the_title() . "&amp;body=" . $email_subject . " " . get_permalink() . "" );
-  $email       = ( $email       == 'true' ) ? "<a href=\"{$mail_to}\" {$tooltip_attr} class=\"x-share email\" title=\"" . csi18n('shortcodes.share-email') . "\"><span><i class=\"x-icon-envelope-square\" data-x-icon=\"&#xf199;\"></i></span></a>" : '';
+
+
+  if ( $email       == 'true' ) {
+
+    $email_subject = esc_attr( ( $email_subject != '' ) ? cs_decode_shortcode_attribute( $email_subject ) : csi18n('shortcodes.share-email-subject') );
+    $mail_to_subject = esc_url( get_the_title() );
+    $mail_to_url = esc_url( get_permalink() );
+
+    $mail_to = "mailto:?subject=$mail_to_subject&amp;body=$email_subject $mail_to_url";
+
+    $email = "<a href=\"{$mail_to}\" {$tooltip_attr} class=\"x-share email\" title=\"" . csi18n('shortcodes.share-email') . "\"><span><i class=\"x-icon-envelope-square\" data-x-icon=\"&#xf199;\"></i></span></a>";
+
+  } else {
+    $email = '';
+  }
+
 
 
   $output = "<div {$id} class=\"{$class}\" {$style}>"

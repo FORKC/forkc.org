@@ -249,6 +249,7 @@ $anchor_k_pre    = ( isset( $anchor_k_pre ) && $anchor_k_pre != ''       ) ? $an
 
   <?php
 
+  $graphic_no_base  = false;
   $graphic_selector = $anchor_selector;
   $graphic_k_pre    = $anchor_k_pre . 'anchor';
 

@@ -131,6 +131,7 @@ if ( x_get_option( 'x_enable_font_manager' ) ) {
 // =============================================================================
 
 $x_navbar_positioning                  = x_get_navbar_positioning();
+$x_fixed_menu_scroll                   = x_get_option( 'x_fixed_menu_scroll' );
 $x_logo_adjust_navbar_top              = x_get_option( 'x_logo_adjust_navbar_top' );
 $x_logo_adjust_navbar_side             = x_get_option( 'x_logo_adjust_navbar_side' );
 $x_logo_navigation_layout              = x_get_option( 'x_logo_navigation_layout' );

@@ -134,6 +134,8 @@ class Cornerstone_Router extends Cornerstone_Plugin_Component {
     do_action( 'cornerstone_before_ajax' );
     $json = $this->get_json();
 
+    // return cs_send_json_error( array( 'message' => json_encode( $json ) ) );
+
     if ( ! isset( $json['action'] ) ) {
       return cs_send_json_error( array( 'message' => 'Invalid action' ) );
     } else {

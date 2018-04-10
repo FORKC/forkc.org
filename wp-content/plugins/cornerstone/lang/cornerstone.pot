@@ -5063,7 +5063,7 @@ msgid "Content Area"
 msgstr ""
 
 #: includes/elements/definitions/content-area.php:24
-msgid "<span>This content will show up directly in it&apos;s container.</span>"
+msgid "<span>This content will show up directly in its container.</span>"
 msgstr ""
 
 #: includes/elements/definitions/headline.php:21

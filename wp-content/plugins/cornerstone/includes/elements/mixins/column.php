@@ -160,6 +160,9 @@ function x_controls_column( $settings = array() ) {
           ),
         ),
       ),
+    ),
+    x_controls_bg( $settings_column_bg ),
+    array(
       array(
         'type'     => 'group',
         'title'    => __( 'Formatting', '__x__' ),
@@ -173,7 +176,6 @@ function x_controls_column( $settings = array() ) {
         ),
       ),
     ),
-    x_controls_bg( $settings_column_bg ),
     x_control_padding( array( 'k_pre' => 'column', 'group' => $group_design ) ),
     x_control_border( array( 'k_pre' => 'column', 'group' => $group_design ) ),
     x_control_border_radius( array( 'k_pre' => 'column', 'group' => $group_design ) ),
@@ -230,10 +232,10 @@ function x_values_column( $settings = array() ) {
       'column_fade_animation_offset' => x_module_value( '50px', 'markup' ),
       'column_bg_color'              => x_module_value( 'transparent', 'style:color' ),
       'column_bg_advanced'           => x_module_value( false, 'all' ),
-      'column_text_align'            => x_module_value( 'none', 'style' ),
     ),
     x_values_bg(),
     array(
+      'column_text_align'            => x_module_value( 'none', 'style' ),
       'column_padding'               => x_module_value( '0em', 'style' ),
       'column_border_width'          => x_module_value( '0px', 'style' ),
       'column_border_style'          => x_module_value( 'none', 'style' ),

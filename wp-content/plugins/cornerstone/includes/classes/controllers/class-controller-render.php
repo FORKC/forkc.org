@@ -10,6 +10,7 @@ class Cornerstone_Controller_Render extends Cornerstone_Plugin_Component {
 
     $renderer = $this->plugin->loadComponent( 'Element_Renderer' );
     $renderer->start( isset($data['context']) ? $data['context'] : array() );
+    $this->plugin->loadComponent('Font_Manager')->set_previewing();
 
     foreach ($data['batch'] as $key => $value) {
       $data['batch'][$key]['response'] = $renderer->render_element( $value['data'] );

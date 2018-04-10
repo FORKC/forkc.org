@@ -21,7 +21,7 @@ $data = array(
   'title'  => __( 'Content Area', '__x__' ),
   'values' => array_merge(
     array(
-      'content' => x_module_value( __( '<span>This content will show up directly in it&apos;s container.</span>', '__x__' ), 'markup:html' ),
+      'content' => x_module_value( __( '<span>This content will show up directly in its container.</span>', '__x__' ), 'markup:html', true ),
     ),
     x_values_omega()
   ),

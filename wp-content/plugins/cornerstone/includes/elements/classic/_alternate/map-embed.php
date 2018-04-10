@@ -9,7 +9,8 @@ class CS_Map_Embed extends Cornerstone_Element_Base {
       'section'     => 'media',
       'description' => __( 'Map Embed description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'empty'       => array( 'content' => '' )
+      'empty'       => array( 'content' => '' ),
+      'protected_keys' => array( 'content' )
     );
   }
 

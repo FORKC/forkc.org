@@ -222,7 +222,7 @@ function x_values_off_canvas( $settings = array() ) {
     'off_canvas_content_border_width'          => x_module_value( '0px', 'style' ),
     'off_canvas_content_border_style'          => x_module_value( 'none', 'style' ),
     'off_canvas_content_border_color'          => x_module_value( 'transparent', 'style:color' ),
-    'off_canvas_content_box_shadow_dimensions' => x_module_value( '0em 0em 2em 0em', 'style:color' ),
+    'off_canvas_content_box_shadow_dimensions' => x_module_value( '0em 0em 2em 0em', 'style' ),
     'off_canvas_content_box_shadow_color'      => x_module_value( 'rgba(0, 0, 0, 0.25)', 'style:color' ),
   );
 

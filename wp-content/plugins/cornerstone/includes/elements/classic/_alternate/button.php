@@ -11,7 +11,8 @@ class CS_Button extends Cornerstone_Element_Base {
       'supports'    => array( 'id', 'class', 'style' ),
       'autofocus' => array(
     		'content' => '.x-btn'
-    	)
+    	),
+      'protected_keys' => array( 'content', 'info_content', 'href', 'href_title', 'href_target' )
     );
   }
 

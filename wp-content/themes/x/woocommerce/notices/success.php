@@ -3,19 +3,21 @@
 // =============================================================================
 // WOOCOMMERCE/NOTICES/SUCCESS.PHP
 // -----------------------------------------------------------------------------
-// @version 1.6.4
+// @version 3.3.0
 // =============================================================================
 
 if ( ! defined( 'ABSPATH' ) ) {
-  exit; // Exit if accessed directly
+  exit;
 }
 
-if ( ! $messages ) return;
+if ( ! $messages ) {
+  return;
+}
 
 ?>
 
 <?php foreach ( $messages as $message ) : ?>
-  <div class="woocommerce-message x-alert x-alert-info x-alert-block">
+  <div class="woocommerce-message x-alert x-alert-info x-alert-block" role="alert">
     <?php echo wp_kses_post( $message ); ?>
   </div>
 <?php endforeach; ?>

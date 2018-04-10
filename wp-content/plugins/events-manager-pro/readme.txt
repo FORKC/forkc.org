@@ -3,7 +3,7 @@ Contributors: netweblogic
 Tags: events, event, event registration, event calendar, events calendar, event management, paypal, registration, ticket, tickets, ticketing, tickets, theme, widget, locations, maps, booking, attendance, attendee, buddypress, calendar, gigs, payment, payments, sports,
 Requires at least: 3.5
 Tested up to: 4.8.1
-Stable tag: 2.5.1
+Stable tag: 2.6.1
 
 == Description ==
 
@@ -22,6 +22,42 @@ http://wp-events-plugin.com/support/
 Please visit http://wp-events-plugin.com/documentation/installation/
 
 == Changelog ==
+= 2.6.1 = 
+* fixed manual bookings not adding correct new user information when name/email/profile fields are set to not be displayed or editable
+* fixed reminder emails not getting translated into booked language
+* fixed minor PHP warning on transactions table when no transactions to display
+
+= 2.6 =
+* reduced number of redundant booking form SQL calls on booking admin pages
+* optimized pending counts of bookings for gateways by avoiding loading/looping through all bookings and using SQL queries instead
+* made adjustments for timezone changes in EM
+* fixed custom event emails of a translation getting deleted in WPML when saving the original translation
+* fixed various PHP warnings/notices and PHP 7.2 compatibility issues
+* fixed partial refunds in paypal sending a 'pending' email
+* fixed 'resume payment' button for paypal in MB mode not including all events booked at once
+* changed all recaptcha on booking forms to v2 without the need for a SDK requiring higher PHP versions than WP minimum
+* fixed minor coupon rounding issue in description text
+* fixed attendee emails not getting sent to logged in users when booking forms have non-editable user fields
+* fixed duplicate custom email and coupon records in recurrences resulting in incorrectly saved data
+* renamed recaptcha form editor private/public key labels to match site/secret key labels on recaptcha admin site
+* optimized transactions lookup for bookings with a specific ticket
+* fixed some inconsistencies when saving checkboxes and other multiple choice attendee form fields with HTML entities
+* fixed multiple selection user fields not being saved to user account during a booking and only to booking object
+* added option to reserve bookings pending payment on PayPal
+* fixed anonymous@ emails being cc'd in admin emails when Multiple Bookings mode is active 
+* fixed custom emails for offline gateway not defaulting to the custom 'pending' template if a custom 'awaiting payment' template not defined
+* fixed unexpected behaviour when pressing back button from paypal and attempting to submit a second time 
+* fixed coupon code issues derived from duplicate codes by preventing creation of non-unique coupon codes
+* fixed coupons and gateway options appearing in certain instances when an event is free
+* added price adjustment calculation functions for single bookings within a multiple booking instance to allow calculation of proportional totals after discounts/surcharges applied to overall booking,
+* fixed 'Total Paid' booking table field showing 0 when in Multiple Bookings mode
+* fixed various multilingual and cascading/precedence issues with custom emails
+* removed EM_Custom_Emails_Admin get_gateway_default_values()/get_gateway_mb_default_values() and unified in get_default_email_values(),
+* tweaked custom emails so offline gateway 'pending' custom email will be used if no gateway 'awaiting offline' template is defined,
+* added pending Multiple Booking email template,
+* changed option dbem_multiple_bookings_contact_email_subject/body to dbem_multiple_bookings_contact_email_confirmed_subject/body,
+* fixed potential WPML multilingual issues with saving certain setting pages when in another language
+
 = 2.5.1 =
 * fixed EM_Coupons::em_event_delete_meta filter not returning a value and breaking filter result
 * fixed 'Call to a member function get() on null...' PHP error with certain plugins and themes

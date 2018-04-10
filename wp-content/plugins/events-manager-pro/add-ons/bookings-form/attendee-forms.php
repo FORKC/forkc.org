@@ -498,7 +498,7 @@ class EM_Attendees_Form {
 							$attendee_index = 0;
 							foreach($attendees_data as $attendee_title => $attendee_data){
 								//preload the form object with this attendee information
-								if( !empty($EM_Booking->booking_meta['attendees'][$EM_Ticket_Booking->ticket_id][$attendee_index]) ){
+								if( isset($EM_Booking->booking_meta['attendees'][$EM_Ticket_Booking->ticket_id][$attendee_index]) ){
 									$EM_Form->field_values = $EM_Booking->booking_meta['attendees'][$EM_Ticket_Booking->ticket_id][$attendee_index];
 									$EM_Form->attendee_number = $attendee_index;
 								}

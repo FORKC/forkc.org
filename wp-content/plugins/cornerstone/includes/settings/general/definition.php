@@ -177,7 +177,7 @@ class CS_Settings_General {
 
 	}
 
-	public function handler( $data ) {
+	public function handler( $data, $content = null ) {
 
 		global $post;
 		$settings = CS()->common()->get_post_settings( $post->ID );
@@ -196,8 +196,8 @@ class CS_Settings_General {
 			$update['post_excerpt'] = $data['manual_excerpt'];
 		}
 
-		if ( current_user_can( $this->manager->post_type_object->cap->publish_posts ) ) {
-			$update['post_status'] = $data['post_status'];
+		if ( isset( $data['post_status'] ) && current_user_can( $this->manager->post_type_object->cap->publish_posts ) ) {
+      $content->set_post_status( $data['post_status'] );
 		}
 
 		if ( post_type_supports( $post->post_type, 'page-attributes' ) ) {

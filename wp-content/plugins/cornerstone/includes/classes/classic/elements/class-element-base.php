@@ -24,24 +24,29 @@ abstract class Cornerstone_Element_Base {
 	public function __construct() {
 
 		$this->data = wp_parse_args( $this->data(), array(
-			'name'         => '',
-			'title'        => 'Generic Element',
-			'section'      =>  'content',
-			'description'  => 'Generic Element',
-			'autofocus'    => '',
-			'controls'     => array(),
-			'empty'        => false,
-			'context'      => 'all',
-			'render'       => true,
-			'htmlhint'     => false,
-			'delegate'     => false,
-			'childType'    => false,
-			'renderChild'  => false,
-      'linked_child' => false,
-      'attr_keys'    => array(),
-			'can_preview'  => true,
+			'name'              => '',
+			'title'             => 'Generic Element',
+			'section'           =>  'content',
+			'description'       => 'Generic Element',
+			'autofocus'         => '',
+			'controls'          => array(),
+			'empty'             => false,
+			'context'           => 'all',
+			'render'            => true,
+			'htmlhint'          => false,
+			'delegate'          => false,
+      'alt_breadcrumb'    => '',
+      'protected_keys'    => array(),
+			'childType'         => false,
+			'renderChild'       => false,
+      'linked_child'      => false,
+      'attr_keys'         => array(),
+			'can_preview'       => true,
 			'undefined_message' => false,
-			'active'       => $this->is_active(),
+      'no_server_render'  => false,
+      'safe_container'    => false,
+      'wrapping_tag'      => 'div',
+			'active'            => $this->is_active(),
 		) );
 
 	}
@@ -106,19 +111,24 @@ abstract class Cornerstone_Element_Base {
 
 	public function flags() {
 		return array(
-			'_v'           => 'mk1',
-			'context'      => $this->data['context'],
-			'child'        => $this->data['delegate'],
-			'delegate'     => $this->data['delegate'],
-			'childType'    => $this->data['childType'],
-			'empty'        => $this->data['empty'],
-			'render'       => $this->data['render'],
-			'htmlhint'     => $this->data['htmlhint'],
-			'attr_keys'    => $this->data['attr_keys'],
-			'can_preview'  => $this->can_preview(),
-			'manageChild'  => $this->data['renderChild'],
-      'linked_child'  => $this->data['linked_child'],
+			'_v'                => 'mk1',
+			'context'           => $this->data['context'],
+			'child'             => $this->data['delegate'],
+			'delegate'          => $this->data['delegate'],
+      'alt_breadcrumb'    => $this->data['alt_breadcrumb'],
+      'protected_keys'    => $this->data['protected_keys'],
+			'childType'         => $this->data['childType'],
+			'empty'             => $this->data['empty'],
+			'render'            => $this->data['render'],
+			'htmlhint'          => $this->data['htmlhint'],
+			'attr_keys'         => $this->data['attr_keys'],
+			'can_preview'       => $this->can_preview(),
+			'manageChild'       => $this->data['renderChild'],
+      'linked_child'      => $this->data['linked_child'],
 			'undefined_message' => $this->data['undefined_message'],
+      'no_server_render'  => $this->data['no_server_render'],
+      'safe_container'    => $this->data['safe_container'],
+      'wrapping_tag'      => $this->data['wrapping_tag'],
 		);
 	}
 
@@ -190,7 +200,7 @@ abstract class Cornerstone_Element_Base {
 	 * @param string $type     Type of view used to create the UI for this control
 	 * @param string $title    Localized title. Set null to compact this control
 	 * @param string $tooltip  Localized tooltip. Only visible if title is set
-	 * @param array  $default  Values used to populate the control if the element doesn't have values of it's own
+	 * @param array  $default  Values used to populate the control if the element doesn't have values of its own
 	 * @param array  $options  Information specific to this control. For example, the names and data of items in a dropdown
 	 */
 	public function addControl( $name, $type, $title = null, $tooltip = null, $default = array(), $options = array() ) {
@@ -199,7 +209,7 @@ abstract class Cornerstone_Element_Base {
 	}
 
 	/**
-	 * Allow a mixin to be added inline. This allows you to determine it's position
+	 * Allow a mixin to be added inline. This allows you to determine its position
 	 * in the order of mapped controls.
 	 * @param string $support name of the mixin
 	 */

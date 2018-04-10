@@ -619,7 +619,7 @@ function x_add_portfolio_item_meta_boxes() {
       ),
       array(
         'name'    => __( 'Featured Content', '__x__' ),
-        'desc'    => __( 'Select "Media" if you would like to show your video or gallery on the index page in place of the featured image.', '__x__' ),
+        'desc'    => __( 'Select "Media" if you would like to show your video or gallery on the index page in place of the featured image. Note: will always use "Thumbnail" in Ethos due to Stack styling.', '__x__' ),
         'id'      => '_x_portfolio_index_media',
         'type'    => 'radio',
         'std'     => 'Thumbnail',

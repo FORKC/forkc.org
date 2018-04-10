@@ -15,7 +15,15 @@ class CSE_Pricing_Table_Column {
 	public function flags() {
 		return array(
 			'child' => true,
-			'dimension_target' => '.x-pricing-column'
+			'dimension_target' => '.x-pricing-column',
+      'protected_keys' => array(
+        'title',
+        'content',
+        'featured_sub',
+        'currency',
+        'price',
+        'interval',
+      ),
 		);
 	}
 

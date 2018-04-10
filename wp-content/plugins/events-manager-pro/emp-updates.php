@@ -29,7 +29,7 @@ class EM_Updates {
 	public static function update_notices() {
 		if( !self::check_api_key()){
 			$admin_url = ( is_multisite() ) ? network_admin_url('admin.php?page=events-manager-options'):admin_url('edit.php?post_type='.EM_POST_TYPE_EVENT.'&page=events-manager-options');
-			echo '<p style="font-style:italic; border-top: 1px solid #ddd; padding-top: 3px">'.sprintf(__('Please enter a valid API key in your <a href="%s">settings page</a>.','em-pro'), $admin_url).'</p>';
+			echo '</p><p style="font-style:italic;">'.sprintf(__('Please enter a valid API key in your <a href="%s">settings page</a>.','em-pro'), $admin_url);
 		}
 	}
 	
@@ -243,13 +243,13 @@ class EM_Updates {
 		$transient = get_site_transient('dbem_pro_api_key_check');
 	    
 	    // The transient contains the 'checked' information
-	    if( empty($transient->checked[EMP_SLUG]) ) $transient->checked[EMP_SLUG] = 0;
+	    //if( empty($transient->checked[EMP_SLUG]) ) $transient->checked[EMP_SLUG] = 0;
 	    
 	    $args = array(
 	        'action' => 'info',
 	        'slug' => EMP_SLUG,
 	        'plugin_name' => EMP_SLUG,
-	        'version' => $transient->checked[EMP_SLUG],
+	        //'version' => $transient->checked[EMP_SLUG],
 	    );	
 	    //request the latest dev version
 	    if( (defined('EMP_DEV_UPDATES') && EMP_DEV_UPDATES) || get_option('dbem_pro_dev_updates') || get_option('em_check_dev_version') ){

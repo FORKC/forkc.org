@@ -6,10 +6,10 @@
 // Colophon markup.
 // =============================================================================
 
-$atts = x_atts( array(
+$atts = x_atts( apply_filters( 'x_colophon_atts', array(
   'class' => 'x-colophon',
   'role'  => 'contentinfo'
-) );
+) ) );
 
 ?>
 

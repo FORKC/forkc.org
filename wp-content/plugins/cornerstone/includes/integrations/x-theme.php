@@ -20,7 +20,7 @@ class Cornerstone_Integration_X_Theme {
    */
   public function theme_setup( $theme ) {
 
-    add_action( 'init', array( $this, 'init' ) );
+    add_action( 'init', array( $this, 'init' ), 20 );
     add_action( 'admin_init', array( $this, 'admin_init' ) );
 
     add_action( 'cornerstone_load_preview', array( $this, 'load_preview' ) );
@@ -31,7 +31,7 @@ class Cornerstone_Integration_X_Theme {
     add_filter( 'cornerstone_customizer_output',  '__return_false' );
 
     // Set the app slug
-    add_filter( 'cornerstone_default_app_slug', array( $this, 'x_slug' ) );
+    add_filter( 'cornerstone_default_app_slug', array( $this, 'app_slug' ) );
 
     // Don't load the Customizer
     add_filter( 'cornerstone_options_use_native',  '__return_false' );
@@ -52,8 +52,8 @@ class Cornerstone_Integration_X_Theme {
     add_filter( 'cs_recent_posts_post_types', array( $this, 'recentPostTypes' ) );
 
     add_filter( 'cornerstone_menu_item_root', array( $this, 'relocateDashboardMenuCustomItems') );
-    add_filter( 'cs_integration_mode', array( $this, 'set_integration_mode') );
 
+    add_filter( '_cs_validation_url', 'x_addons_get_link_home' );
   }
 
   public function init() {
@@ -69,10 +69,14 @@ class Cornerstone_Integration_X_Theme {
 
     add_filter( 'pre_option_cs_product_validation_key', array( $this, 'validation_passthru' ) );
 
+    $front_end = CS()->loadComponent('Front_End');
+    remove_action( 'cs_the_content_late', array( $front_end, 'shim_x_before_site_end') );
+
   }
 
-  public function x_slug() {
-    return 'x';
+  public function app_slug() {
+    $slug = csi18n('app.integration-mode');
+    return ( $slug ) ? $slug :'x';
   }
 
   public function admin_init() {
@@ -183,14 +187,6 @@ class Cornerstone_Integration_X_Theme {
       remove_action( 'wp_footer', 'x_video_lock_output' );
     }
 
-  }
-
-  public function set_integration_mode( $mode ) {
-    if ( ! $mode ) {
-      $mode = 'x';
-    }
-
-    return $mode;
   }
 
 }

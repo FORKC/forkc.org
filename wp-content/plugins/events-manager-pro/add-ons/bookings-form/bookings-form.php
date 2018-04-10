@@ -190,7 +190,7 @@ class EM_Booking_Form {
 		$EM_Form = self::get_form($EM_Booking->event_id, $EM_Booking);
 		if( !empty($EM_Booking->booking_id) ){
 		    //no validation of user fields for current bookings
-		    add_filter('option_dbem_emp_booking_form_reg_input', create_function('','return false;'));
+		    add_filter('option_dbem_emp_booking_form_reg_input', '__return_false');
 		}
 		if( empty($EM_Form->field_values) ){
 		    //in the event we're validating a booking that wasn't retrieved by post, with booking meta
@@ -232,7 +232,7 @@ class EM_Booking_Form {
 		if( !empty($EM_Booking->booking_meta['registration']) && is_array($EM_Booking->booking_meta['registration']) && !$EM_Booking->is_no_user() ){
 			$user_data = array();
 			foreach($EM_Booking->booking_meta['registration'] as $fieldid => $field_value){
-				if( !empty($field_value) && (!is_array($field_value) && trim($field_value) !== '') && array_key_exists($fieldid, $EM_Form->form_fields) ){
+				if( !empty($field_value) && (is_array($field_value) || trim($field_value) !== '') && array_key_exists($fieldid, $EM_Form->form_fields) ){
 					$user_data[$fieldid] = $field_value;
 				}
 			}
@@ -331,13 +331,15 @@ class EM_Booking_Form {
 	 * ----------------------------------------------------------
 	 */
 	
-	public static function em_bookings_table_rows_col($value, $col, $EM_Booking, $EM_Bookings_Table, $csv){
+	public static function em_bookings_table_rows_col($value, $col, $EM_Booking, $EM_Bookings_Table, $format){
 		global $EM_Event;
+		//we're either viewing booking columns for a specific event, or all events, whether or not we're searching for a specific ticket.
 		$event_id = (!empty($EM_Booking->get_event()->event_id) && !empty($EM_Event->event_id) && $EM_Event->event_id == $EM_Booking->get_event()->event_id ) ? $EM_Event->event_id:false;
-		$EM_Form = self::get_form($event_id, $EM_Booking);
+		$EM_Form = self::get_form($event_id);
 		if( $EM_Form->is_normal_field($col) && isset($EM_Booking->booking_meta['booking'][$col]) ){
 			$field = $EM_Form->form_fields[$col];
-            $value = $EM_Form->get_formatted_value($field, $EM_Booking->booking_meta['booking'][$col]);
+			$value = $EM_Form->get_formatted_value($field, $EM_Booking->booking_meta['booking'][$col]);
+			if( $format == 'html' || empty($format) ) $value = esc_html($value);
 		}
 		return $value;
 	}
@@ -348,6 +350,7 @@ class EM_Booking_Form {
 		$EM_Form = self::get_form($event_id);
 		foreach($EM_Form->form_fields as $field_id => $field ){
 		    if( $EM_Form->is_normal_field($field_id)){ //user fields already handled, htmls shouldn't show
+		    	$field = $EM_Form->translate_field($field);
     			$template[$field_id] = $field['label'];
 		    }
 		}
@@ -368,7 +371,7 @@ class EM_Booking_Form {
 		//if you want to mess with these values, intercept the em_bookings_single_custom instead
 		$EM_Form = self::get_form($EM_Booking->event_id, $EM_Booking);
 		foreach($EM_Form->form_fields as $fieldid => $field){
-			if( !array_key_exists($fieldid, $EM_Form->user_fields) && !in_array($fieldid, array('user_email','user_name')) && $field['type'] != 'html' ){
+			if( !array_key_exists($fieldid, $EM_Form->user_fields) && !in_array($fieldid, array('user_email','user_name')) && $field['type'] != 'html' && $field['type'] != 'captcha' ){
 				//get value of field
 				$input_value = $field_value = (isset($EM_Booking->booking_meta['booking'][$fieldid])) ? $EM_Booking->booking_meta['booking'][$fieldid]:'n/a';
 				//account for the free version and the booking_comment field so that old booking info still shows

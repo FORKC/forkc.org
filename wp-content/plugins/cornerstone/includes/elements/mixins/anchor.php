@@ -174,7 +174,7 @@ function x_controls_anchor( $settings = array() ) {
   );
 
   $options_anchor_width_and_height = array(
-    'available_units' => array( 'px', 'em', 'rem', '%' ),
+    'available_units' => array( 'px', 'em', 'rem', '%', 'vw', 'vh' ),
     'fallback_value'  => 'auto',
     'valid_keywords'  => array( 'auto', 'calc' ),
     'ranges'          => array(
@@ -182,11 +182,13 @@ function x_controls_anchor( $settings = array() ) {
       'em'  => array( 'min' => 2.5, 'max' => 15,  'step' => 0.1 ),
       'rem' => array( 'min' => 2.5, 'max' => 15,  'step' => 0.1 ),
       '%'   => array( 'min' => 25,  'max' => 100, 'step' => 1   ),
+      'vw'  => array( 'min' => 25,  'max' => 100, 'step' => 1   ),
+      'vh'  => array( 'min' => 25,  'max' => 100, 'step' => 1   ),
     ),
   );
 
   $options_anchor_min_width_and_height = array(
-    'available_units' => array( 'px', 'em', 'rem', '%' ),
+    'available_units' => array( 'px', 'em', 'rem', '%', 'vw', 'vh' ),
     'fallback_value'  => '0px',
     'valid_keywords'  => array( 'calc' ),
     'ranges'          => array(
@@ -194,18 +196,22 @@ function x_controls_anchor( $settings = array() ) {
       'em'  => array( 'min' => 2.5, 'max' => 15,  'step' => 0.1 ),
       'rem' => array( 'min' => 2.5, 'max' => 15,  'step' => 0.1 ),
       '%'   => array( 'min' => 25,  'max' => 100, 'step' => 1   ),
+      'vw'  => array( 'min' => 25,  'max' => 100, 'step' => 1   ),
+      'vh'  => array( 'min' => 25,  'max' => 100, 'step' => 1   ),
     ),
   );
 
   $options_anchor_max_width_and_height = array(
-    'available_units' => array( 'px', 'em', 'rem', '%' ),
-    'fallback_value'  => 'auto',
+    'available_units' => array( 'px', 'em', 'rem', '%', 'vw', 'vh' ),
+    'fallback_value'  => 'none',
     'valid_keywords'  => array( 'none', 'calc' ),
     'ranges'          => array(
       'px'  => array( 'min' => 50,  'max' => 200, 'step' => 1   ),
       'em'  => array( 'min' => 2.5, 'max' => 15,  'step' => 0.1 ),
       'rem' => array( 'min' => 2.5, 'max' => 15,  'step' => 0.1 ),
       '%'   => array( 'min' => 25,  'max' => 100, 'step' => 1   ),
+      'vw'  => array( 'min' => 25,  'max' => 100, 'step' => 1   ),
+      'vh'  => array( 'min' => 25,  'max' => 100, 'step' => 1   ),
     ),
   );
 
@@ -755,8 +761,8 @@ function x_values_anchor( $settings = array() ) {
 
     $k_pre . 'anchor_text_margin'                    => x_module_value( '5px', 'style' ),
 
-    $k_pre . 'anchor_primary_font_family'            => x_module_value( 'fw_fallback', 'style:font-family' ),
-    $k_pre . 'anchor_primary_font_weight'            => x_module_value( 'fw_fallback:400', 'style:font-weight' ),
+    $k_pre . 'anchor_primary_font_family'            => x_module_value( 'inherit', 'style:font-family' ),
+    $k_pre . 'anchor_primary_font_weight'            => x_module_value( 'inherit:400', 'style:font-weight' ),
     $k_pre . 'anchor_primary_font_size'              => x_module_value( '1em', 'style' ),
     $k_pre . 'anchor_primary_letter_spacing'         => x_module_value( '0em', 'style' ),
     $k_pre . 'anchor_primary_line_height'            => x_module_value( '1', 'style' ),
@@ -776,10 +782,10 @@ function x_values_anchor( $settings = array() ) {
     $values = array_merge(
       $values,
       array(
-        $k_pre . 'anchor_href'     => x_module_value( '#', 'markup' ),
-        $k_pre . 'anchor_info'     => x_module_value( false, 'markup' ),
-        $k_pre . 'anchor_blank'    => x_module_value( false, 'markup' ),
-        $k_pre . 'anchor_nofollow' => x_module_value( false, 'markup' ),
+        $k_pre . 'anchor_href'     => x_module_value( '#', 'markup', true ),
+        $k_pre . 'anchor_info'     => x_module_value( false, 'markup', true ),
+        $k_pre . 'anchor_blank'    => x_module_value( false, 'markup', true ),
+        $k_pre . 'anchor_nofollow' => x_module_value( false, 'markup', true ),
       )
     );
   }
@@ -801,8 +807,8 @@ function x_values_anchor( $settings = array() ) {
         $k_pre . 'anchor_text_reverse'                     => x_module_value( false, 'all' ),
         $k_pre . 'anchor_text_spacing'                     => x_module_value( '0.35em', 'style' ),
 
-        $k_pre . 'anchor_secondary_font_family'            => x_module_value( 'fw_fallback', 'style:font-family' ),
-        $k_pre . 'anchor_secondary_font_weight'            => x_module_value( 'fw_fallback:400', 'style:font-weight' ),
+        $k_pre . 'anchor_secondary_font_family'            => x_module_value( 'inherit', 'style:font-family' ),
+        $k_pre . 'anchor_secondary_font_weight'            => x_module_value( 'inherit:400', 'style:font-weight' ),
         $k_pre . 'anchor_secondary_font_size'              => x_module_value( '0.75em', 'style' ),
         $k_pre . 'anchor_secondary_letter_spacing'         => x_module_value( '0em', 'style' ),
         $k_pre . 'anchor_secondary_line_height'            => x_module_value( '1', 'style' ),
@@ -825,8 +831,8 @@ function x_values_anchor( $settings = array() ) {
       $values = array_merge(
         $values,
         array(
-          $k_pre . 'anchor_text_primary_content'                 => x_module_value( 'on', 'all' ),
-          $k_pre . 'anchor_text_secondary_content'               => x_module_value( '', 'all' ),
+          $k_pre . 'anchor_text_primary_content'                 => x_module_value( 'on', 'all', true ),
+          $k_pre . 'anchor_text_secondary_content'               => x_module_value( '', 'all', true ),
           $k_pre . 'anchor_sub_indicator'                        => x_module_value( true, 'all' ),
           $k_pre . 'anchor_sub_indicator_font_size'              => x_module_value( '1em', 'style' ),
           $k_pre . 'anchor_sub_indicator_width'                  => x_module_value( 'auto', 'style' ),
@@ -846,8 +852,8 @@ function x_values_anchor( $settings = array() ) {
       $values = array_merge(
         $values,
         array(
-          $k_pre . 'anchor_text_primary_content'   => x_module_value( __( 'Learn More', '__x__' ), 'all' ),
-          $k_pre . 'anchor_text_secondary_content' => x_module_value( '', 'all' ),
+          $k_pre . 'anchor_text_primary_content'   => x_module_value( __( 'Learn More', '__x__' ), 'all', true ),
+          $k_pre . 'anchor_text_secondary_content' => x_module_value( '', 'all', true ),
         )
       );
     }

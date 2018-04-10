@@ -18,6 +18,14 @@
 ?>
 
 .$_el.x-container {
+  @if $row_inner_container === false {
+    @if $row_width !== 'auto' {
+      width: $row_width;
+    }
+    @unless $row_max_width?? {
+      max-width: $row_max_width;
+    }
+  }
   @unless $row_margin?? {
     margin: $row_margin;
   }

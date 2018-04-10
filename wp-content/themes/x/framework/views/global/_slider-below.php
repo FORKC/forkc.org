@@ -38,6 +38,23 @@ if ( X_REVOLUTION_SLIDER_IS_ACTIVE || X_LAYERSLIDER_IS_ACTIVE ) :
           <i class="x-icon-angle-down" data-x-icon="&#xf107;" aria-hidden="true"></i>
         </a>
 
+        <script>
+          jQuery(function($) {
+            $('.x-slider-container.below .x-slider-scroll-bottom').on('touchstart click', function(e) {
+              e.preventDefault();
+              var mastheadSelector     = ( $('.x-masthead').length > 0 ) ? '.x-masthead' : '.masthead';
+              var mastheadHeight       = $(mastheadSelector).outerHeight();
+              var navbarFixedTopHeight = $('.x-navbar-fixed-top-active .x-navbar').outerHeight();
+              var sliderAboveHeight    = $('.x-slider-container.above').outerHeight();
+              var sliderBelowHeight    = $('.x-slider-container.below').outerHeight();
+              var heightSum            = mastheadHeight + sliderAboveHeight + sliderBelowHeight - navbarFixedTopHeight;
+              $('html, body').animate({
+                scrollTop: heightSum
+              }, 850, 'xEaseInOutExpo');
+            });
+          });
+        </script>
+
       <?php endif; ?>
 
       <?php echo do_shortcode( x_get_slider_shortcode( $slider ) ); ?>

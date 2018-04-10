@@ -21,7 +21,7 @@ $data = array(
   'title'  => __( 'Widget Area', '__x__' ),
   'values' => array_merge(
     array(
-      'widget_area_sidebar'               => x_module_value( '', 'markup' ),
+      'widget_area_sidebar'               => x_module_value( '', 'markup', true ),
       'widget_area_base_font_size'        => x_module_value( '16px', 'style' ),
       'widget_area_bg_color'              => x_module_value( 'transparent', 'style:color' ),
       'widget_area_margin'                => x_module_value( '0em', 'style' ),

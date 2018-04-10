@@ -220,6 +220,7 @@ function emp_add_options() {
 	add_option('em_paypal_button', 'http://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif');
 	add_option('em_paypal_booking_feedback_thanks', __('Thank you for your payment. Your transaction has been completed, and a receipt for your purchase has been emailed to you along with a separate email containing account details to access your booking information on this site. You may log into your account at www.paypal.com to view details of this transaction.', 'em-pro'));
 	add_option('em_paypal_inc_tax', get_option('em_pro_version') == false );
+	add_option('em_paypal_reserve_pending', absint(get_option('em_paypal_booking_timeout', 1)) > 0 );
 	//offline
 	add_option('em_offline_option_name', __('Pay Offline', 'em-pro'));
 	add_option('em_offline_booking_feedback', emp__('Booking successful.', 'events-manager'));
@@ -252,13 +253,25 @@ function emp_add_options() {
 	add_option('dbem_multiple_bookings_feedback_empty_cart', __('Are you sure you want to empty your cart?','em-pro'));
 	add_option('dbem_multiple_bookings_submit_button', __('Place Order','em_pro'));
 	//multiple bookings - emails
-	add_option('dbem_multiple_bookings_contact_email_subject', __('New Booking','em-pro'));
-	$respondent_email_body_localizable = __("#_BOOKINGNAME (#_BOOKINGEMAIL) has made a booking: <br />#_BOOKINGSUMMARY",'em-pro').$email_footer;
-	add_option('dbem_multiple_bookings_contact_email_body', str_replace("<br />", "\n\r", $respondent_email_body_localizable));
+	$contact_person_email_body_template = strtoupper(emp__('Booking Details'))."\n\r".
+		emp__('Name','events-manager').' : #_BOOKINGNAME'."\n\r".
+		emp__('Email','events-manager').' : #_BOOKINGEMAIL'."\n\r".
+		'#_BOOKINGSUMMARY';
+		$contact_person_emails['confirmed'] = sprintf(emp__('The following booking is %s :'),strtolower(emp__('Confirmed')))."\n\r".$contact_person_email_body_template;
+		$contact_person_emails['pending'] = sprintf(emp__('The following booking is %s :'),strtolower(emp__('Pending')))."\n\r".$contact_person_email_body_template;
+		$contact_person_emails['cancelled'] = sprintf(emp__('The following booking is %s :'),strtolower(emp__('Cancelled')))."\n\r".$contact_person_email_body_template;
+	
+		add_option('dbem_multiple_bookings_contact_email_confirmed_subject', emp__("Booking Confirmed"));
+	$respondent_email_body_localizable = sprintf(emp__('The following booking is %s :'),strtolower(emp__('Confirmed')))."\n\r".$contact_person_email_body_template;
+	add_option('dbem_multiple_bookings_contact_email_confirmed_body', $respondent_email_body_localizable);
+	
+	add_option('dbem_multiple_bookings_contact_email_pending_subject', emp__("Booking Pending"));
+	$respondent_email_body_localizable = sprintf(emp__('The following booking is %s :'),strtolower(emp__('Pending')))."\n\r".$contact_person_email_body_template;
+	add_option('dbem_multiple_bookings_contact_email_pending_body', $respondent_email_body_localizable);
 	
 	add_option('dbem_multiple_bookings_contact_email_cancelled_subject', __('Booking Cancelled','em-pro'));
-	$respondent_email_body_localizable = __("#_BOOKINGNAME (#_BOOKINGEMAIL) has cancelled a booking: <br />#_BOOKINGSUMMARY",'em-pro').$email_footer;
-	add_option('dbem_multiple_bookings_contact_email_cancelled_body', str_replace("<br />", "\n\r", $respondent_email_body_localizable));
+	$respondent_email_body_localizable = sprintf(emp__('The following booking is %s :'),strtolower(emp__('Cancelled')))."\n\r".$contact_person_email_body_template;
+	add_option('dbem_multiple_bookings_contact_email_cancelled_body', $respondent_email_body_localizable);
 	
 	add_option('dbem_multiple_bookings_email_confirmed_subject', __('Booking Confirmed','em-pro'));
 	$respondent_email_body_localizable = __("Dear #_BOOKINGNAME, <br />Your booking has been confirmed. <br />Below is a summary of your booking: <br />#_BOOKINGSUMMARY <br />We look forward to seeing you there!",'em-pro').$email_footer;
@@ -360,6 +373,18 @@ function emp_add_options() {
 				delete_option('em_paypal_api_username');
 				delete_option('em_paypal_api_password');
 				delete_option('em_paypal_api_signature');
+			}
+		}
+		if( get_option('em_pro_version') < 2.5124 ){ 
+			update_option('dbem_multiple_bookings_contact_email_confirmed_subject', get_option('dbem_multiple_bookings_contact_email_subject'));
+			update_option('dbem_multiple_bookings_contact_email_confirmed_body', get_option('dbem_multiple_bookings_contact_email_body'));
+			delete_option('dbem_multiple_bookings_contact_email_subject');
+			delete_option('dbem_multiple_bookings_contact_email_body');
+			if( get_option('dbem_multiple_bookings_contact_email_subject_ml') ){
+				update_option('dbem_multiple_bookings_contact_email_confirmed_subject_ml', get_option('dbem_multiple_bookings_contact_email_subject_ml'));
+				update_option('dbem_multiple_bookings_contact_email_confirmed_body_ml', get_option('dbem_multiple_bookings_contact_email_body_ml'));
+				delete_option('dbem_multiple_bookings_contact_email_subject_ml');
+				delete_option('dbem_multiple_bookings_contact_email_body_ml');
 			}
 		}
 	}else{

@@ -108,11 +108,17 @@ jQuery(function($) {
   var $mobileSubs    = $mobileMenu.find('.sub-menu');
 
   $mobileTargets.each(function(i) {
-    $(this).append('<div class="x-sub-toggle" data-toggle="collapse" data-target=".sub-menu.sm-' + i + '"><span><i class="x-icon-angle-double-down" data-x-icon="&#xf103;"></i></span></div>');
+    $(this).append('<div class="x-sub-toggle collapsed" data-x-toggle="collapse-b" data-x-toggleable="x-nav-wrap-mobile-sm-' + i + '" aria-expanded="false" aria-haspopup="true" aria-controls="x-nav-wrap-mobile-sm-' + i + '">' +
+                     '<span><i class="x-icon-angle-double-down" data-x-icon="&#xf103;"></i></span>' +
+                   '</div>');
   });
 
   $mobileSubs.each(function(i) {
-    $(this).addClass('sm-' + i + ' collapse');
+    $(this).attr('id', 'x-nav-wrap-mobile-sm-' + i)
+           .attr('class', 'x-collapsed')
+           .attr('data-x-toggleable', 'x-nav-wrap-mobile-sm-' + i)
+           .attr('data-x-toggle-collapse', '1')
+           .attr('aria-hidden', 'true');
   });
 
   $('.x-sub-toggle').on('click', function(e) {

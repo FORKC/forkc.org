@@ -67,10 +67,10 @@ function x_add_customizer_custom_controls( $wp_customize ) {
             min   : <?php echo $this->choices['min']; ?>,
             max   : <?php echo $this->choices['max']; ?>,
             step  : <?php echo $this->choices['step']; ?>,
-            slide : function(e, ui) { $('#input_<?php echo $this->id; ?>').val(ui.value).keyup(); }
+            slide : function(e, ui) { $('#input_<?php echo $this->id; ?>').val(ui.value).trigger('input'); }
           });
 
-          $('#input_<?php echo $this->id; ?>').val($('#slider_<?php echo $this->id; ?>').slider('value'));
+          // $('#input_<?php echo $this->id; ?>').val($('#slider_<?php echo $this->id; ?>').slider('value'));
 
         });
       </script>

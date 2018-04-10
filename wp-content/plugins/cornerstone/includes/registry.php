@@ -27,10 +27,7 @@ return array(
     'init' => array(
       'menu-item-custom-fields/menu-item-custom-fields',
       'menu-item-custom-fields/menu-item-custom-fields-map',
-    ),
-    'loggedin' => array(
-      'utility/wp-clean-slate',
-    ),
+    )
   ),
 
   'components' => array(
@@ -48,9 +45,12 @@ return array(
       'Element_Orchestrator',
       'Core_Scripts',
       'Front_End',
+      'Element_Front_End',
       'App_Boot',
       'Router',
       'Revision_Manager',
+      'Template_Manager',
+      'Global_Blocks_Manager',
       'Wpml'
     ),
     'after_theme_setup' => array(
@@ -59,6 +59,7 @@ return array(
     ),
     'loggedin' => array(
       'Admin',
+      'Wp_Export',
       'Options_Manager', // MOVE
       'App',
       'Preview_Frame_Loader',
@@ -101,16 +102,19 @@ return array(
       '_text-format',
       '_text-shadow',
       '_text-style',
+      'accordion',
       'alert',
       'anchor',
       'audio',
       'bg',
+      'quote',
       'breadcrumbs',
       'cart',
       'column',
       'counter',
       'dropdown',
       'frame',
+      'global-block',
       'graphic',
       'image',
       'line',
@@ -126,18 +130,26 @@ return array(
       'separator',
       'search',
       'section',
+      'statbar',
+      'tabs',
       'text',
       'toggle',
       'video',
     ),
 
     'definitions' => array(
+
       'button',
       'column',
       'content-area',
       'content-area-dropdown',
       'content-area-modal',
       'content-area-off-canvas',
+      'global-block',
+      'accordion',
+      'accordion-item',
+      // 'tabs',
+      // 'tab',
       'image',
       'nav-collapsed',
       'nav-dropdown',
@@ -154,9 +166,11 @@ return array(
       'social',
       'text',
       'headline',
+      'quote',
       'breadcrumbs',
       'alert',
       'counter',
+      'statbar',
       'line',
       'gap',
       'widget-area',

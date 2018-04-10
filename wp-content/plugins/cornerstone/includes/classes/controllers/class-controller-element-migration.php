@@ -5,7 +5,7 @@ class Cornerstone_Controller_Element_Migration extends Cornerstone_Plugin_Compon
   public function migrate_elements( $data ) {
 
     if ( !isset( $data['elements'] ) ) {
-      return new WP_Error( 'cornertone', 'Elements missing.' );
+      return new WP_Error( 'cornerstone', 'Elements missing.' );
     }
 
 		$version = isset( $data['version'] ) ? $data['version'] : 0;

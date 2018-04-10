@@ -177,9 +177,9 @@ function x_values_audio( $settings = array() ) {
   $values = array(
     'audio_type'        => x_module_value( 'embed', 'markup' ),
     'audio_width'       => x_module_value( '100%', 'style' ),
-    'audio_max_width'   => x_module_value( '300px', 'style' ),
-    'audio_embed_code'  => x_module_value( '', 'markup:html' ),
-    'mejs_source_files' => x_module_value( '', 'markup:raw' ),
+    'audio_max_width'   => x_module_value( 'none', 'style' ),
+    'audio_embed_code'  => x_module_value( '', 'markup:html', true ),
+    'mejs_source_files' => x_module_value( '', 'markup:raw', true ),
     'audio_margin'      => x_module_value( '0em', 'style' ),
   );
 

@@ -51,6 +51,11 @@ function x_addons_page_home() {
           <?php require( 'markup/page-home-box-support.php' ); ?>
         </div>
 
+        <div class="tco-row">
+          <?php do_action( 'x_overview_main_before_theme_options_manager' ); ?>
+          <?php require( 'markup/page-home-box-theme-options-manager.php' ); ?>
+        </div>
+
         <?php do_action( 'x_overview_main_content_middle' ); ?>
 
         <div class="tco-row">

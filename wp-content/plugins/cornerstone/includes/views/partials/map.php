@@ -38,7 +38,7 @@ switch ( $map_type ) {
   // -----
 
   case 'embed' :
-    $map_content = ( ! empty( $map_embed_code ) ) ? $map_embed_code : '<img src="' . cornerstone_make_placeholder_image_uri( 280, 500, 'rgba(0, 0, 0, 0.35)' ) . '" width="500" height="280" alt="Placeholder">';
+    $map_content = ( ! empty( $map_embed_code ) ) ? $map_embed_code : '<img style="object-fit: cover; width: 100%; height: 100%;" src="' . cornerstone_make_placeholder_image_uri( 1, 1, 'rgba(0, 0, 0, 0.35)' ) . '" width="1" height="1" alt="Placeholder">';
     break;
 
 

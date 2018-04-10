@@ -133,7 +133,7 @@ class Cornerstone_Builder_Renderer extends Cornerstone_Plugin_Component {
       $markup = $definition->preview( $element, $this->orchestrator, $parent, $transient, $inception );
     } else {
       $message = ( $flags['undefined_message']) ? $flags['undefined_message'] : csi18n('app.elements-undefined-preview');
-      $markup = "<div class=\"cs-undefined-element\"><p>$message</p></div>";
+      $markup = "<div class=\"cs-empty-element cs-undefined-element\"><p class=\"cs-empty-element-message\">$message</p></div>";
     }
 
 
@@ -143,12 +143,23 @@ class Cornerstone_Builder_Renderer extends Cornerstone_Plugin_Component {
       $markup = '';
     }
 
-    if ( ( ! isset( $flags['dynamic_child']) || ! $flags['dynamic_child'] ) &&
-         ( ! isset( $flags['attr_keys'] ) || empty( $flags['attr_keys']) ) ) {
+    if ( ( ! isset( $flags['safe_container']) || ! $flags['safe_container'] ) &&
+         ( ! isset( $flags['dynamic_child'])  || ! $flags['dynamic_child'] ) &&
+         ( ! isset( $flags['attr_keys'] )     || empty( $flags['attr_keys'] ) ) ) {
       $markup = '{{base64content "' . base64_encode( $markup ) . '" }}';
     }
 
-    return "<div class=\"cs-element-preview-wrapper\">$markup</div>";
+    if ( isset( $flags['safe_container'] ) && $flags['safe_container'] ) {
+      return $markup;
+    }
+
+    $tag = 'div';
+
+    if ( isset( $flags['wrapping_tag'] ) && $flags['wrapping_tag'] ) {
+      $tag = $flags['wrapping_tag'];
+    }
+
+    return "<$tag class=\"cs-element-preview-wrapper\">$markup</$tag>";
 
 	}
 

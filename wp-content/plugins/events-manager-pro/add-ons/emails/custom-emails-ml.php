@@ -22,7 +22,6 @@ class EM_Custom_Emails_ML{
 	 */
 	public static function em_custom_emails_event_messages( $custom_emails, $EM_Booking ){
 	    if( !empty($EM_Booking->booking_meta['lang']) ){
-	        $custom_emails = array();
 		    //get the translated event
 	        $EM_Event = EM_ML::get_translation($EM_Booking->get_event(), $EM_Booking->booking_meta['lang']);
 	        //check that we're not already dealing with the translated event

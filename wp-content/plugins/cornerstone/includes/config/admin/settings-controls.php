@@ -53,7 +53,7 @@ $controls = array(
 		)
 	),
 
-  'content_builer_elements' => array(
+  'content_builder_elements' => array(
 		'type' => 'select',
 		'ui' => array(
 			'title'       => __( 'Content Builder Elements', 'cornerstone' ),

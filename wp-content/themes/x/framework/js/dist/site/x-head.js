@@ -23,8 +23,18 @@
 // =============================================================================
 // TABLE OF CONTENTS
 // -----------------------------------------------------------------------------
-//   01. Custom Functionality
+//   01. Add scrollBottom plugin
+//   02. Custom Functionality
 // =============================================================================
+
+// Add scrollBottom() plugin
+// ---------------------------
+
+jQuery.fn.scrollBottom = function() {
+  return jQuery(document).height() - this.scrollTop() - this.height();
+};
+
+
 
 // Custom Functionality
 // =============================================================================
@@ -38,15 +48,6 @@ jQuery(document).ready(function($) {
     classActive  : 'x-active',
     classFocused : 'x-focused',
   }
-
-
-  // Add scrollBottom() Function
-  // ---------------------------
-
-  $.fn.scrollBottom = function() {
-    return $(document).height() - this.scrollTop() - this.height();
-  };
-
 
   // Prevent Default Behavior on Various Toggles
   // -------------------------------------------
@@ -81,12 +82,12 @@ jQuery(document).ready(function($) {
   // pressed to ensure that elements are spaced out properly.
 
   $('body').on('click', '.x-iso-container .flex-direction-nav a', function() {
-    setTimeout(function() { $window.xsmartresize(); }, 750);
+    setTimeout(function() { $(window).xsmartresize(); }, 750);
   });
 
   $('body.x-masonry-active').on('keyup', function(e) {
     if (e.which >= 37 && e.which <= 40) {
-      setTimeout(function() { $window.xsmartresize(); }, 750);
+      setTimeout(function() { $(window).xsmartresize(); }, 750);
     }
   });
 

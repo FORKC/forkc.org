@@ -158,9 +158,12 @@ if ( ! function_exists( 'x_breadcrumbs_data' ) ) :
 
     GLOBAL $wp;
 
-    $page_for_posts_id = get_option( 'page_for_posts' );
 
-    $blog_label = __( 'Blog', '__x__' );
+    // Label - Blog
+    // ------------
+
+    $page_for_posts_id = get_option( 'page_for_posts' );
+    $blog_label        = __( 'Blog', '__x__' );
 
     if ( ! $page_for_posts_id ) {
 
@@ -176,15 +179,49 @@ if ( ! function_exists( 'x_breadcrumbs_data' ) ) :
       $blog_label = get_the_title( $page_for_posts_id );
     }
 
+
+    // Label - Shop
+    // ------------
+
+    $shop_label = '';
+
+    if ( X_WOOCOMMERCE_IS_ACTIVE ) {
+      if ( function_exists( 'wc_get_page_id' ) ) {
+        $shop_label = get_the_title( wc_get_page_id( 'shop' ) );
+      } else {
+        $shop_label = get_the_title( woocommerce_get_page_id( 'shop' ) );
+      }
+    }
+
+
+    // Label - Events
+    // --------------
+
+    $events_label = '';
+
+    if ( X_MEC_IS_ACTIVE ) {
+      $events_options = get_option( 'mec_options' );
+      $events_label   = $events_options['settings']['archive_title'];
+    }
+
+
+    // Data Args
+    // ---------
+
     $args = apply_filters( 'x_breadcrumbs_data_args', wp_parse_args( $args, array(
       'home_label'            => __( 'Home', '__x__' ),
       'blog_label'            => $blog_label,
       'search_label'          => __( 'Search Results', '__x__' ),
       '404_label'             => __( '404 (Page Not Found)', '__x__' ),
-      'shop_label'            => X_WOOCOMMERCE_IS_ACTIVE ? ( function_exists( 'wc_get_page_id' ) ) ? get_the_title( wc_get_page_id( 'shop' ) ) : get_the_title( woocommerce_get_page_id( 'shop' ) ) : '',
+      'shop_label'            => $shop_label,
       'portfolio_label'       => x_get_parent_portfolio_title(),
+      'events_label'          => $events_label, 
       'archive_default_label' => __( 'Archives', '__x__' ),
     ) ) );
+
+
+    // Begin Breadcrumbs
+    // -----------------
 
     $crumbs = array(
       array(
@@ -199,6 +236,7 @@ if ( ! function_exists( 'x_breadcrumbs_data' ) ) :
     }
 
     $q_obj = get_queried_object();
+
 
     // Add Breadcrumbs
     // ---------------
@@ -265,7 +303,7 @@ if ( ! function_exists( 'x_breadcrumbs_data' ) ) :
 
     } elseif ( x_is_bbpress() ) {
 
-      add_filter( 'bbp_get_breadcrumb', 'x_bbpress_get_breadcrumb',10,2 );
+      add_filter( 'bbp_get_breadcrumb', 'x_bbpress_get_breadcrumb', 10, 2 );
       remove_filter( 'bbp_no_breadcrumb', '__return_true' );
 
       if ( bbp_is_forum_archive() ) {
@@ -278,26 +316,25 @@ if ( ! function_exists( 'x_breadcrumbs_data' ) ) :
 
       } else {
 
-        $bbpress_crumbs = bbp_get_breadcrumb();
+        $bbpress_crumbs      = bbp_get_breadcrumb();
+        $final_bbpress_crumb = array_pop( $bbpress_crumbs );
 
-        $final_bbpress_crumb = array_pop($bbpress_crumbs);
+        foreach ( $bbpress_crumbs as $bbpress_crumb ) {
 
-        foreach ($bbpress_crumbs as $bbpress_crumb ) {
-
-          preg_match('/<a.+?href="(.+?)".*?class="(.*?)".*?>(.*?)<\/a>/', $bbpress_crumb, $matches);
+          preg_match( '/<a.+?href="(.+?)".*?class="(.*?)".*?>(.*?)<\/a>/', $bbpress_crumb, $matches );
 
           $crumbs[] = array(
-            'type' => isset($matches[2]) ? $matches[2] : '',
-            'url' => isset($matches[1]) ? $matches[1] : '',
-            'label' => isset($matches[3]) ? $matches[3] : '',
+            'type'  => isset( $matches[2] ) ? $matches[2] : '',
+            'url'   => isset( $matches[1] ) ? $matches[1] : '',
+            'label' => isset( $matches[3] ) ? $matches[3] : '',
           );
 
         }
 
         $crumbs[] = array(
-          'type' => 'bbp-current',
-          'url'  => home_url( $wp->request . '/' ),
-          'label' => $final_bbpress_crumb
+          'type'  => 'bbp-current',
+          'url'   => home_url( $wp->request . '/' ),
+          'label' => $final_bbpress_crumb,
         );
 
       }
@@ -328,6 +365,9 @@ if ( ! function_exists( 'x_breadcrumbs_data' ) ) :
           case 'x-portfolio' :
             $archive_label = $args['portfolio_label'];
             break;
+          case 'mec-events' :
+            $archive_label = $args['events_label'];
+            break;
           default :
             $archive_label = $q_obj->label;
             break;
@@ -353,7 +393,11 @@ if ( ! function_exists( 'x_breadcrumbs_data' ) ) :
               $ancestor_archive_label = $args['shop_label'];
               break;
             case 'x-portfolio' :
+              $ancestor_archive_link  = x_get_parent_portfolio_link();
               $ancestor_archive_label = $args['portfolio_label'];
+              break;
+            case 'mec-events' :
+              $ancestor_archive_label = $args['events_label'];
               break;
             default :
               $post_type_obj          = get_post_type_object( $q_obj->post_type );
@@ -385,7 +429,7 @@ if ( ! function_exists( 'x_breadcrumbs_data' ) ) :
           'label' => $q_obj->post_title,
         );
 
-      } elseif ( property_exists( $q_obj, 'parent' ) ) { // 02
+      } elseif ( property_exists( $q_obj, 'parent' ) ) { // 03
 
         $archive_tax = get_taxonomy( $q_obj->taxonomy );
 
@@ -405,7 +449,11 @@ if ( ! function_exists( 'x_breadcrumbs_data' ) ) :
                   $ancestor_archive_label = $args['shop_label'];
                   break;
                 case 'x-portfolio' :
+                  $ancestor_archive_link  = x_get_parent_portfolio_link();
                   $ancestor_archive_label = $args['portfolio_label'];
+                  break;
+                case 'mec-events' :
+                  $ancestor_archive_label = $args['events_label'];
                   break;
                 default :
                   $post_type_obj          = get_post_type_object( $archive_post_type );

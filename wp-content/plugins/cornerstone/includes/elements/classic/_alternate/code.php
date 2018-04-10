@@ -11,7 +11,8 @@ class CS_Code extends Cornerstone_Element_Base {
       'supports'    => array( 'id', 'class', 'style' ),
       'autofocus' => array(
     		'content' => '.x-code',
-    	)
+    	),
+      'protected_keys' => array( 'content' )
     );
   }
 

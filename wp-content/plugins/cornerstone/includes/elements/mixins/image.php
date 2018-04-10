@@ -134,7 +134,7 @@ function x_controls_image( $settings = array() ) {
             'conditions' => $conditions_standard,
             'options'    => array(
               'available_units' => array( 'px', 'em', 'rem', '%', 'vw', 'vh' ),
-              'valid_keywords'  => array( 'auto' ),
+              'valid_keywords'  => array( 'auto', 'calc' ),
             ),
           ),
           array(
@@ -144,7 +144,7 @@ function x_controls_image( $settings = array() ) {
             'conditions' => $conditions_standard,
             'options'    => array(
               'available_units' => array( 'px', 'em', 'rem', '%', 'vw', 'vh' ),
-              'valid_keywords'  => array( 'none' ),
+              'valid_keywords'  => array( 'none', 'calc' ),
             ),
           ),
           array(
@@ -244,7 +244,7 @@ function x_values_image( $settings = array() ) {
     'image_styled_max_width'      => x_module_value( 'none', 'style' ),
     'image_bg_color'              => x_module_value( 'transparent', 'style:color' ),
     'image_bg_color_alt'          => x_module_value( 'transparent', 'style:color' ),
-    'image_src'                   => x_module_value( '', 'markup' ),
+    'image_src'                   => x_module_value( '', 'markup', true ),
     'image_margin'                => x_module_value( '0px', 'style' ),
     'image_padding'               => x_module_value( '0px', 'style' ),
     'image_border_width'          => x_module_value( '0px', 'style' ),
@@ -262,7 +262,7 @@ function x_values_image( $settings = array() ) {
     $values = array_merge(
       $values,
       array(
-        'image_retina' => x_module_value( true, 'markup' ),
+        'image_retina' => x_module_value( true, 'markup', true ),
       )
     );
   }
@@ -271,7 +271,7 @@ function x_values_image( $settings = array() ) {
     $values = array_merge(
       $values,
       array(
-        'image_width' => x_module_value( 48, 'markup' ),
+        'image_width' => x_module_value( 48, 'markup', true ),
       )
     );
   }
@@ -280,7 +280,7 @@ function x_values_image( $settings = array() ) {
     $values = array_merge(
       $values,
       array(
-        'image_height' => x_module_value( 48, 'markup' ),
+        'image_height' => x_module_value( 48, 'markup', true ),
       )
     );
   }
@@ -289,10 +289,10 @@ function x_values_image( $settings = array() ) {
     $values = array_merge(
       $values,
       array(
-        'image_link'     => x_module_value( false, 'markup' ),
-        'image_href'     => x_module_value( '', 'markup' ),
-        'image_blank'    => x_module_value( false, 'markup' ),
-        'image_nofollow' => x_module_value( false, 'markup' ),
+        'image_link'     => x_module_value( false, 'markup', true ),
+        'image_href'     => x_module_value( '', 'markup', true ),
+        'image_blank'    => x_module_value( false, 'markup', true ),
+        'image_nofollow' => x_module_value( false, 'markup', true ),
       )
     );
   }
@@ -301,7 +301,7 @@ function x_values_image( $settings = array() ) {
     $values = array_merge(
       $values,
       array(
-        'image_info' => x_module_value( false, 'markup' ),
+        'image_info' => x_module_value( false, 'markup', true ),
       )
     );
   }
@@ -310,7 +310,7 @@ function x_values_image( $settings = array() ) {
     $values = array_merge(
       $values,
       array(
-        'image_alt' => x_module_value( '', 'markup' ),
+        'image_alt' => x_module_value( '', 'markup', true ),
       )
     );
   }

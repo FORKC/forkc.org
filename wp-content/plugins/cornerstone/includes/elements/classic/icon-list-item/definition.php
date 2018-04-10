@@ -14,7 +14,14 @@ class CSE_Icon_List_Item {
 
 	public function flags() {
 		return array(
-			'child' => true
+			'child' => true,
+      'alt_breadcrumb' => __( 'Item', 'cornerstone' ),
+      'protected_keys' => array(
+        'title',
+        'link_url',
+        'link_title',
+        'link_new_tab',
+      ),
 		);
 	}
 

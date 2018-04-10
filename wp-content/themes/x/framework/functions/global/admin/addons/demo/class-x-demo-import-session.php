@@ -42,6 +42,10 @@ class X_Demo_Import_Session {
       ) );
     }
 
+    if ( function_exists('cs_set_curl_timeout_begin') ) {
+      cs_set_curl_timeout_begin( 30 );
+    }
+
     // Uncomment to simulate a timeout
     // header("HTTP/1.0 408 Request Timeout"); die();
 
@@ -54,6 +58,10 @@ class X_Demo_Import_Session {
         'debug_message' => $response->get_error_message(),
         'debug' => $debug
       ) );
+    }
+
+    if ( function_exists('cs_set_curl_timeout_end') ) {
+      cs_set_curl_timeout_end();
     }
 
     $response['debug'] = $debug;

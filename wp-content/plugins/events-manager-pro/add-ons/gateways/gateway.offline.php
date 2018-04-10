@@ -40,7 +40,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 		global $EM_Notices, $EM_Booking, $EM_Event, $wpdb;
 		//if manual booking submitted, prevent double bookings check so that current user can book someone else if they are also booked in event
 		if( !empty($_REQUEST['manual_booking']) && wp_verify_nonce($_REQUEST['manual_booking'], 'em_manual_booking_'.$_REQUEST['event_id']) ){
-		    add_action('pre_option_dbem_bookings_double',create_function('','return true;')); //so we don't get a you're already booked here message
+			add_action('pre_option_dbem_bookings_double','__return_true'); //so we don't get a you're already booked here message
 		}
 		//Check if manual payment has been added
 		if( !empty($_REQUEST['booking_id']) && !empty($_REQUEST['action']) && !empty($_REQUEST['_wpnonce'])){
@@ -113,7 +113,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 	}
 	
 	function em_bookings_pending_count($count){
-		return $count + count(EM_Bookings::get(array('status'=>'5'))->bookings);
+		return $count + EM_Bookings::count(array('status'=>'5'));
 	}
 	
 	/* 
@@ -191,7 +191,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 						<input type="hidden" name="action" value="gateway_add_payment" />
 						<input type="hidden" name="_wpnonce" value="<?php echo wp_create_nonce('gateway_add_payment'); ?>" />
 						<input type="hidden" name="redirect_to" value="<?php echo (!empty($_REQUEST['redirect_to'])) ? $_REQUEST['redirect_to']:em_wp_get_referer(); ?>" />
-						<input type="submit" value="<?php _e('Add Offline Payment', 'em-pro'); ?>" />
+						<input type="submit" class="<?php if( is_admin() ) echo 'button-primary'; ?>" value="<?php _e('Add Offline Payment', 'em-pro'); ?>" />
 					</form>
 				</div>					
 			</div>
@@ -222,7 +222,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 		add_action('em_booking_form_footer', array($this,'em_booking_form_footer'),10,2);
 		add_action('em_booking_form_custom', array($this,'em_booking_form_custom'), 1);
         $header_button_classes = is_admin() ? 'page-title-action':'button add-new-h2';
-		add_action('pre_option_dbem_bookings_double',create_function('','return true;')); //so we don't get a you're already booked here message
+		add_action('pre_option_dbem_bookings_double','__return_true'); //so we don't get a you're already booked here message
 		do_action('em_before_manual_booking_form');
 		?>
 		<div class='wrap'>
@@ -297,17 +297,22 @@ class EM_Gateway_Offline extends EM_Gateway {
 				}
 			}
 			add_filter('em_booking_set_status',array(&$this,'em_booking_set_status'),1,2);
-			$add_txt = '<a href=\"'.em_wp_get_referer().'\">'.__('Add another booking','em-pro').'</a>';
-			add_filter('em_action_booking_add', create_function('$feedback', '$feedback["message"] = $feedback["message"] . "<p>'.$add_txt.'</p>"; return $feedback;'));
+			add_filter('em_action_booking_add', 'EM_Gateway_Offline::em_action_booking_add');
 		}
 		return $result;
+	}
+	
+	public static function em_action_booking_add( $feedback ){
+		$add_txt = '<a href="'.em_wp_get_referer().'">'.__('Add another booking','em-pro').'</a>';
+		$feedback["message"] = $feedback["message"] . "<p>$add_txt</p>";
+		return $feedback;
 	}
 	
 	function em_booking_validate($result, $EM_Booking){
 		if( !empty($_REQUEST['manual_booking']) && wp_verify_nonce($_REQUEST['manual_booking'], 'em_manual_booking_'.$_REQUEST['event_id']) ){
 			if( !empty($_REQUEST['person_id']) ){
 				//@todo allow users to update user info during manual booking
-				add_filter('option_dbem_emp_booking_form_reg_input', create_function('','return false;'));
+				add_filter('option_dbem_emp_booking_form_reg_input', '__return_false');
 				//impose double bookings here, because earlier we had to disable it due to the fact that the logged in admin is checked for double booking rather than represented user
 		  		remove_all_actions('pre_option_dbem_bookings_double'); //so we don't get a you're already booked here message
 				if( !get_option('dbem_bookings_double') && $EM_Booking->get_event()->get_bookings()->has_booking($_REQUEST['person_id']) ){

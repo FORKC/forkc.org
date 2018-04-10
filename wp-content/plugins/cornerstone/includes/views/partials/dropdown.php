@@ -13,6 +13,7 @@ $tag    = ( isset( $dropdown_is_list ) && $dropdown_is_list ) ? 'ul' : 'div';
 // Prepare Attr Values
 // -------------------
 
+$id_slug = ( isset( $id ) && ! empty( $id ) ) ? $id . '-dropdown' : $mod_id . '-dropdown';
 $classes = x_attr_class( array( $mod_id, 'x-dropdown', $class ) );
 
 
@@ -20,10 +21,12 @@ $classes = x_attr_class( array( $mod_id, 'x-dropdown', $class ) );
 // ------------
 
 $atts = array(
+  'id'                => $id_slug,
   'class'             => $classes,
   'data-x-stem'       => NULL,
   'data-x-stem-top'   => NULL,
   'data-x-toggleable' => $mod_id,
+  'aria-hidden'       => 'true',
 );
 
 if ( isset( $_region ) && $_region === 'left' ) {
@@ -32,10 +35,6 @@ if ( isset( $_region ) && $_region === 'left' ) {
 
 if ( isset( $_region ) && $_region === 'right' ) {
   $atts['data-x-stem-top'] = 'rh'; 
-}
-
-if ( isset( $id ) && ! empty( $id ) ) {
-  $atts['id'] = $id . '-dropdown';
 }
 
 

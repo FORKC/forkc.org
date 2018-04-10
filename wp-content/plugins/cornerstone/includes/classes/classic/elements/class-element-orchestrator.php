@@ -4,6 +4,7 @@ class Cornerstone_Element_Orchestrator extends Cornerstone_Plugin_Component {
 
 	protected $class_prefix = 'CSE';
 	protected $elements = array();
+  public $dependencies = array( 'Control_Mixins' );
 	protected $loaded = false;
 	protected $registered = false;
 	protected $magic_hooks;

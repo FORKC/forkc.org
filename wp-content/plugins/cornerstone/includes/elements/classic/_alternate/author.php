@@ -11,7 +11,8 @@ class CS_Author extends Cornerstone_Element_Base {
       'supports'    => array( 'id', 'class', 'style' ),
       'autofocus' => array(
     		'heading' => '.x-author-box',
-    	)
+    	),
+      'protected_keys' => array( 'heading', 'author_id' )
     );
   }
 

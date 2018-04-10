@@ -12,11 +12,12 @@ class CS_Gravity_Forms extends Cornerstone_Element_Base {
 			'description' => __( 'Alert description.', 'my-text-domain' ),
 			'helpText'   => array(
         'title' => __( 'Display issues?', 'cornerstone' ),
-        'message' => __( '<strong>Gravity Forms</strong> uses it&apos;s own dynamic process to render forms, which could result in visual differences in the preview area. Be sure to test by viewing the true front end of this page.', 'cornerstone' ),
+        'message' => __( '<strong>Gravity Forms</strong> uses its own dynamic process to render forms, which could result in visual differences in the preview area. Be sure to test by viewing the true front end of this page.', 'cornerstone' ),
       ),
 			'supports'    => array( 'id', 'class', 'style' ),
 			'empty'       => array( 'form_id' => 'none' ),
-      'undefined_message' => __('This element can not render because Gravity Forms is not active.', 'cornerstone' )
+      'undefined_message' => __('This element can not render because Gravity Forms is not active.', 'cornerstone' ),
+      'protected_keys' => array( 'form_id' )
 		);
 	}
 

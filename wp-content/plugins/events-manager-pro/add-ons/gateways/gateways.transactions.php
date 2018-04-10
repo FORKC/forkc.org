@@ -103,6 +103,7 @@ class EM_Gateways_Transactions{
 					el.parents('#em-transactions-table').find('.table-wrap').first().append('<div id="em-loading" />');
 					$.get( EM.ajaxurl, el.serializeArray(), function(data){
 						el.parents('#em-transactions-table').first().replaceWith(data);
+						$('#em-transactions-table form.transactions-filter input[name="pno"]').val(1); //reset pno in JS
 					});
 					return false;
 				});
@@ -305,10 +306,9 @@ class EM_Gateways_Transactions{
 				<?php
 			}
 		} else {
-			$columncount = count($columns);
 			?>
 			<tr valign="middle" class="alternate" >
-				<td colspan="<?php echo $columncount; ?>" scope="row"><?php _e('No Transactions','em-pro'); ?></td>
+				<td colspan="<?php echo $columns; ?>" scope="row"><?php _e('No Transactions','em-pro'); ?></td>
 		    </tr>
 			<?php
 		}
@@ -350,13 +350,13 @@ class EM_Gateways_Transactions{
 			}
 			$conditions[] = $booking_condition;		
 		}elseif( is_object($context) && get_class($context)=="EM_Person" ){
-			//FIXME peole could potentially view other's txns like this
 			$join = " JOIN $table ON $table.booking_id=tx.booking_id";
 			$conditions[] = "person_id = ".$context->ID;			
 		}elseif( is_object($context) && get_class($context)=="EM_Ticket" && $context->can_manage('manage_bookings','manage_others_bookings') ){
 			$booking_ids = array();
-			foreach($context->get_bookings()->bookings as $EM_Booking){
-				$booking_ids[] = $EM_Booking->booking_id;
+			$EM_Ticket = $context;
+			foreach( EM_Bookings::get( array('ticket_id' => $EM_Ticket->ticket_id, 'array' => 'booking_id') ) as $booking ){
+				$booking_ids[] = $booking['booking_id'];
 			}
 			if( count($booking_ids) > 0 ){
 				$conditions[] = "tx.booking_id IN (".implode(',', $booking_ids).")";
@@ -389,7 +389,7 @@ class EM_Gateways_Transactions{
 	 * ----------------------------------------------------------
 	 */
 	
-	function em_bookings_table_rows_col($value, $col, $EM_Booking, $EM_Bookings_Table, $csv){
+	function em_bookings_table_rows_col($value, $col, $EM_Booking, $EM_Bookings_Table, $format){
 		global $EM_Event;
 		if( $col == 'gateway_txn_id' ){
 			//check if this isn't a multiple booking, otherwise look for info from main booking

@@ -9,7 +9,9 @@ class CS_Revolution_Slider extends Cornerstone_Element_Base {
       'section'     => 'media',
       'description' => __( 'Place a Revolution Slider element into your content.', 'cornerstone' ),
       'supports'    => array(),
-      'undefined_message' => __('This element can not render because Revolution Slider is not active.', 'cornerstone' )
+      'can_preview' => false,
+      'undefined_message' => __('This element can not render because Revolution Slider is not active.', 'cornerstone' ),
+      'protected_keys' => array( 'alias' )
     );
   }
 

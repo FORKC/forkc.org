@@ -8,7 +8,8 @@ class CS_Recent_Posts extends Cornerstone_Element_Base {
       'title'       => __('Recent Posts', 'cornerstone' ),
       'section'     => 'content',
       'description' => __( 'Recent Posts description.', 'cornerstone' ),
-      'supports'    => array( 'id', 'class', 'style' )
+      'supports'    => array( 'id', 'class', 'style' ),
+      'protected_keys' => array( 'post_type' )
     );
   }
 

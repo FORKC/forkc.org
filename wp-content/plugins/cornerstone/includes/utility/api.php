@@ -88,37 +88,12 @@ function cornerstone_unregister_integration( $name ) {
 	CS()->component( 'Integration_Manager' )->unregister( $name );
 }
 
-/**
- * Provide Cornerstone with data and a template loader so styles can be dynamically
- * generated. Should be used before `wp_head`, preferably in `template_redirect`
- * @param  array    $header          Header data object
- * @param  string   $class_prefix    CSS prefix to place before each id.
- * @return none
- */
-function cornerstone_setup_header_styles( $header ) {
-  $regions = CS()->loadComponent( 'Regions' );
-  if ( $regions ) {
-    $regions->register_header_styles( $header );
-  }
+function cornerstone_register_element_styles( $id, $elements ) {
+  return CS()->loadComponent( 'Element_Front_End' )->register_element_styles( $id, $elements );
 }
 
-function cornerstone_setup_style_class_prefix( $mode, $prefix ) {
-  CS()->loadComponent( 'Element_Manager' )->set_class_prefix( $mode, $prefix );
-}
-
-
-/**
- * Provide Cornerstone with data and a template loader so styles can be dynamically
- * generated. Should be used before `wp_head`, preferably in `template_redirect`
- * @param  array    $header          Footer data object
- * @param  string   $class_prefix    CSS prefix to place before each id.
- * @return none
- */
-function cornerstone_setup_footer_styles( $footer ) {
-  $regions = CS()->loadComponent( 'Regions' );
-  if ( $regions ) {
-    $regions->register_footer_styles( $footer );
-  }
+function cornerstone_register_styles( $id, $css ) {
+  return CS()->loadComponent( 'Styling' )->add_styles( $id, $css );
 }
 
 function cornerstone_options_register_option( $name, $default_value = null, $options = array() ) {
@@ -230,6 +205,10 @@ function cornerstone_post_process_color( $value ) {
 
 function cornerstone_cleanup_generated_styles() {
   return CS()->loadComponent('Cleanup')->clean_generated_styles();
+}
+
+function cornerstone_restore_import_starter_pack() {
+  return CS()->loadComponent('Template_Manager')->unhide_starter_pack();
 }
 
 /**

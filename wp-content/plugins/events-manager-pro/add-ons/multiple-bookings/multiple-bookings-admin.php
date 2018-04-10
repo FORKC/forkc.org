@@ -128,20 +128,28 @@ class EM_Multiple_Bookings_Admin {
 				<tr class="em-header"><td colspan='2'><h4><?php esc_html_e_emp('Event Admin/Owner Emails', 'events-manager'); ?></h4></td></tr>
 				<tbody class="em-subsection">
     				<tr class="em-subheader"><td colspan='2'>
-    					<h5><?php esc_html_e_emp('Contact person booking confirmed','events-manager'); ?></h5>
-    					<em><?php esc_html_e_emp('An email will be sent to the event contact when a booking is first made.','events-manager').$bookings_placeholder_tip ?></em>
+    					<h5><?php esc_html_e_emp('Confirmed booking email'); ?></h5>
+    					<em><?php esc_html_e_emp('This is sent when a person\'s booking is confirmed. This will be sent automatically if approvals are required and the booking is approved. If approvals are disabled, this is sent out when a user first submits their booking.').$bookings_placeholder_tip ?></em>
     				</td></tr>
     				<?php
-    				em_options_input_text ( esc_html__emp( 'Contact person email subject', 'events-manager'), 'dbem_multiple_bookings_contact_email_subject', $email_subject_tip );
-    				em_options_textarea ( esc_html__emp( 'Contact person email', 'events-manager'), 'dbem_multiple_bookings_contact_email_body', '' );
+    				em_options_input_text ( esc_html__emp('Confirmed booking email'), 'dbem_multiple_bookings_contact_email_confirmed_subject', $email_subject_tip );
+    				em_options_textarea ( esc_html__emp('Booking confirmed email'), 'dbem_multiple_bookings_contact_email_confirmed_body', '' );
     				?>
     				<tr class="em-subheader"><td colspan='2'>
-    					<h5><?php esc_html_e_emp('Contact person booking cancelled','events-manager') ?></h5>
-    					<em><?php esc_html_e_emp('An email will be sent to the event contact if someone cancels their booking.','events-manager').$bookings_placeholder_tip ?></em>
+    					<h5><?php esc_html_e_emp('Pending booking email').$email_subject_tip ?></h5>
+    					<em><?php esc_html_e_emp('This is sent when a person\'s booking is pending. If approvals are enabled, this is sent out when a user first submits their booking.').$bookings_placeholder_tip ?></em>
     				</td></tr>
     				<?php
-    				em_options_input_text ( esc_html__emp( 'Contact person cancellation subject', 'events-manager'), 'dbem_multiple_bookings_contact_email_cancelled_subject', $email_subject_tip );
-    				em_options_textarea ( esc_html__emp( 'Contact person cancellation email', 'events-manager'), 'dbem_multiple_bookings_contact_email_cancelled_body', '' );
+    				em_options_input_text ( esc_html__emp( 'Booking pending email subject'), 'dbem_multiple_bookings_contact_email_pending_subject', $email_subject_tip );
+    				em_options_textarea ( esc_html__emp( 'Booking pending email'), 'dbem_multiple_bookings_contact_email_pending_body', '' );
+    				?>
+    				<tr class="em-subheader"><td colspan='2'>
+    					<h5><?php esc_html_e_emp('Booking cancelled','events-manager') ?></h5>
+    					<em><?php esc_html_e_emp('An email will be sent to the event contact if someone cancels their booking.').$bookings_placeholder_tip ?></em>
+    				</td></tr>
+    				<?php
+    				em_options_input_text ( esc_html__emp('Booking cancelled email subject'), 'dbem_multiple_bookings_contact_email_cancelled_subject', $email_subject_tip );
+    				em_options_textarea ( esc_html__emp('Booking cancelled email'), 'dbem_multiple_bookings_contact_email_cancelled_body', '' );
     				?>
 				</tbody>
 				<tbody class="em-subsection">

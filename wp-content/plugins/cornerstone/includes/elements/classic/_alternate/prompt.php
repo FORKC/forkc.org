@@ -13,7 +13,8 @@ class CS_Prompt extends Cornerstone_Element_Base {
     		'heading' => '.h-prompt',
     		'message' => '.p-prompt',
     		'button_text' => '.x-btn',
-    	)
+    	),
+      'protected_keys' => array( 'heading', 'message', 'button_text', 'button_icon', 'href', 'href_title', 'href_target' )
     );
   }
 

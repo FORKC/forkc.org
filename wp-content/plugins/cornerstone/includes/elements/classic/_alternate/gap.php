@@ -10,6 +10,7 @@ class CS_Gap extends Cornerstone_Element_Base {
       'description' => __( 'Gap description.', 'cornerstone' ),
       'supports'    => array( 'visibility', 'id', 'class', 'style' ),
       'render'      => false,
+      'safe_container' => true,
       'autofocus' => array(
     		'gap_size' => '.cs-gap',
     	)

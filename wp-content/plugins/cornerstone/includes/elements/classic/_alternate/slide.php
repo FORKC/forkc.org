@@ -10,7 +10,8 @@ class CS_Slide extends Cornerstone_Element_Base {
       'description' => __( 'Slide description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
       'render'      => false,
-      'delegate'    => true
+      'delegate'    => true,
+      'protected_keys' => array( 'title', 'content' )
     );
   }
 

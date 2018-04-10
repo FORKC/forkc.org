@@ -46,6 +46,34 @@ function x_controls_row( $settings = array() ) {
     'fallback_value' => '9999',
   );
 
+  $options_row_width = array(
+    'available_units' => array( 'px', 'em', 'rem', '%', 'vw', 'vh' ),
+    'valid_keywords'  => array( 'calc', 'auto' ),
+    'fallback_value'  => 'auto',
+    'ranges'          => array(
+      'px'  => array( 'min' => 0, 'max' => 1500, 'step' => 10  ),
+      'em'  => array( 'min' => 0, 'max' => 40,   'step' => 0.5 ),
+      'rem' => array( 'min' => 0, 'max' => 40,   'step' => 0.5 ),
+      '%'   => array( 'min' => 0, 'max' => 100,  'step' => 1   ),
+      'vw'  => array( 'min' => 0, 'max' => 100,  'step' => 1   ),
+      'vh'  => array( 'min' => 0, 'max' => 100,  'step' => 1   ),
+    ),
+  );
+
+  $options_row_max_width = array(
+    'available_units' => array( 'px', 'em', 'rem', '%', 'vw', 'vh' ),
+    'valid_keywords'  => array( 'calc', 'none' ),
+    'fallback_value'  => 'none',
+    'ranges'          => array(
+      'px'  => array( 'min' => 0, 'max' => 1500, 'step' => 10  ),
+      'em'  => array( 'min' => 0, 'max' => 40,  'step' => 0.5  ),
+      'rem' => array( 'min' => 0, 'max' => 40,  'step' => 0.5  ),
+      '%'   => array( 'min' => 0, 'max' => 100, 'step' => 1    ),
+      'vw'  => array( 'min' => 0, 'max' => 100, 'step' => 1    ),
+      'vh'  => array( 'min' => 0, 'max' => 100, 'step' => 1    ),
+    ),
+  );
+
 
   // Setup - Settings
   // ----------------
@@ -83,6 +111,45 @@ function x_controls_row( $settings = array() ) {
             ),
           ),
           array(
+            'key'     => 'row_inner_container',
+            'type'    => 'choose',
+            'label'   => __( 'Inner Container', '__x__' ),
+            'options' => array(
+              'choices' => array(
+                array( 'value' => false, 'label' => __( 'Off', '__x__' ) ),
+                array( 'value' => true,  'label' => __( 'On', '__x__' ) ),
+              ),
+            ),
+          ),
+          array(
+            'type'      => 'group',
+            'title'     => __( 'Width &amp; Max Width', '__x__' ),
+            'condition' => array( 'row_inner_container' => false ),
+            'controls'  => array(
+              array(
+                'key'     => 'row_width',
+                'type'    => 'unit',
+                'options' => $options_row_width,
+              ),
+              array(
+                'key'     => 'row_max_width',
+                'type'    => 'unit',
+                'options' => $options_row_max_width,
+              ),
+            ),
+          ),
+          array(
+            'key'     => 'row_marginless_columns',
+            'type'    => 'choose',
+            'label'   => __( 'Marginless Columns', '__x__' ),
+            'options' => array(
+              'choices' => array(
+                array( 'value' => false, 'label' => __( 'Off', '__x__' ) ),
+                array( 'value' => true,  'label' => __( 'On', '__x__' ) ),
+              ),
+            ),
+          ),
+          array(
             'type'     => 'group',
             'title'    => __( 'Background', '__x__' ),
             'controls' => array(
@@ -106,30 +173,11 @@ function x_controls_row( $settings = array() ) {
               ),
             ),
           ),
-          array(
-            'key'     => 'row_inner_container',
-            'type'    => 'choose',
-            'label'   => __( 'Inner Container', '__x__' ),
-            'options' => array(
-              'choices' => array(
-                array( 'value' => false, 'label' => __( 'Off', '__x__' ) ),
-                array( 'value' => true,  'label' => __( 'On', '__x__' ) ),
-              ),
-            ),
-          ),
-          array(
-            'key'     => 'row_marginless_columns',
-            'type'    => 'choose',
-            'label'   => __( 'Marginless Columns', '__x__' ),
-            'options' => array(
-              'choices' => array(
-                array( 'value' => false, 'label' => __( 'Off', '__x__' ) ),
-                array( 'value' => true,  'label' => __( 'On', '__x__' ) ),
-              ),
-            ),
-          ),
         ),
       ),
+    ),
+    x_controls_bg( $settings_row_bg ),
+    array(
       array(
         'type'     => 'group',
         'title'    => __( 'Formatting', '__x__' ),
@@ -143,10 +191,10 @@ function x_controls_row( $settings = array() ) {
         ),
       ),
     ),
-    x_controls_bg( $settings_row_bg ),
     x_control_margin( array( 'k_pre' => 'row', 'group' => $group_design, 'options' => array( 'left' => array( 'disabled' => true, 'fallback_value' => 'auto' ), 'right' => array( 'disabled' => true, 'fallback_value' => 'auto' ) ) ) ),
     x_control_padding( array( 'k_pre' => 'row', 'group' => $group_design ) ),
     x_control_border( array( 'k_pre' => 'row', 'group' => $group_design ) ),
+    x_control_border_radius( array( 'k_pre' => 'row', 'group' => $group_design ) ),
     x_control_box_shadow( array( 'k_pre' => 'row', 'group' => $group_design ) )
   );
 
@@ -193,19 +241,22 @@ function x_values_row( $settings = array() ) {
     array(
       'row_base_font_size'     => x_module_value( '1em', 'style' ),
       'row_z_index'            => x_module_value( '1', 'style' ),
-      'row_bg_color'           => x_module_value( 'transparent', 'style:color' ),
-      'row_bg_advanced'        => x_module_value( false, 'all' ),
+      'row_width'              => x_module_value( 'auto', 'style' ),
+      'row_max_width'          => x_module_value( 'none', 'style' ),
       'row_inner_container'    => x_module_value( true, 'markup' ),
       'row_marginless_columns' => x_module_value( false, 'markup' ),
-      'row_text_align'         => x_module_value( 'none', 'style' ),
+      'row_bg_color'           => x_module_value( 'transparent', 'style:color' ),
+      'row_bg_advanced'        => x_module_value( false, 'all' ),
     ),
     x_values_bg(),
     array(
+      'row_text_align'              => x_module_value( 'none', 'style' ),
       'row_margin'                  => x_module_value( '0em auto 0em auto', 'style' ),
       'row_padding'                 => x_module_value( '0em', 'style' ),
       'row_border_width'            => x_module_value( '0px', 'style' ),
       'row_border_style'            => x_module_value( 'none', 'style' ),
       'row_border_color'            => x_module_value( 'transparent', 'style:color' ),
+      'row_border_radius'           => x_module_value( '0px', 'style' ),
       'row_box_shadow_dimensions'   => x_module_value( '0em 0em 0em 0em', 'style' ),
       'row_box_shadow_color'        => x_module_value( 'transparent', 'style:color' ),
     )

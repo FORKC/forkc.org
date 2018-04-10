@@ -61,7 +61,7 @@ class EM_Emails {
 	public static function queue_emails(){
 	    global $wpdb;
 		//disable the current events are past rule
-	    add_filter('option_pre_dbem_events_current_are_past', 'em_emails_return_false', create_function('$a', 'return false;'));
+	    add_filter('option_pre_dbem_events_current_are_past', 'em_emails_return_false', '__return_false');
 	    //For each event x days on
 	    $days = get_option('dbem_emp_emails_reminder_days',1);
 	    $scope = ($days > 0) ? date('Y-m-d', current_time('timestamp') + (86400*$days)):date('Y-m-d', current_time('timestamp')+86400);
@@ -76,8 +76,19 @@ class EM_Emails {
 	    	foreach( $EM_Event->get_bookings()->get_bookings()->bookings as $EM_Booking ){ //get confirmed bookings
 	    	    /* @var $EM_Booking EM_Booking */
 	    	    if( is_email($EM_Booking->get_person()->user_email) ){
-			    	$subject = $EM_Booking->output(get_option('dbem_emp_emails_reminder_subject'),'raw');
-			    	$message = $EM_Booking->output(get_option('dbem_emp_emails_reminder_body'),$output_type);
+	    	    	if( EM_ML::$is_ml ){
+		    	    	if( !empty($EM_Booking->booking_meta['lang']) && EM_ML::$current_language != $EM_Booking->booking_meta['lang'] ){
+		    	    		$lang = $EM_Booking->booking_meta['lang'];
+		    	    		$subject_format = EM_ML_Options::get_option('dbem_emp_emails_reminder_subject', $lang);
+		    	    		$message_format = EM_ML_Options::get_option('dbem_emp_emails_reminder_body', $lang);
+		    	    	}
+	    	    	}
+	    	    	if( empty($subject_format) ){
+		    	    	$subject_format = get_option('dbem_emp_emails_reminder_subject');
+		    	    	$message_format = get_option('dbem_emp_emails_reminder_body');
+	    	    	}
+	    	    	$subject = $EM_Booking->output($subject_format,'raw');
+	    	    	$message = $EM_Booking->output($message_format,$output_type);
 		    	    $emails[] = array($EM_Booking->get_person()->user_email, $subject, $message, $EM_Booking->booking_id);
 	    	    }
 	    	}

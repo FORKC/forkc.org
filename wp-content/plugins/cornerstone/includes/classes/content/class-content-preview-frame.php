@@ -20,8 +20,9 @@ class Cornerstone_Content_Preview_Frame extends Cornerstone_Plugin_Component {
 
     }
 
-    do_action('cs_content_preview_setup', $state );
+    do_action( 'cs_content_preview_setup', $state );
     add_action( 'template_redirect', array( $this, 'after_template_redirect' ), 9999999 );
+    add_filter( '_cornerstone_custom_css', '__return_false' );
 
   }
 

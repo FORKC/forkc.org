@@ -20,11 +20,6 @@
 /* Base Styles
 // ========================================================================== */
 
-<?php
-// .button
-// [type="submit"]
-?>
-
 .x-btn,
 .button,
 [type="submit"] {
@@ -89,10 +84,6 @@
 
 }
 
-<?php
-// .button:hover
-// [type="submit"]:hover
-?>
 
 .x-btn:hover,
 .button:hover,

@@ -27,16 +27,27 @@ return array(
 	'overwrite-decline'           => $decline,
 	'default-title'               => __( 'Cornerstone Draft', 'cornerstone'),
 
-  'dashboard-title'             => CS()->common()->properTitle(),
-  'dashboard-menu-title'        => __( 'Home', 'cornerstone'),
-  'dashboard-settings-title'    => __( 'Settings', 'cornerstone' ),
-  'dashboard-settings-path'     => 'cornerstone-settings',
-  'dashboard-settings-update'   => __( 'Update', 'cornerstone' ),
-  'dashboard-settings-info'     => __( 'Once you are satisfied with your settings, click the button below to save them.', 'cornerstone' ),
-  'dashboard-settings-updating' => __( 'Updating&hellip;', 'cornerstone' ),
-  'dashboard-settings-updated'  => __( 'Settings Saved!', 'cornerstone' ),
-  'dashboard-settings-error'    => __( 'Sorry! Unable to Save', 'cornerstone' ),
+  'dashboard-title'                  => CS()->common()->properTitle(),
+  'dashboard-menu-title'             => __( 'Home', 'cornerstone'),
+  'dashboard-settings-title'         => __( 'Settings', 'cornerstone' ),
+  'dashboard-settings-path'          => 'cornerstone-settings',
+  'dashboard-settings-update'        => __( 'Update', 'cornerstone' ),
 
+  'dashboard-settings-save-title'    => __( 'Save Settings', 'cornerstone' ),
+  'dashboard-settings-save-update'   => __( 'Update', 'cornerstone' ),
+  'dashboard-settings-save-info'     => __( 'Once you are satisfied with your settings, click the button below to save them.', 'cornerstone' ),
+  'dashboard-settings-save-updating' => __( 'Updating&hellip;', 'cornerstone' ),
+  'dashboard-settings-save-updated'  => __( 'Settings Saved!', 'cornerstone' ),
+  'dashboard-settings-save-error'    => __( 'Sorry! Unable to Save', 'cornerstone' ),
+
+  'dashboard-settings-system-title' => __( 'System', 'cornerstone' ),
+
+  'dashboard-settings-system-clear-style-cache-title' => __( 'Clear Style Cache', 'cornerstone' ),
+  'dashboard-settings-system-clear-style-cache-description' => __( 'For quicker page loads V2 Elements will remember the CSS generated when they were last saved. This is automatically cleared when Cornerstone is updated. It may be useful to clear manually if any V2 Elements are missing styling.', 'cornerstone' ),
+  'dashboard-settings-system-clear-style-cache-button'      => __( 'Clear Style Cache', 'cornerstone' ),
+  'dashboard-settings-system-clear-style-cache-button-clearing' => __( 'Clearing&hellip;', 'cornerstone' ),
+  'dashboard-settings-system-clear-style-cache-button-cleared'  => __( 'Cleared!', 'cornerstone' ),
+  'dashboard-settings-system-clear-style-cache-button-error'    => __( 'Unable to clear!', 'cornerstone' ),
 
 
   'plugin-update-nothing'   => __( 'Nothing to report.', 'cornerstone' ),

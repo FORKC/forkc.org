@@ -61,11 +61,7 @@ class Cornerstone_Plugin extends Cornerstone_Plugin_Base {
     $this->autoload_directories = array_merge( $classes, $classic_classes );
 		spl_autoload_register( array( __CLASS__, 'autoloader' ) );
 
-	}
-
-	public function adminBefore() {
-		// Version migrations
-		add_action( 'cornerstone_updated', array( $this, 'update' ) );
+    add_action( 'cornerstone_updated', array( $this, 'update' ) );
 	}
 
 	public function update( $prior ) {
@@ -75,6 +71,12 @@ class Cornerstone_Plugin extends Cornerstone_Plugin_Base {
 		 * if ( version_compare( $prior, '1.0.7', '<' ) ) {
 		 * }
 		 */
+
+    // if ( ! is_null( $prior ) ) {
+    //
+    // }
+
+    CS()->loadComponent('Cleanup')->clean_generated_styles();
 
 	}
 

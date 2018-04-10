@@ -12,7 +12,8 @@ class CS_Columnize extends Cornerstone_Element_Base {
       'empty'       => array( 'content' => '' ),
       'autofocus' => array(
     		'content' => '.x-columnize',
-    	)
+    	),
+      'protected_keys' => array( 'content' )
     );
   }
 

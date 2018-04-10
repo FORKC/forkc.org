@@ -15,4 +15,12 @@ class CSE_Text {
     );
 	}
 
+  public function flags() {
+		return array(
+      'protected_keys' => array(
+        'content'
+      )
+		);
+	}
+
 }

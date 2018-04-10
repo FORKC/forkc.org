@@ -9,7 +9,9 @@ class CS_Layerslider extends Cornerstone_Element_Base {
       'section'     => 'media',
       'description' => __( 'Place a LayerSlider element into your content.', 'cornerstone' ),
       'supports'    => array(),
-      'undefined_message' => __('This element can not render because Layer Slider is not active.', 'cornerstone' )
+      'can_preview' => false,
+      'undefined_message' => __('This element can not render because Layer Slider is not active.', 'cornerstone' ),
+      'protected_keys' => array( 'source_id' )
     );
   }
 

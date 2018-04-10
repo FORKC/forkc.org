@@ -218,14 +218,3 @@ function x_cornerstone_home_page_scripts() {
 }
 
 add_action( '_cornerstone_home_after', 'x_cornerstone_home_page_scripts' );
-
-
-
-// Typekit output hook
-// =============================================================================
-
-function x_cornerstone_typekit_output_hook( $action ) {
-  return 'x_after_head_css';
-}
-
-add_filter('cs_typekit_hook', 'x_cornerstone_typekit_output_hook');

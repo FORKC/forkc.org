@@ -10,41 +10,44 @@
 // TABLE OF CONTENTS
 // -----------------------------------------------------------------------------
 //   01. Mixin: Base
-//   02. Mixin: Anchor
-//   03. Mixin: Flex Layout Attr
-//   04. Mixin: Image
-//   05. Mixin: Toggle
-//   06. Mixin: Dropdown
-//   07. Decorator: Content Area
-//   08. Decorator: Content Area (Dropdown)
-//   09. Decorator: Content Area (Modal)
-//   10. Decorator: Content Area (Off Canvas)
-//   11. Decorator: Image
-//   12. Decorator: Text
-//   13. Decorator: Headline
-//   14. Decorator: Breadcrumbs
-//   15. Decorator: Counter
-//   16. Decorator: Line
-//   17. Decorator: Gap
-//   18. Decorator: Alert
-//   19. Decorator: Nav (Inline)
-//   20. Decorator: Nav (Dropdown)
-//   21. Decorator: Nav (Collapsed)
-//   22. Decorator: Nav (Modal)
-//   23. Decorator: Button
-//   24. Decorator: Social
-//   25. Decorator: Search (Inline)
-//   26. Decorator: Search (Dropdown)
-//   27. Decorator: Search (Modal)
-//   28. Decorator: Map
-//   29. Decorator: Audio
-//   30. Decorator: Video
-//   31. Decorator: Login (Modal)
-//   32. Decorator: Third Party (bbPress: Dropdown)
-//   33. Decorator: Third Party (BuddyPress: Dropdown)
-//   34. Decorator: Third Party (WooCommerce Cart: Dropdown)
-//   35. Decorator: Third Party (WooCommerce Cart: Modal)
-//   36. Decorator: Third Party (WooCommerce Cart: Off Canvas)
+//   02. Mixin: Anchor href
+//   03. Mixin: ARIA
+//   04. Mixin: Flex Layout Attr
+//   05. Mixin: Dropdown
+//   06. Decorator: Content Area
+//   07. Decorator: Content Area (Dropdown)
+//   08. Decorator: Content Area (Modal)
+//   09. Decorator: Content Area (Off Canvas)
+//   10. Decorator: Image
+//   11. Decorator: Text
+//   12. Decorator: Headline
+//   13. Decorator: Breadcrumbs
+//   14. Decorator: Counter
+//   15. Decorator: Line
+//   16. Decorator: Gap
+//   17. Decorator: Alert
+//   18. Decorator: Nav (Inline)
+//   19. Decorator: Nav (Dropdown)
+//   20. Decorator: Nav (Collapsed)
+//   21. Decorator: Nav (Modal)
+//   22. Decorator: Button
+//   23. Decorator: Social
+//   24. Decorator: Search (Inline)
+//   25. Decorator: Search (Dropdown)
+//   26. Decorator: Search (Modal)
+//   27. Decorator: Map
+//   28. Decorator: Audio
+//   29. Decorator: Video
+//   30. Decorator: Accordion
+//   31. Decorator: Tabs
+//   32. Decorator: Statbar
+//   33. Decorator: Quote
+//   34. Decorator: Login (Modal)
+//   35. Decorator: Third Party (bbPress: Dropdown)
+//   36. Decorator: Third Party (BuddyPress: Dropdown)
+//   37. Decorator: Third Party (WooCommerce Cart: Dropdown)
+//   38. Decorator: Third Party (WooCommerce Cart: Modal)
+//   39. Decorator: Third Party (WooCommerce Cart: Off Canvas)
 // =============================================================================
 
 // Mixin: Base
@@ -56,18 +59,13 @@ function x_module_decorator_base( $module ) {
     $module['_region'] = 'top';
   }
 
-  $class_prefix = 'el';
-  if ( $module['_region'] === 'footer' ) {
-    $class_prefix = 'fm';
+  $unique_id = $module['_id'];
+
+  if ( isset( $module['_p'] ) ) {
+    $unique_id = $module['_p'] . '-' . $unique_id;
   }
 
-  if ( in_array( $module['_region'], array('top','left','bottom','right'), true ) ) {
-    $class_prefix = 'hm';
-  }
-
-  $class_prefix = apply_filters('cs_element_class_prefix', $class_prefix, $module );
-
-  $module['mod_id'] = $class_prefix . $module['_id'];
+  $module['mod_id'] = 'e' . $unique_id;
 
   if ( ! empty( $module['hide_bp'] ) ) {
     $hide_bps = explode( ' ', $module['hide_bp'] );
@@ -79,14 +77,13 @@ function x_module_decorator_base( $module ) {
     }
   }
 
-
   return $module;
 
 }
 
 
 
-// Mixin: Anchor
+// Mixin: Anchor href
 // =============================================================================
 
 function x_module_decorator_mixin_anchor( $anchor_href ) {
@@ -94,6 +91,57 @@ function x_module_decorator_mixin_anchor( $anchor_href ) {
   $decorations = array(
     'anchor_href' => $anchor_href,
   );
+
+  return $decorations;
+
+}
+
+
+
+// Mixin: ARIA
+// =============================================================================
+
+function x_module_decorator_mixin_aria( $k_pre = 'anchor', $aria = array(), $id, $mod_id ) {
+
+  $decorations = array();
+  $k_pre       = ( ! empty( $k_pre ) ) ? $k_pre . '_' : '';
+
+  if ( isset( $aria['controls'] ) ) {
+
+    $the_id   = ( ! empty( $id ) ) ? $id : $mod_id;
+    $the_type = '-' . $aria['controls'];
+
+    $decorations[$k_pre . 'aria_controls'] = $the_id . $the_type;
+
+  }
+
+  if ( isset( $aria['expanded'] ) ) {
+    $decorations[$k_pre . 'aria_expanded'] = $aria['expanded'];
+  }
+
+  if ( isset( $aria['selected'] ) ) {
+    $decorations[$k_pre . 'aria_selected'] = $aria['selected'];
+  }
+
+  if ( isset( $aria['haspopup'] ) ) {
+    $decorations[$k_pre . 'aria_haspopup'] = $aria['haspopup'];
+  }
+
+  if ( isset( $aria['label'] ) ) {
+    $decorations[$k_pre . 'aria_label'] = $aria['label'];
+  }
+
+  if ( isset( $aria['labelledby'] ) ) {
+    $decorations[$k_pre . 'aria_labelledby'] = $aria['labelledby'];
+  }
+
+  if ( isset( $aria['hidden'] ) ) {
+    $decorations[$k_pre . 'aria_hidden'] = $aria['hidden'];
+  }
+
+  if ( isset( $aria['orientation'] ) ) {
+    $decorations[$k_pre . 'aria_orientation'] = $aria['orientation'];
+  }
 
   return $decorations;
 
@@ -111,21 +159,6 @@ function x_module_decorator_flex_layout_attr( $_region, $flex_attr_prefix = '', 
 
   $decorations = array(
     $k_pre . 'flex_layout_attr' => $flex_layout_attr
-  );
-
-  return $decorations;
-
-}
-
-
-
-// Mixin: Toggle
-// =============================================================================
-
-function x_module_decorator_mixin_toggle( $toggle_target ) {
-
-  $decorations = array(
-    'toggle_target' => $toggle_target,
   );
 
   return $decorations;
@@ -173,10 +206,19 @@ function x_module_decorator_content_area_dropdown( $module ) {
 
   extract( $module );
 
+  $aria_args = array(
+    'controls' => 'dropdown',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Dropdown Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-dropdown" )
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id )
   );
+
+  // x_dump( $module );
 
   return $module;
 
@@ -191,9 +233,16 @@ function x_module_decorator_content_area_modal( $module ) {
 
   extract( $module );
 
+  $aria_args = array(
+    'controls' => 'modal',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Modal Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-modal" )
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id )
   );
 
   return $module;
@@ -209,9 +258,16 @@ function x_module_decorator_content_area_off_canvas( $module ) {
 
   extract( $module );
 
+  $aria_args = array(
+    'controls' => 'off-canvas',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Off Canvas Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-off-canvas" ),
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id),
     x_module_decorator_mixin_dropdown( false )
   );
 
@@ -387,9 +443,16 @@ function x_module_decorator_nav_dropdown( $module ) {
 
   extract( $module );
 
+  $aria_args = array(
+    'controls' => 'dropdown',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Dropdown Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-dropdown" ),
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id),
     x_module_decorator_mixin_dropdown( true )
   );
 
@@ -407,8 +470,8 @@ function x_module_decorator_nav_collapsed( $module ) {
   extract( $module );
 
   $module = array_merge(
-    $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-bar-nav-collapsed" )
+    $module
+    // x_module_decorator_mixin_aria( 'toggle_anchor', array( 'controls' => 'nav-collapsed' ), $id, $mod_id )
   );
 
   return $module;
@@ -424,9 +487,16 @@ function x_module_decorator_nav_modal( $module ) {
 
   extract( $module );
 
+  $aria_args = array(
+    'controls' => 'modal',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Modal Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-modal" )
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id )
   );
 
   return $module;
@@ -460,8 +530,8 @@ function x_module_decorator_social( $module ) {
   extract( $module );
 
   $module = array_merge(
-    $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-bar-social .x-bar-social-networks" )
+    $module
+    // x_module_decorator_mixin_aria( 'toggle_anchor', array( 'controls' => 'social' ), $id, $mod_id )
   );
 
   return $module;
@@ -494,11 +564,16 @@ function x_module_decorator_search_dropdown( $module ) {
 
   extract( $module );
 
-  $anchor_href = '';
+  $aria_args = array(
+    'controls' => 'dropdown',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Dropdown Content', '__x__' ),
+  );
 
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-dropdown" )
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id )
   );
 
   return $module;
@@ -514,9 +589,16 @@ function x_module_decorator_search_modal( $module ) {
 
   extract( $module );
 
+  $aria_args = array(
+    'controls' => 'modal',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Modal Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-modal" )
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id )
   );
 
   return $module;
@@ -576,6 +658,74 @@ function x_module_decorator_search_modal( $module ) {
 
 
 
+// Decorator: Accordion
+// =============================================================================
+
+// function x_module_decorator_accordion( $module ) {
+//
+//   extract( $module );
+//
+//   $module = array_merge(
+//     $module
+//   );
+//
+//   return $module;
+//
+// }
+
+
+
+// Decorator: Tabs
+// =============================================================================
+
+// function x_module_decorator_tabs( $module ) {
+//
+//   extract( $module );
+//
+//   $module = array_merge(
+//     $module
+//   );
+//
+//   return $module;
+//
+// }
+
+
+
+// Decorator: Statbar
+// =============================================================================
+
+// function x_module_decorator_statbar( $module ) {
+//
+//   extract( $module );
+//
+//   $module = array_merge(
+//     $module
+//   );
+//
+//   return $module;
+//
+// }
+
+
+
+// Decorator: Quote
+// =============================================================================
+
+// function x_module_decorator_quote( $module ) {
+//
+//   extract( $module );
+//
+//   $module = array_merge(
+//     $module
+//   );
+//
+//   return $module;
+//
+// }
+
+
+
 // Decorator: Login (Modal)
 // =============================================================================
 
@@ -583,9 +733,16 @@ function x_module_decorator_login_modal( $module ) {
 
   extract( $module );
 
+  $aria_args = array(
+    'controls' => 'modal',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Modal Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-modal" )
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id )
   );
 
   return $module;
@@ -601,13 +758,20 @@ function x_module_decorator_tp_bbp_dropdown( $module ) {
 
   extract( $module );
 
-  $anchor_href = get_post_type_archive_link( bbp_get_forum_post_type() );
+  // $anchor_href = get_post_type_archive_link( bbp_get_forum_post_type() );
   $anchor_href = '';
+
+  $aria_args = array(
+    'controls' => 'dropdown',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Dropdown Content', '__x__' ),
+  );
 
   $module = array_merge(
     $module,
     x_module_decorator_mixin_anchor( $anchor_href ),
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-dropdown" ),
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id),
     x_module_decorator_mixin_dropdown( true )
   );
 
@@ -634,10 +798,17 @@ function x_module_decorator_tp_bp_dropdown( $module ) {
 
   $anchor_href = ( is_user_logged_in() ) ? bp_loggedin_user_domain() : $logged_out_link;
 
+  $aria_args = array(
+    'controls' => 'dropdown',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Dropdown Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
     x_module_decorator_mixin_anchor( $anchor_href ),
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-dropdown" ),
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id),
     x_module_decorator_mixin_dropdown( true )
   );
 
@@ -660,10 +831,17 @@ function x_module_decorator_tp_wc_cart_dropdown( $module ) {
     $href = '';
   }
 
+  $aria_args = array(
+    'controls' => 'dropdown',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Dropdown Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
     x_module_decorator_mixin_anchor( $href ),
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-dropdown" ),
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id),
     x_module_decorator_mixin_dropdown( false )
   );
 
@@ -680,9 +858,16 @@ function x_module_decorator_tp_wc_cart_modal( $module ) {
 
   extract( $module );
 
+  $aria_args = array(
+    'controls' => 'modal',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Modal Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-modal" )
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id )
   );
 
   return $module;
@@ -698,9 +883,16 @@ function x_module_decorator_tp_wc_cart_off_canvas( $module ) {
 
   extract( $module );
 
+  $aria_args = array(
+    'controls' => 'off-canvas',
+    'haspopup' => 'true',
+    'expanded' => 'false',
+    'label'    => __( 'Toggle Off Canvas Content', '__x__' ),
+  );
+
   $module = array_merge(
     $module,
-    x_module_decorator_mixin_toggle( ".hm{$_id}.x-off-canvas" )
+    x_module_decorator_mixin_aria( 'toggle_anchor', $aria_args, $id, $mod_id )
   );
 
   return $module;

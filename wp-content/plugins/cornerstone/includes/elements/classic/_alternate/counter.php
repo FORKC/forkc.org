@@ -12,7 +12,8 @@ class CS_Counter extends Cornerstone_Element_Base {
       'autofocus' => array(
     		'text_above' => '.text-above',
     		'text_below' => '.text-below',
-    	)
+    	),
+      'protected_keys' => array( 'num_start', 'num_end', 'num_prefix', 'num_suffix', 'text_above', 'text_below' )
     );
   }
 

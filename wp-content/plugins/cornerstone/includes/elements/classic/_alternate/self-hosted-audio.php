@@ -9,7 +9,7 @@ class CS_Self_Hosted_Audio extends Cornerstone_Element_Base {
       'section'     => 'media',
       'description' => __( 'Audio Player description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'empty'       => array( 'src' => '' )
+      'empty'       => array( 'src' => '' ),
     );
   }
 

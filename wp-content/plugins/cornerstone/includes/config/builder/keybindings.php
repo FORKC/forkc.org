@@ -16,6 +16,8 @@ return array(
   'delete-release' => 'keyup:shift',
   'mod-key-press' => 'keydown:mod',
   'mod-key-release' => 'keyup:mod',
+  'alt-key-press' => 'keydown:alt',
+  'alt-key-release' => 'keyup:alt',
 	'skeleton-mode'  => 'mod+k',
   'save'  => 'mod+s',
   'find'  => 'mod+f',

@@ -85,7 +85,7 @@ class EM_Custom_Emails_Admin {
 								<input type="text" name="<?php echo $param; ?>[<?php echo $email_array_subgroup; ?>][<?php echo $email_type_name; ?>][subject]" value="<?php echo esc_attr($subject); ?>" />
 							</div>
 							<div class="emp-cet-val">
-								<label><?php _e('Title','em-pro'); ?></label>
+								<label><?php _e('Message','em-pro'); ?></label>
 								<textarea name="<?php echo $param; ?>[<?php echo $email_array_subgroup; ?>][<?php echo $email_type_name; ?>][message]"><?php echo esc_html($message); ?></textarea>
 							</div>
 						</div>
@@ -193,24 +193,45 @@ class EM_Custom_Emails_Admin {
 		return $emails;
 	}
 	
-	public static function get_default_email_values(){
+	/**
+	 * @param EM_Gateway|false $EM_Gateway
+	 * @param boolean $multiple_bookings
+	 * @return array
+	 */
+	public static function get_default_email_values( $EM_Gateway = false, $multiple_bookings = false ){
 		//build structure of values to add to these emails
+		$mb_opt = $multiple_bookings ? 'multiple_':'';
+		$mb_key = $multiple_bookings ? 'mb-':'';
 		$email_values = array(
-			'admin'=>array(
-				0 => array('subject'=>get_option('dbem_bookings_contact_email_subject'),'message'=>get_option('dbem_bookings_contact_email_body'),'status'=>0),
-				1 => array('subject'=>get_option('dbem_bookings_contact_email_subject'),'message'=>get_option('dbem_bookings_contact_email_body'),'status'=>0),
-				3 => array('subject'=>get_option('dbem_contactperson_email_cancelled_subject'),'message'=>get_option('dbem_contactperson_email_cancelled_body'),'status'=>0)
+			$mb_key.'admin'=>array(
+				0 => array('subject'=>get_option('dbem_'.$mb_opt.'bookings_contact_email_pending_subject'),'message'=>get_option('dbem_'.$mb_opt.'bookings_contact_email_pending_body'),'status'=>0),
+				1 => array('subject'=>get_option('dbem_'.$mb_opt.'bookings_contact_email_confirmed_subject'),'message'=>get_option('dbem_'.$mb_opt.'bookings_contact_email_confirmed_body'),'status'=>0),
+				3 => array('subject'=>get_option('dbem_'.$mb_opt.'bookings_contact_email_cancelled_subject'),'message'=>get_option('dbem_'.$mb_opt.'bookings_contact_email_cancelled_body'),'status'=>0)
 			),
-			'user'=>array(
-				0 => array('subject'=>get_option('dbem_bookings_email_pending_subject'),'message'=>get_option('dbem_bookings_email_pending_body'),'status'=>0),
-				1 => array('subject'=>get_option('dbem_bookings_email_confirmed_subject'),'message'=>get_option('dbem_bookings_email_confirmed_body'),'status'=>0),
-				2 => array('subject'=>get_option('dbem_bookings_email_rejected_subject'),'message'=>get_option('dbem_bookings_email_rejected_body'),'status'=>0),
-				3 => array('subject'=>get_option('dbem_bookings_email_cancelled_subject'),'message'=>get_option('dbem_bookings_email_cancelled_body'),'status'=>0)
+			$mb_key.'user'=>array(
+				0 => array('subject'=>get_option('dbem_'.$mb_opt.'bookings_email_pending_subject'),'message'=>get_option('dbem_'.$mb_opt.'bookings_email_pending_body'),'status'=>0),
+				1 => array('subject'=>get_option('dbem_'.$mb_opt.'bookings_email_confirmed_subject'),'message'=>get_option('dbem_'.$mb_opt.'bookings_email_confirmed_body'),'status'=>0),
+				2 => array('subject'=>get_option('dbem_'.$mb_opt.'bookings_email_rejected_subject'),'message'=>get_option('dbem_'.$mb_opt.'bookings_email_rejected_body'),'status'=>0),
+				3 => array('subject'=>get_option('dbem_'.$mb_opt.'bookings_email_cancelled_subject'),'message'=>get_option('dbem_'.$mb_opt.'bookings_email_cancelled_body'),'status'=>0)
 			)
 		);
+		//handle gateways, and only return a single gateway value if requested by $EM_Gateway parameter
 		if( get_option('dbem_custom_emails_gateways') ){
-    		foreach(EM_Gateways::active_gateways() as $gateway => $gateway_name ){
-    		    $gateway_email_defaults = self::get_gateway_default_values(EM_Gateways::get_gateway($gateway));
+			$email_values_template = $email_values;
+			if( !empty($EM_Gateway) ){
+				$email_values = array();
+				$gateways = array($EM_Gateway->gateway => $EM_Gateway->title);
+			}else{
+				$gateways = EM_Gateways::active_gateways();
+			}
+    		foreach($gateways as $gateway => $gateway_name ){
+    			//default values are - by default - the general settings values, overriden further down by $possible_email_values
+    			$gateway_email_defaults = array($gateway.'-'.$mb_key.'admin' => $email_values_template[$mb_key.'admin'], $gateway.'-'.$mb_key.'user' => $email_values_template[$mb_key.'user']);
+    		    //temporary fix, we assume everything is online except for offline - maybe a good reason for split offline/online base gateway subclasses
+    		    if( $gateway == 'offline' ){
+    		    	$gateway_email_defaults[$gateway.'-'.$mb_key.'admin'][5] = array('subject'=>get_option('dbem_'.$mb_opt.'bookings_contact_email_pending_subject'),'message'=>get_option('dbem_'.$mb_opt.'bookings_contact_email_pending_body'),'status'=>0);
+    		    	$gateway_email_defaults[$gateway.'-'.$mb_key.'user'][5] = array('subject'=>get_option('dbem_'.$mb_opt.'bookings_email_pending_subject'),'message'=>get_option('dbem_'.$mb_opt.'bookings_email_pending_body'),'status'=>0);
+    		    }
     			//get custom values if applicable
     			$possible_email_values = maybe_unserialize(get_option('em_'.$gateway . "_emails"));
     			$gateway_email_values = self::merge_gateway_default_values($gateway, $gateway_email_defaults, $possible_email_values, true); //merge in only messages here not statuses
@@ -270,7 +291,7 @@ class EM_Custom_Emails_Admin {
 	public static function em_gateway_settings_footer( $EM_Gateway ){
 		//get default email structures and values
 	    $default_emails = self::get_gateway_default_emails($EM_Gateway);
-		$default_email_values = self::get_gateway_default_values($EM_Gateway);
+		$default_email_values = self::get_default_email_values($EM_Gateway);
 		$gateway = $EM_Gateway->gateway;
 		//get custom values if applicable and merge them into $email_values
 		$gateway_email_values = maybe_unserialize($EM_Gateway->get_option('emails'));
@@ -295,7 +316,7 @@ class EM_Custom_Emails_Admin {
 			$default_emails[$gateway.'-mb']['text'] .= '<p>'. __('Note that some gateways do not automatically send pending or confirmed emails, in these cases they may only apply to when event admins manually change the status of a booking resulting in an automated email getting sent.','em-pro').'</p>';
 			$default_emails[$gateway.'-mb']['text'] .= '<p>'. __('Click on the title texts with a plus (+) next to them to reveal further options, and the minus (-) sign to hide them.','em-pro').'</p>';		
 			//get default mb values and merge them into email values
-			$mb_default_email_values = self::get_gateway_mb_default_values($EM_Gateway);
+			$mb_default_email_values = self::get_default_email_values($EM_Gateway, true);
     		//get custom values if applicable
     		$mb_email_values = self::merge_gateway_default_values($gateway, $mb_default_email_values, $gateway_email_values);
 			//merge them all together
@@ -405,54 +426,6 @@ class EM_Custom_Emails_Admin {
 		return $emails;
 	}
 	
-	public static function get_gateway_default_values( $EM_Gateway, $lang = false ){
-		global $EM_Gateways;
-		$email_values = array();
-		//@todo remove the loop, we don't need it but simpler for revising the SVN commit
-		$gateways = is_object($EM_Gateway) ? array($EM_Gateway->gateway => $EM_Gateway->title) : array();
-		foreach($gateways as $gateway => $gateway_name ){
-			$email_values[$gateway.'-admin'] = array(
-				0 => array('subject'=>get_option('dbem_bookings_contact_email_subject'),'message'=>get_option('dbem_bookings_contact_email_body'),'status'=>0),
-				1 => array('subject'=>get_option('dbem_bookings_contact_email_subject'),'message'=>get_option('dbem_bookings_contact_email_body'),'status'=>0),
-				3 => array('subject'=>get_option('dbem_contactperson_email_cancelled_subject'),'message'=>get_option('dbem_contactperson_email_cancelled_body'),'status'=>0)
-			);
-			$email_values[$gateway.'-user'] = array(
-				0 => array('subject'=>get_option('dbem_bookings_email_pending_subject'),'message'=>get_option('dbem_bookings_email_pending_body'),'status'=>0),
-				1 => array('subject'=>get_option('dbem_bookings_email_confirmed_subject'),'message'=>get_option('dbem_bookings_email_confirmed_body'),'status'=>0),
-				2 => array('subject'=>get_option('dbem_bookings_email_rejected_subject'),'message'=>get_option('dbem_bookings_email_rejected_body'),'status'=>0),
-				3 => array('subject'=>get_option('dbem_bookings_email_cancelled_subject'),'message'=>get_option('dbem_bookings_email_cancelled_body'),'status'=>0)
-			);
-			//temporary fix, we assume everything is online except for offline - maybe a good reason for split offline/online base gateway subclasses
-			if( $gateway == 'offline' ){
-				$email_values[$gateway.'-admin'][5] = array('subject'=>get_option('dbem_bookings_contact_email_subject'),'message'=>get_option('dbem_bookings_contact_email_body'),'status'=>0);
-				$email_values[$gateway.'-user'][5] = array('subject'=>get_option('dbem_bookings_email_pending_subject'),'message'=>get_option('dbem_bookings_email_pending_body'),'status'=>0);
-			}
-		}
-		return $email_values;
-	}
-	
-	public static function get_gateway_mb_default_values( $EM_Gateway ){
-	    $gateway = $EM_Gateway->gateway;
-		$email_values = array();
-		$email_values[$gateway.'-mb-admin'] = array(
-			0 => array('subject'=>get_option('dbem_multiple_bookings_contact_email_subject'),'message'=>get_option('dbem_multiple_bookings_contact_email_body'),'status'=>0),
-			1 => array('subject'=>get_option('dbem_multiple_bookings_contact_email_subject'),'message'=>get_option('dbem_multiple_bookings_contact_email_body'),'status'=>0),
-			3 => array('subject'=>get_option('dbem_multiple_bookings_contact_email_cancelled_subject'),'message'=>get_option('dbem_multiple_bookings_contact_email_cancelled_body'),'status'=>0)
-		);
-		$email_values[$gateway.'-mb-user'] = array(
-			0 => array('subject'=>get_option('dbem_multiple_bookings_email_pending_subject'),'message'=>get_option('dbem_multiple_bookings_email_pending_body'),'status'=>0),
-			1 => array('subject'=>get_option('dbem_multiple_bookings_email_confirmed_subject'),'message'=>get_option('dbem_multiple_bookings_email_confirmed_body'),'status'=>0),
-			2 => array('subject'=>get_option('dbem_multiple_bookings_email_rejected_subject'),'message'=>get_option('dbem_multiple_bookings_email_rejected_body'),'status'=>0),
-			3 => array('subject'=>get_option('dbem_multiple_bookings_email_cancelled_subject'),'message'=>get_option('dbem_multiple_bookings_email_cancelled_body'),'status'=>0)
-		);
-		//temporary fix, we assume everything is online except for offline - maybe a good reason for split offline/online base gateway subclasses
-		if( $gateway == 'offline' ){
-			$email_values[$gateway.'-mb-admin'][5] = array('subject'=>get_option('dbem_multiple_bookings_contact_email_subject'),'message'=>get_option('dbem_multiple_bookings_contact_email_body'),'status'=>0);
-			$email_values[$gateway.'-mb-user'][5] = array('subject'=>get_option('dbem_multiple_bookings_email_pending_subject'),'message'=>get_option('dbem_multiple_bookings_email_pending_body'),'status'=>0);
-		}
-		return $email_values;
-	}
-	
 	public static function merge_gateway_default_values( $gateway, $email_values, $possible_email_values, $messages_only = false ){
 		if( is_array($possible_email_values) ){
 			foreach( $possible_email_values as $subgroup_name => $subgroup_msgs ){
@@ -558,7 +531,8 @@ class EM_Custom_Emails_Admin {
 				}else{
 					$wpdb->insert(EM_META_TABLE, array('object_id'=>$EM_Event->event_id, 'meta_key'=>'event-emails', 'meta_value' => serialize($EM_Event->custom_booking_emails)), array('%d','%s','%s'));
 				}
-			}else{
+			}elseif( isset($EM_Event->custom_booking_emails) ){
+				//only delete if custom_booking_emails property is set, since that only happens when populating a specific event in the admin, not another event on the side
 				$sql = $wpdb->prepare('DELETE FROM '.EM_META_TABLE." WHERE object_id = %d AND meta_key = %s LIMIT 1", $EM_Event->event_id, 'event-emails');
 				$wpdb->query($sql);
 			}
@@ -571,7 +545,8 @@ class EM_Custom_Emails_Admin {
 					}else{
 						$wpdb->insert(EM_META_TABLE, array('object_id'=>$EM_Event->event_id, 'meta_key'=>'event-admin-emails', 'meta_value' => serialize($EM_Event->custom_admin_emails)), array('%d','%s','%s'));
 					}
-				}else{
+				}elseif( isset($EM_Event->custom_admin_emails) ){
+					//only delete if custom_admin_emails property is set, since that only happens when populating a specific event in the admin, not another event on the side
     				$sql = $wpdb->prepare('DELETE FROM '.EM_META_TABLE." WHERE object_id = %d AND meta_key = %s LIMIT 1", $EM_Event->event_id, 'event-admin-emails');
     				$wpdb->query($sql);
     			}
@@ -583,6 +558,9 @@ class EM_Custom_Emails_Admin {
 	public static function em_event_save_events( $result, $EM_Event, $event_ids, $post_ids ){
 		global $wpdb;
 		if( $result && current_user_can(self::$caps['custom_emails']) ){
+			//delete all previous records of event coupons
+			$wpdb->query("DELETE FROM ".EM_META_TABLE." WHERE (meta_key='event-admin-emails' OR meta_key='event-emails') AND object_id IN (".implode(',',$event_ids).")");
+			//create inserts
 			$inserts = array();
 			if( !empty($EM_Event->custom_booking_emails) ){
 				foreach($event_ids as $event_id){

@@ -51,6 +51,7 @@ function x_controls_omega( $settings = array() ) {
   $keys = array(
     'id'    => 'id',
     'class' => 'class',
+    'css'   => 'css',
     'bp'    => 'hide_bp',
     'login' => 'hide_login',
   );
@@ -106,6 +107,7 @@ function x_values_omega( $settings = array() ) {
   $values = array(
     'id'         => x_module_value( '', 'markup' ),
     'class'      => x_module_value( '', 'attr' ),
+    'css'        => x_module_value( '', 'style' ),
     'hide_bp'    => x_module_value( '', 'markup' ),
     'hide_login' => x_module_value( '', 'markup' ),
   );

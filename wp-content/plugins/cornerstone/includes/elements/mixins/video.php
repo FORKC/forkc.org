@@ -137,9 +137,9 @@ function x_values_video( $settings = array() ) {
   $values = array(
     'video_is_bg'       => x_module_value( $is_bg, 'markup' ),
     'video_type'        => x_module_value( 'embed', 'markup' ),
-    'video_embed_code'  => x_module_value( '', 'markup:html' ),
-    'mejs_source_files' => x_module_value( '', 'markup:raw' ),
-    'mejs_poster'       => x_module_value( '', 'markup' ),
+    'video_embed_code'  => x_module_value( '', 'markup:html', true ),
+    'mejs_source_files' => x_module_value( '', 'markup:raw', true ),
+    'mejs_poster'       => x_module_value( '', 'markup', true ),
   );
 
   $values = array_merge(

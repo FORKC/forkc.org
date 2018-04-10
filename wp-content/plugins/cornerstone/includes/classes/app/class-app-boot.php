@@ -32,7 +32,7 @@ class Cornerstone_App_Boot extends Cornerstone_Plugin_Component {
 
       if ( is_array( $parts ) && $parts[0] === $this->plugin->common()->get_app_slug() ) {
 
-        if ( 1 === count( $parts[0] ) && '/' !== substr( $_SERVER['REQUEST_URI'], -1, 1 ) ) {
+        if ( 1 === count( $parts ) && '/' !== substr( $_SERVER['REQUEST_URI'], -1, 1 ) ) {
           wp_safe_redirect( $wp->request . '/' );
         }
 

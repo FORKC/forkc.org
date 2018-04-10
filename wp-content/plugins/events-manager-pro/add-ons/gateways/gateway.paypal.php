@@ -16,9 +16,7 @@ class EM_Gateway_Paypal extends EM_Gateway {
 	 */
 	function __construct() {
 		//Booking Interception
-	    if( $this->is_active() && absint(get_option('em_'.$this->gateway.'_booking_timeout')) > 0 ){
-	        $this->count_pending_spaces = true;
-	    }
+		$this->count_pending_spaces = get_option('em_'.$this->gateway.'_reserve_pending');
 		parent::__construct();
 		$this->status_txt = __('Awaiting PayPal Payment','em-pro');
 		if($this->is_active()) {
@@ -111,6 +109,11 @@ class EM_Gateway_Paypal extends EM_Gateway {
 	 */
 	function em_my_bookings_booking_actions( $message, $EM_Booking){
 	    global $wpdb;
+	    //if in multiple booking mode, switch the booking for the main booking and treat that as our booking
+	    if( get_option('dbem_multiple_bookings') ){
+	    	$EM_Multiple_Booking = EM_Multiple_Bookings::get_main_booking($EM_Booking);
+	    	if( $EM_Multiple_Booking !== false ) $EM_Booking = $EM_Multiple_Booking;
+	    }
 		if($this->uses_gateway($EM_Booking) && $EM_Booking->booking_status == $this->status){
 		    //first make sure there's no pending payments
 		    $pending_payments = $wpdb->get_var('SELECT COUNT(*) FROM '.EM_TRANSACTIONS_TABLE. " WHERE booking_id='{$EM_Booking->booking_id}' AND transaction_gateway='{$this->gateway}' AND transaction_status='Pending'");
@@ -424,7 +427,7 @@ Events Manager
 				if( $amount >= $EM_Booking->get_price() ){
 					$EM_Booking->cancel();
 				}else{
-					$EM_Booking->set_status(0); //Set back to normal "pending"
+					$EM_Booking->set_status(0, false); //Set back to normal "pending" but don't send email about it to prevent confusion
 				}
 				do_action('em_payment_refunded', $EM_Booking, $this, $filter_args);
 				break;
@@ -629,10 +632,22 @@ Events Manager
 				</td>
 			</tr>
 			<tr valign="top">
+				<th scope="row"><?php esc_html_e_emp('Reserved unconfirmed spaces?') ?></th>
+				<td>
+					<?php $v = get_option('em_paypal_reserve_pending'); ?>
+					<select name="em_paypal_reserve_pending">
+						<option value="1" <?php if( $v ) echo 'selected="selected"'; ?>><?php esc_html_e_emp('Yes'); ?></option>
+						<option value="0" <?php if( !$v ) echo 'selected="selected"'; ?>><?php esc_html_e_emp('No'); ?></option>
+					</select>
+					<br>
+					<em><?php echo sprintf(esc_html__('If set to "Yes", spaces will be reserved once a user submits a booking and proceeds to payment, even if a user does not complete the payment process. We recommend setting this to "Yes" and automatically deleting upaid bookings after at least %s minutes in the %s setting below.','em-pro'), '<strong>15</strong>', '<strong>'.esc_html__('Delete Bookings Pending Payment', 'em-pro').'</strong>'); ?></em>
+				</td>
+			</tr>
+			<tr valign="top">
 				<th scope="row"><?php _e('Delete Bookings Pending Payment', 'em-pro') ?></th>
 				<td>
 					<input type="text" name="em_paypal_booking_timeout" style="width:50px;" value="<?php esc_attr_e(get_option('em_'. $this->gateway . "_booking_timeout" )); ?>" style='width: 40em;' /> <?php _e('minutes','em-pro'); ?><br />
-					<em><?php echo sprintf( esc_html__('Once a booking is started and the user is taken to PayPal, Events Manager stores a booking record in the database to identify the incoming payment. These spaces may be considered reserved if you enable %s in your Events &gt; Settings page. If you would like these bookings to expire after x minutes, please enter a value above (note that bookings will be deleted, and any late payments will need to be refunded manually via PayPal).','em-pro'), '<b>'.esc_html__('Reserved unconfirmed spaces?', 'events-manager-pro').'</b>'); ?></em>
+					<em><?php esc_html_e('Once a booking is started and the user is taken to PayPal, Events Manager stores a booking record in the database to identify the incoming payment. If you would like these bookings to expire after x minutes, please enter a value above (note that bookings will be deleted, and any late payments will need to be refunded manually via PayPal).','em-pro'); ?></em>
 					<br/><br/>
 					<em><?php echo $api_help_tip; ?></em>
 				</td>
@@ -667,6 +682,7 @@ Events Manager
 		$gateway_options[] = 'em_'. $this->gateway . '_format_logo';
 		$gateway_options[] = 'em_'. $this->gateway . '_format_border';
 		$gateway_options[] = 'em_'. $this->gateway . '_manual_approval';
+		$gateway_options[] = 'em_'. $this->gateway . '_reserve_pending';
 		$gateway_options[] = 'em_'. $this->gateway . '_booking_timeout';
 		$gateway_options[] = 'em_'. $this->gateway . '_return';
 		$gateway_options[] = 'em_'. $this->gateway . '_cancel_return';
@@ -700,7 +716,8 @@ function em_gateway_paypal_booking_timeout(){
 	$EM_Gateway_Paypal = EM_Gateways::get_gateway('paypal'); /* @var $EM_Gateway_Paypal EM_Gateway_Paypal */
 	if( $minutes_to_subtract > 0 ){
 		//get booking IDs without pending transactions
-		$cut_off_time = date('Y-m-d H:i:s', current_time('timestamp') - ($minutes_to_subtract * 60));
+		$EM_DateTime = new EM_DateTime();
+		$cut_off_time = $EM_DateTime->sub('PT'.$minutes_to_subtract.'M')->getDateTime(true); //get the time in UTC
 		$sql = 'SELECT b.booking_id FROM '.EM_BOOKINGS_TABLE.' b LEFT JOIN '.EM_TRANSACTIONS_TABLE." t ON t.booking_id=b.booking_id  WHERE booking_date < '{$cut_off_time}' AND booking_status=4 AND transaction_id IS NULL AND booking_meta LIKE '%s:7:\"gateway\";s:6:\"paypal\";%'";
 		if( get_option('dbem_multiple_bookings') ){ //multiple bookings mode
 			//If we're in MB mode, check that this isn't the main booking, if it isn't then skip it.

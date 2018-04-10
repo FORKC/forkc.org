@@ -35,10 +35,12 @@ return array(
 	'layout-add-row'                => __( 'Add Row', 'cornerstone' ),
 	'layout-add-section'            => __( 'Add Section', 'cornerstone' ),
 	'layout-templates'              => __( 'Templates', 'cornerstone' ),
+  'layout-load-template'          => __( 'Load Template', 'cornerstone' ),
+	'layout-save-template'          => __( ' Save Template', 'cornerstone' ),
 
 
-	'layout-section-delete-confirm' => __( 'Are you sure you want to delete this section along with all it&apos;s contents?', 'cornerstone' ),
-	'layout-row-delete-confirm'     => __( 'Are you sure you want to delete this row along with all it&apos;s contents?', 'cornerstone' ),
+	'layout-section-delete-confirm' => __( 'Are you sure you want to delete this section along with all its contents?', 'cornerstone' ),
+	'layout-row-delete-confirm'     => __( 'Are you sure you want to delete this row along with all its contents?', 'cornerstone' ),
 	'layout-row-subtext'            => __( 'Click a row to manage columns. Drag to reorder.', 'cornerstone' ),
 	'layout-info-title'             => __( 'Just getting started?', 'cornerstone' ),
 	'layout-info-description'       => __( 'Add a section then click on it to manage column layouts or drag it to reorder.', 'cornerstone' ),
@@ -80,7 +82,6 @@ return array(
 	'templates-overwrite-yep'     => __( 'Yep', 'cornerstone' ),
 	'templates-overwrite-nope'    => __( 'Nope', 'cornerstone' ),
 	'templates-error-read'        => __( 'Unable to read file', 'cornerstone' ),
-	'templates-error-upload'      => __( 'Sorry! Your file is not properly formatted.', 'cornerstone' ),
 	'templates-error-save'        => __( 'Unable to save template.', 'cornerstone' ),
 	'templates-error-import'      => __( 'Could not load template.', 'cornerstone' ),
 	'templates-remove-label'      => __( 'Remove Templates', 'cornerstone' ),
@@ -134,7 +135,7 @@ return array(
 	'sortable-add'          => __( 'Add', 'cornerstone' ),
 	'sortable-remove'       => __( 'Are you sure you wish to remove this item?', 'cornerstone' ),
 	'sortable-at-floor'     => __( 'The last item can&apos;t be deleted, but would you like to reset it to defaults?', 'cornerstone' ),
-	'sortable-at-cap'       => __( 'This element has reached it&apos;s capacity. You can&apos;t add any more.', 'cornerstone' ),
+	'sortable-at-cap'       => __( 'This element has reached its capacity. You can&apos;t add any more.', 'cornerstone' ),
 	'sortable-default'      => __( 'New Item %s', 'cornerstone' ),
 	'sortable-duplicate'    => __( 'Copy of %s', 'cornerstone' ),
 	'sortable-empty'        => __( 'No items!', 'cornerstone' ),
@@ -234,6 +235,13 @@ return array(
 
 	// Skeleton Mode
 	'skeleton-main-title' => __( "Skeleton Mode", 'cornerstone' ),
-	'skeleton-item-handle' => __("{{type}} - {{title}}", 'cornerstone')
+	'skeleton-item-handle' => __("{{type}} - {{title}}", 'cornerstone'),
+
+  // Global Blocks
+  'global-blocks.delete-confirm'           => __( 'Are you sure you want to delete this Global Block? This can not be undone.', 'cornerstone' ),
+  'global-blocks.no-content'               => __( 'No Global Blocks', 'cornerstone' ),
+  'global-blocks.no-content-message'       => __( 'Click "Add New" to create your first Global Block.', 'cornerstone' ),
+  'global-blocks.no-content-found'         => __( 'No Global Blocks Found', 'cornerstone' ),
+  'global-blocks.no-content-found-message' => __( 'Try refining your search to locate your desired Global Block.', 'cornerstone' ),
 
 );

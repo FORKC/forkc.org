@@ -3,18 +3,20 @@
 // =============================================================================
 // WOOCOMMERCE/NOTICES/ERROR.PHP
 // -----------------------------------------------------------------------------
-// @version 1.6.4
+// @version 3.3.0
 // =============================================================================
 
 if ( ! defined( 'ABSPATH' ) ) {
-  exit; // Exit if accessed directly
+  exit;
 }
 
-if ( ! $messages ) return;
+if ( ! $messages ) {
+  return;
+}
 
 ?>
 
-<ul class="woocommerce-error x-alert x-alert-danger x-alert-block">
+<ul class="woocommerce-error x-alert x-alert-danger x-alert-block" role="alert">
   <?php foreach ( $messages as $message ) : ?>
     <li><?php echo wp_kses_post( $message ); ?></li>
   <?php endforeach; ?>

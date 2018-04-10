@@ -10,6 +10,11 @@ class EMP_ML {
         if( get_option('dbem_multiple_bookings') ){
    	        add_filter('option_dbem_multiple_bookings_checkout_page','EM_ML_Options::get_translated_page');
         }
+        add_filter('em_ml_admin_settings_pages', 'EMP_ML::em_ml_admin_settings_pages');
+    }
+    
+    public static function em_ml_admin_settings_pages( $settings ){
+    	return array_merge( $settings, array('events-manager-gateways', 'events-manager-forms-editor', 'events-manager-coupons') );
     }
     
     /**
@@ -31,8 +36,10 @@ class EMP_ML {
             $options[] = 'dbem_multiple_bookings_feedback_empty_cart';
             $options[] = 'dbem_multiple_bookings_submit_button';
             //MB Emails
-            $options[] = 'dbem_multiple_bookings_contact_email_subject';
-            $options[] = 'dbem_multiple_bookings_contact_email_body';
+            $options[] = 'dbem_multiple_bookings_contact_email_confirmed_subject';
+            $options[] = 'dbem_multiple_bookings_contact_email_confirmed_body';
+            $options[] = 'dbem_multiple_bookings_contact_email_pending_subject';
+            $options[] = 'dbem_multiple_bookings_contact_email_pending_body';
             $options[] = 'dbem_multiple_bookings_contact_email_cancelled_subject';
             $options[] = 'dbem_multiple_bookings_contact_email_cancelled_body';
             $options[] = 'dbem_multiple_bookings_email_confirmed_subject';
@@ -47,17 +54,19 @@ class EMP_ML {
 		//payment gateway options (pro, move out asap)
 		$options[] = 'dbem_gateway_label';
         //gateway translateable options
-		foreach ( EM_Gateways::gateways_list() as $gateway => $gateway_name ){
-		    $EM_Gateway = EM_Gateways::get_gateway($gateway);
-		    $options[] = 'em_'.$gateway.'_option_name';
-		    $options[] = 'em_'.$gateway.'_booking_feedback';
-		    $options[] = 'em_'.$gateway.'_booking_feedback_free';
-		    $options[] = 'em_'.$gateway.'_booking_feedback_completed';
-		    $options[] = 'em_'.$gateway.'_form';
-		    if( $EM_Gateway->button_enabled ){
-		        $options[] = 'em_'.$gateway.'_button';
-		    }
-		}
+        if( get_option('dbem_rsvp_enabled') ){ 
+			foreach ( EM_Gateways::gateways_list() as $gateway => $gateway_name ){
+			    $EM_Gateway = EM_Gateways::get_gateway($gateway);
+			    $options[] = 'em_'.$gateway.'_option_name';
+			    $options[] = 'em_'.$gateway.'_booking_feedback';
+			    $options[] = 'em_'.$gateway.'_booking_feedback_free';
+			    $options[] = 'em_'.$gateway.'_booking_feedback_completed';
+			    $options[] = 'em_'.$gateway.'_form';
+			    if( $EM_Gateway->button_enabled ){
+			        $options[] = 'em_'.$gateway.'_button';
+			    }
+			}
+        }
         return $options;
     }
 }

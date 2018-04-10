@@ -44,7 +44,7 @@ $is_rtl = is_rtl();
       });
       $('#x-isotope-loading').stop(true,true).fadeOut(300);
       $('#x-iso-container > .hentry').each(function(i) {
-        $(this).delay(i * 150).animate({'opacity' : 1},500);
+        $(this).delay(i * 150).animate({'opacity' : 1},500,'xEaseOutQuad');
       });
     });
 
@@ -77,7 +77,7 @@ $is_rtl = is_rtl();
     });
 
     $('.x-portfolio-filters').click(function() {
-      $(this).parent().find('ul').slideToggle(600, 'easeOutExpo');
+      $(this).parent().find('ul').slideToggle(600, 'xEaseOutExpo');
     });
 
   });

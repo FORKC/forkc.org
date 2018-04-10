@@ -9,9 +9,6 @@ class Cornerstone_Regions_Index_Preview_Frame extends Cornerstone_Plugin_Compone
 
     $state = $this->plugin->component( 'Preview_Frame_Loader' )->get_state();
 
-
-    //cornerstone_header_preview_data
-
     if ( isset( $state['previewing'] ) ) {
       $parts = explode(':', $state['previewing']);
       $this->mode = array_shift($parts);
@@ -29,47 +26,33 @@ class Cornerstone_Regions_Index_Preview_Frame extends Cornerstone_Plugin_Compone
   }
 
   public function get_header_preview_data() {
+
+    $post_id = (int) $this->mode_id;
+
     if ( 'header' === $this->mode ) {
-      return (int) $this->mode_id;
+      return $post_id;
     }
 
     if ( 'header-template' === $this->mode ) {
-      return $this->get_header_template_preview_data();
+      return new Cornerstone_Template( ( $post_id > 0 ) ? $post_id : "header:{$this->mode_id}");
     }
 
     return null;
   }
 
   public function get_footer_preview_data() {
+
+    $post_id = (int) $this->mode_id;
+
     if ( 'footer' === $this->mode ) {
       return (int) $this->mode_id;
     }
 
     if ( 'footer-template' === $this->mode ) {
-      return $this->get_footer_template_preview_data();
+      return new Cornerstone_Template(( $post_id > 0 ) ? $post_id : "footer:{$this->mode_id}");
     }
 
     return null;
-  }
-
-  public function get_header_template_preview_data( $data = null ) {
-    return $this->find_template( $data, $this->plugin->loadComponent('Regions')->get_header_templates() );
-  }
-
-  public function get_footer_template_preview_data( $data = null ) {
-    return $this->find_template( $data, $this->plugin->loadComponent('Regions')->get_footer_templates() );
-  }
-
-  public function find_template( $data, $templates ) {
-    foreach ($templates as $template) {
-      if ( $this->mode_id === $template['id'] ) {
-        return array(
-          'regions' => isset( $template['regions'] ) ? $template['regions'] : array(),
-          'settings' => isset( $template['settings'] ) ? $template['settings'] : array()
-        );
-      }
-    }
-    return $data;
   }
 
   public function get_region_preview_data( $data ) {

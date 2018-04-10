@@ -30,8 +30,10 @@ $atts = array_merge( array(
   'tabindex' => 0
 ), $atts );
 
-if ( $anchor_type !== 'menu-item' ) {
-  if ( isset( $id ) && ! empty( $id ) ) {
+if ( isset( $id ) && ! empty( $id ) ) {
+  if ( $anchor_type === 'button' ) {
+    $atts['id'] = $id;
+  } else if ( $anchor_type === 'toggle' ) {
     $atts['id'] = $id . '-anchor-' . $anchor_type;
   }
 }
@@ -51,7 +53,26 @@ if ( isset( $anchor_nofollow ) && $anchor_nofollow == true ) {
 if ( $anchor_type == 'toggle' ) {
   $atts['data-x-toggle']     = true;
   $atts['data-x-toggleable'] = $mod_id;
-  $atts['aria-label']        = __( 'Toggle', '__x__' );
+}
+
+if ( isset( $anchor_aria_controls ) ) {
+  $atts['aria-controls'] = $anchor_aria_controls;
+}
+
+if ( isset( $anchor_aria_expanded ) ) {
+  $atts['aria-expanded'] = $anchor_aria_expanded;
+}
+
+if ( isset( $anchor_aria_haspopup ) ) {
+  $atts['aria-haspopup'] = $anchor_aria_haspopup;
+}
+
+if ( isset( $anchor_aria_label ) ) {
+  $atts['aria-label'] = $anchor_aria_label;
+}
+
+if ( isset( $anchor_aria_selected ) ) {
+  $atts['aria-selected'] = $anchor_aria_selected;
 }
 
 
@@ -83,7 +104,7 @@ if ( isset( $anchor_text ) && $anchor_text == true ) {
 
 if ( isset( $anchor_graphic ) && $anchor_graphic == true ) {
 
-  $data_graphic           = x_get_partial_data( $_custom_data, array( 'add_in' => array( 'class' => '' ), 'find_data' => array( 'anchor_graphic' => 'graphic', 'toggle' => '' ) ) );
+  $data_graphic           = x_get_partial_data( $_custom_data, array( 'add_in' => array( 'id' => '', 'class' => '' ), 'find_data' => array( 'anchor_graphic' => 'graphic', 'toggle' => '' ) ) );
   $anchor_graphic_content = x_get_view( 'partials', 'graphic', '', $data_graphic, false );
 
 }

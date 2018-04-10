@@ -171,10 +171,10 @@ function x_values_map( $settings = array() ) {
 
   $values = array(
     'map_type'              => x_module_value( 'embed', 'markup' ),
-    'map_embed_code'        => x_module_value( '', 'markup:html' ),
-    'map_google_api_key'    => x_module_value( '', 'markup' ),
-    'map_google_lat'        => x_module_value( '40.674', 'markup' ),
-    'map_google_lng'        => x_module_value( '-73.945', 'markup' ),
+    'map_embed_code'        => x_module_value( '', 'markup:html', true ),
+    'map_google_api_key'    => x_module_value( '', 'markup', true ),
+    'map_google_lat'        => x_module_value( '40.674', 'markup', true ),
+    'map_google_lng'        => x_module_value( '-73.945', 'markup', true ),
     'map_google_drag'       => x_module_value( true, 'markup' ),
     'map_google_zoom'       => x_module_value( true, 'markup' ),
     'map_google_zoom_level' => x_module_value( 12, 'markup' ),

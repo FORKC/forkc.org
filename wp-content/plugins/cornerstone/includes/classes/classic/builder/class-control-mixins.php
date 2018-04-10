@@ -288,7 +288,7 @@ class Cornerstone_Control_Mixins extends Cornerstone_Plugin_Component {
    * @param string $type     Type of view used to create the UI for this control
    * @param string $title    Localized title. Set null to compact this control
    * @param string $tooltip  Localized tooltip. Only visible if title is set
-   * @param array  $default  Values used to populate the control if the element doesn't have values of it's own
+   * @param array  $default  Values used to populate the control if the element doesn't have values of its own
    * @param array  $options  Information specific to this control. For example, the names and data of items in a dropdown
    */
   public function addControl( $name, $type, $title = null, $tooltip = null, $default = array(), $options = array() ) {

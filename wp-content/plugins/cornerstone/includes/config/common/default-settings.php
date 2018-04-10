@@ -13,7 +13,7 @@ return array(
   'help_text'               => true,
   'show_wp_toolbar'         => false,
   'use_shortcode_generator' => false,
-  'content_builer_elements' => 'all',
+  'content_builder_elements' => 'all',
   'custom_app_slug'         => '',
   'hide_access_path'        => false,
 );

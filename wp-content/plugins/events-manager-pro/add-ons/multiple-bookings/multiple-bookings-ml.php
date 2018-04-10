@@ -22,15 +22,15 @@ class EM_Multiple_Bookings_ML{
     				$msg['user']['subject'] = EM_ML_Options::get_option('dbem_multiple_bookings_email_pending_subject', $lang);
     				$msg['user']['body'] = EM_ML_Options::get_option('dbem_multiple_bookings_email_pending_body', $lang);
     				//admins should get something (if set to)
-    				$msg['admin']['subject'] = EM_ML_Options::get_option('dbem_multiple_bookings_contact_email_subject', $lang);
-    				$msg['admin']['body'] = EM_ML_Options::get_option('dbem_multiple_bookings_contact_email_body', $lang);
+    				$msg['admin']['subject'] = EM_ML_Options::get_option('dbem_multiple_bookings_contact_email_pending_subject', $lang);
+    				$msg['admin']['body'] = EM_ML_Options::get_option('dbem_multiple_bookings_contact_email_pending_body', $lang);
     				break;
     			case 1:
     				$msg['user']['subject'] = EM_ML_Options::get_option('dbem_multiple_bookings_email_confirmed_subject', $lang);
     				$msg['user']['body'] = EM_ML_Options::get_option('dbem_multiple_bookings_email_confirmed_body', $lang);
     				//admins should get something (if set to)
-    				$msg['admin']['subject'] = EM_ML_Options::get_option('dbem_multiple_bookings_contact_email_subject', $lang);
-    				$msg['admin']['body'] = EM_ML_Options::get_option('dbem_multiple_bookings_contact_email_body', $lang);
+    				$msg['admin']['subject'] = EM_ML_Options::get_option('dbem_multiple_bookings_contact_email_confirmed_subject', $lang);
+    				$msg['admin']['body'] = EM_ML_Options::get_option('dbem_multiple_bookings_contact_email_confirmed_body', $lang);
     				break;
     			case 2:
     				$msg['user']['subject'] = EM_ML_Options::get_option('dbem_multiple_bookings_email_rejected_subject', $lang);

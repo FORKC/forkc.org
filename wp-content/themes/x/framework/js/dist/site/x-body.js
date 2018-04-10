@@ -1527,9 +1527,9 @@ jQuery(function($){
   var shrinkInterpolate = lerp;//easeOutQuart;
   var slideInterpolate = lerp;//easeOutQuart;
 
-  function easeOutQuart( a, b, f ) {
-    return jQuery.easing.easeOutQuart(null, f, a, b - a, 1 )
-  }
+  // function easeOutQuart( a, b, f ) {
+  //   return jQuery.easing.xEaseOutQuart(null, f, a, b - a, 1 )
+  // }
 
   // Begining, End, Percect complete
   function lerp(a, b, f) {
@@ -1631,7 +1631,7 @@ jQuery(function($){
     var initialHeight = $bar.height();
     var shrinkHeight = isNaN( barData.shrink ) ? initialHeight : initialHeight * barData.shrink;
 
-    var offsetMod = Number.parseInt(barData.triggerOffset);
+    var offsetMod = parseInt(barData.triggerOffset);
     offsetMod = isNaN( offsetMod ) ? 0 : offsetMod;
 
 
@@ -1687,7 +1687,7 @@ jQuery(function($){
       var $space = $('.' + barData.id + '.x-bar-space');
       var $content = $bar.find('.x-bar-content');
       var baseOffset = barIndex > 0 ? minOffset + barData.shrinkHeight : 0;
-      var margin = Number.parseFloat($bar.css('margin-top'));
+      var margin = parseFloat($bar.css('margin-top'));
       var marginOffset = barData.keepMargin ? margin : 0;
 
       var offsetTop = $bar.data('xBarStickyTop');
@@ -1901,7 +1901,7 @@ jQuery(function($) {
 	        return;
         }
 
-        animateOffset($el, 850, 'easeInOutExpo');
+        animateOffset($el, 850, 'xEaseInOutExpo');
       }
     }
   });

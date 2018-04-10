@@ -27,8 +27,13 @@ class Cornerstone_Front_End extends Cornerstone_Plugin_Component {
 		add_filter( 'body_class', array( $this, 'addBodyClass' ), 10002 );
 
 		add_filter( 'the_content', array( $this, 'cs_content_before_shortcodes' ), 10 );
+    add_filter( 'the_content', array( $this, 'cs_content_late' ), 999999 );
 		add_shortcode( 'cs_content', array( $this, 'cs_content_shortcode' ) );
-		add_action('wp_footer', array( $this, 'shim_x_zones') );
+
+    add_action( 'wp_head', array( $this, 'cs_head_late'), 10000 );
+    add_action( 'wp_head', array( $this, 'cs_head_late_after'), 10001 );
+
+    add_action( 'wp_footer', array( $this, 'output_late_styles') );
 
 		add_action('x_section', array( $this, 'output_layout_content') );
 		add_action('x_row', array( $this, 'output_layout_content') );
@@ -36,6 +41,10 @@ class Cornerstone_Front_End extends Cornerstone_Plugin_Component {
 
     add_action('cs_before_preview_frame', array( $this, 'preview_frame_setup' ) );
     add_action('cs_element_rendering', array( $this, 'register_scripts') );
+    add_action( 'wp_footer', array( $this, 'shim_x_zones') ); // Needed for preview
+
+
+    add_action( 'cs_the_content_late', array( $this, 'shim_x_before_site_end') );
 	}
 
 	/**
@@ -86,16 +95,6 @@ class Cornerstone_Front_End extends Cornerstone_Plugin_Component {
 			add_action( 'wp_footer', array( $this, 'inlineScripts' ) );
 		}
 
-		$regions = $this->plugin->loadComponent('Regions');
-    $elements = $regions->get_content_elements( get_the_ID() );
-
-    if ( $elements ) {
-      global $cs_element_shortcode_data;
-      $cs_element_shortcode_data = $regions->flatten_elements( $elements );
-    }
-
-    $this->plugin->loadComponent( 'Styling' )->add_styles( 'content', $regions->get_content_styles( get_the_ID(), $elements ) );
-
     add_action( 'x_head_css', array( $this, 'output_generated_styles') );
     $inline_scripts = $this->plugin->component('Inline_Scripts');
 		add_action( 'wp_footer', array( $inline_scripts, 'output_scripts' ), 9998, 0 );
@@ -126,7 +125,7 @@ class Cornerstone_Front_End extends Cornerstone_Plugin_Component {
 
 		if ( apply_filters( 'cornerstone_customizer_output', true ) ) {
 
-			echo '<style id="cornerstone-generated-css" type="text/css">';
+			echo '<style id="cornerstone-generated-css">';
 
 			$data = array_merge( $this->plugin->settings(), $this->plugin->common()->theme_integration_options() );
     	$this->view( 'frontend/styles', true, $data, true );
@@ -138,7 +137,7 @@ class Cornerstone_Front_End extends Cornerstone_Plugin_Component {
 
 		$custom_css = get_option( 'cs_v1_custom_css', '' );
 			if ( $custom_css ) {
-				echo '<style id="cornerstone-custom-css" type="text/css">' . $custom_css . '</style>';
+				echo '<style id="cornerstone-custom-css">' . $custom_css . '</style>';
 			}
 
 		}
@@ -146,7 +145,7 @@ class Cornerstone_Front_End extends Cornerstone_Plugin_Component {
 
 
 		if ( apply_filters( '_cornerstone_custom_css', isset( $this->postSettings['custom_css'] ) ) ) {
-			echo '<style id="cornerstone-custom-page-css" type="text/css">';
+			echo '<style id="cornerstone-custom-page-css">';
 				echo $this->postSettings['custom_css'];
 				do_action( 'cornerstone_custom_page_css' );
 	  	echo '</style>';
@@ -219,8 +218,14 @@ class Cornerstone_Front_End extends Cornerstone_Plugin_Component {
 
 		if ( false !== strpos( $content, '[cs_content]' ) && false !== strpos( $content, '[/cs_content]' ) ) {
 			$content = cs_noemptyp( $content );
-			$content = str_replace( '[cs_content]', "<div id=\"cs-content\" class=\"cs-content\">", $content );
-			$content = str_replace( '[/cs_content]', '</div>', $content );
+
+      $atts = cs_atts( apply_filters( 'cs_content_atts', array(
+        'id'    => 'cs-content',
+        'class' => 'cs-content',
+      ) ) );
+
+			$content = str_replace( '[cs_content]', "<div $atts>", $content );
+			$content = str_replace( '[/cs_content]', '<!--cs-content-end--></div>', $content );
 		} else {
 			$content = str_replace( '[cs_content]', '', $content );
 			$content = str_replace( '[/cs_content]', '', $content );
@@ -230,10 +235,50 @@ class Cornerstone_Front_End extends Cornerstone_Plugin_Component {
 
 	}
 
+  public function cs_content_late( $content ) {
+    if ( false !== strpos( $content, '<!--cs-content-end-->' ) ) {
+      ob_start();
+      do_action( 'cs_the_content_late' );
+      $late_content = ob_get_clean();
+      $content = apply_filters( 'cs_content_late', str_replace( '<!--cs-content-end-->', $late_content, $content ) );
+    }
+    return $content;
+  }
+
 	public function cs_content_shortcode( $atts, $content ) {
-		$content = do_shortcode( $content );
-		return "<div id=\"cs-content\" class=\"cs-content\">$content</div>";
+
+    extract( shortcode_atts( array(
+      '_p'      => false,
+      'no_wrap' => false,
+    ), $atts, 'cs_content' ) );
+
+    $attrs = array( 'class' => 'cs-content' );
+
+    if ( $_p ) {
+
+      $content = $this->plugin->loadComponent('Element_Front_End')->shortcode_output( array(
+        '_p' => $_p
+      ), $content, 'cs_content' );
+
+    } else {
+      $attrs['id'] = 'cs-content';
+    }
+
+    $content = do_shortcode( $content );
+
+    do_action('cs_content_shortcode', $_p );
+
+    if ( $no_wrap ) {
+      return $content;
+    }
+
+    $attrs = cs_atts( $attrs );
+
+		return "<div $attrs >$content</div>";
 	}
+  public function shim_x_before_site_end() {
+    do_action( 'x_before_site_end' );
+  }
 
 	public function shim_x_zones() {
 
@@ -264,5 +309,18 @@ class Cornerstone_Front_End extends Cornerstone_Plugin_Component {
       $config['dynamic_css_selector'] = '#cornerstone-generated-css';
     }
     return $config;
+  }
+
+  public function cs_head_late() {
+    do_action( 'cs_head_late' );
+  }
+
+  public function cs_head_late_after() {
+    do_action( 'cs_head_late_after' );
+  }
+
+  public function output_late_styles() {
+    $styling = $this->plugin->loadComponent('Styling');
+    $styling->output_late_style( 'cs-late-element-css', $styling->get_generated_late_styles_clean() );
   }
 }

@@ -50,7 +50,7 @@ class Cornerstone_Model_Content_Content extends Cornerstone_Plugin_Component {
   public function make_error_response( $message, $status = 404 ) {
     return array(
       'errors' => array(
-        array( 'status' => $status, 'title' => 'message' )
+        array( 'status' => $status, 'title' => $message )
       )
     );
   }

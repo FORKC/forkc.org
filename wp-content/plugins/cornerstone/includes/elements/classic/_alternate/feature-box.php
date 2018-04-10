@@ -8,7 +8,8 @@ class CS_Feature_Box extends Cornerstone_Element_Base {
       'title'       => __( 'Feature Box', 'cornerstone' ),
       'section'     => 'content',
       'description' => __( 'Feature Box description.', 'cornerstone' ),
-      'supports'    => array( 'id', 'class', 'style' )
+      'supports'    => array( 'id', 'class', 'style' ),
+      'protected_keys' => array( 'title', 'content', 'graphic_icon', 'graphic_image', 'graphic_image_alt_text', 'link_text', 'href', 'href_title', 'href_target' )
     );
   }
 

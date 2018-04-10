@@ -33,7 +33,22 @@ class EM_Coupon_Admin extends EM_Coupon {
 	 * @return boolean
 	 */
 	function validate(){
+		global $wpdb;
 		$validate = true;
+		//check for duplicates
+		if( !empty($this->coupon_code) ){
+			$sql = $wpdb->prepare('SELECT coupon_id FROM '.EM_COUPONS_TABLE.' WHERE coupon_code=%s', $this->coupon_code);
+			$duplicates = $wpdb->get_col($sql);
+			if( !empty($duplicates) ){
+				foreach( $duplicates as $coupon_id ){
+					if( $coupon_id != $this->coupon_id ){
+						$validate = false;
+						$this->add_error( __('This coupon code has already been used, coupon codes must be unique.', 'em-pro') );
+					}
+				}
+			}
+		}
+		//check required fields
 		foreach( $this->required_fields as $field => $msg){
 			if( empty($this->$field) ){
 				$validate = false;

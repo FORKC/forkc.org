@@ -176,7 +176,7 @@ class EM_Gateways {
 	}
 	
 	static function event_booking_form_footer( $EM_Event ){
-		if(!$EM_Event->is_free() ){
+		if(!$EM_Event->is_free(true) ){
 		    self::booking_form_footer();
 		}
 	}
@@ -267,6 +267,22 @@ class EM_Gateways {
 	
 	static function em_booking_js(){
 		include(dirname(__FILE__).'/gateways.js');
+	}
+	
+	/**
+	 * Verification of whether current page load is for a manual booking or not. If $new_registration is true, it will also check whether a new user registration
+	 * is being requested and return true or false depending on both conditions being met. 
+	 * @param boolean $new_registration
+	 * @return boolean
+	 */
+	public static function is_manual_booking( $new_registration = true ){
+		if( !empty($_REQUEST['manual_booking']) && wp_verify_nonce($_REQUEST['manual_booking'], 'em_manual_booking_'.$_REQUEST['event_id']) ){
+			if( $new_registration ){
+				return empty($_REQUEST['person_id']) || $_REQUEST['person_id'] < 0;
+			}
+			return true;
+		}
+		return false;
 	}
 	
 	/*

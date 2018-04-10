@@ -13,7 +13,8 @@ class CS_Blockquote extends Cornerstone_Element_Base {
       'autofocus' => array(
     		'cite' => '.x-blockquote .x-cite',
     		'content' => '.x-blockquote'
-    	)
+    	),
+      'protected_keys' => array( 'content', 'cite' )
     );
   }
 

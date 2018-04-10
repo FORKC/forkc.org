@@ -7,11 +7,45 @@ class Cornerstone_Model_Footers_Footer_Template extends Cornerstone_Plugin_Compo
 
   public function setup() {
 
-    $records = $this->plugin->loadComponent('Regions')->get_footer_templates();
+    $posts = get_posts( array(
+      'post_type' => array( 'cs_template' ),
+      'post_status' => array( 'tco-data', 'publish' ),
+      'orderby' => 'type',
+      'posts_per_page' => 2500,
+      'meta_key' => '_cs_template_type',
+      'meta_value' => 'footer',
+    ) );
 
-    foreach ($records as $record) {
-      $this->resources[] = $this->to_resource( $record );
+    foreach ($posts as $post) {
+
+      $record = $this->make_record( $post );
+      if ( is_array( $record ) ) {
+        $this->resources[] = $this->to_resource( $record );
+      }
+
     }
+
+  }
+
+  public function make_record( $post ) {
+
+    try {
+
+      $template = new Cornerstone_Template( $post );
+
+      if ( $template && ! $template->is_hidden() ) {
+        return array(
+          'id' => $template->get_id(),
+          'title' => $template->get_title()
+        );
+      }
+
+    } catch( Exception $e ) {
+
+    }
+
+    return null;
+
   }
 
   public function query( $params ) {
@@ -88,6 +122,79 @@ class Cornerstone_Model_Footers_Footer_Template extends Cornerstone_Plugin_Compo
     }
 
     return true;
+  }
+
+  public function create( $params ) {
+
+    $atts = $this->atts_from_request( $params );
+
+    if ( ! isset( $atts['title'] ) ) {
+      throw new Exception( 'Footer template requires a title' );
+    }
+
+    if ( ! isset( $atts['meta'] ) || ! isset( $atts['meta']['footerId'] ) ) {
+      throw new Exception( 'Saving footer template requires ID of existing footer ' );
+    }
+
+    $footer = new Cornerstone_Footer( (int) $atts['meta']['footerId'] );
+
+    $footer_template = new Cornerstone_Template( array(
+      'title' => $atts['title'],
+      'type'  => 'footer',
+      'meta'  => array(
+        'regions' => $footer->get_regions(),
+        'settings' => $footer->get_settings(),
+      )
+    ) );
+
+    return $this->make_response( $this->to_resource( $footer_template->save() ) );
+
+  }
+
+  public function update( $params ) {
+
+    $atts = $this->atts_from_request( $params );
+
+    if ( ! $atts['id'] ) {
+      throw new Exception( 'Attempting to update Footer Template without specifying an ID.' );
+    }
+
+    $id = (int) $atts['id'];
+
+    $template = new Cornerstone_Template( $id );
+
+    if ( isset( $atts['title'] ) ) {
+      $template->set_title( $atts['title'] );
+    }
+
+    if ( isset( $atts['meta'] ) && isset( $atts['meta']['footerId'] ) ) {
+
+      $footer = new Cornerstone_Footer( (int) $atts['meta']['footerId'] );
+
+      $template->set_meta( array(
+        'regions' => $footer->get_regions(),
+        'settings' => $footer->get_settings(),
+      ) );
+
+    }
+
+    return $this->make_response( $this->to_resource( $template->save() ) );
+
+  }
+
+  protected function atts_from_request( $params ) {
+
+    if ( ! isset( $params['model'] ) || ! isset( $params['model']['data'] ) || ! isset( $params['model']['data']['attributes'] ) ) {
+      throw new Exception( 'Request to Footer model missing attributes.' );
+    }
+
+    $atts = $params['model']['data']['attributes'];
+
+    if ( isset( $params['model']['data']['id'] ) ) {
+      $atts['id'] = $params['model']['data']['id'];
+    }
+
+    return $atts;
   }
 
   public function to_resource( $record ) {

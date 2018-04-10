@@ -12,7 +12,7 @@ $n = x_get_option( 'x_footer_widget_areas' );
 
 <?php if ( $n != 0 ) : ?>
 
-  <footer class="x-colophon top" role="contentinfo">
+  <footer class="x-colophon top">
     <div class="x-container max width">
 
       <?php

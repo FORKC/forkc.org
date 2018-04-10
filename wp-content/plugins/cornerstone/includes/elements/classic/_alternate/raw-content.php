@@ -13,7 +13,8 @@ class CS_Raw_Content extends Cornerstone_Element_Base {
         'message' => sprintf( __( 'We recommend using <strong>Custom JS</strong> in <strong class="glue">%s Settings</strong>. Be sure to test on the front end, as it may not work as expected in the preview.', 'cornerstone' ), '%%icon-nav-settings-solid%%' ),
       ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'htmlhint' => true
+      'htmlhint' => true,
+      'protected_keys' => array( 'content' )
     );
   }
 

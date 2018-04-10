@@ -1,14 +1,24 @@
 <?php
 
 class Cornerstone_Debug extends Cornerstone_Plugin_Component {
+  public $messages;
 
   public function setup() {
     add_action( 'parse_request', array( $this, 'detect_load' ) );
+
+    // if ( current_user_can( 'manage_options' ) && isset( $_GET['cs-debug-messages'] ) && '1' === $_GET['cs-debug-messages'] ) {
+    //   add_action( 'wp_footer', array( $this, 'message_output' ) );
+    // }
+
+  }
+
+  public function can_debug() {
+
   }
 
   public function detect_load( $wp ) {
 
-    if ( ! ( current_user_can('manage_options') && isset( $_GET['cs-debug'] ) && '1' === $_GET['cs-debug'] ) ) {
+    if ( ! ( current_user_can( 'manage_options' ) && isset( $_GET['cs-debug'] ) && '1' === $_GET['cs-debug'] ) ) {
       return;
     }
 
@@ -73,5 +83,18 @@ class Cornerstone_Debug extends Cornerstone_Plugin_Component {
     $class = join( ' ', $classes );
     echo " class=\"$class\"";
 
+  }
+
+  public function add_message( $message ) {
+    $this->messages[] = $message;
+  }
+
+  public function message_output() {
+    if ( empty($this->messages)) return;
+    echo '<pre>';
+    foreach ($this->messages as $message) {
+      var_dump($message);
+    }
+    echo '</pre>';
   }
 }

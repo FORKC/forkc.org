@@ -26,6 +26,7 @@ class Cornerstone_Preview_Frame_Loader extends Cornerstone_Plugin_Component {
 
     add_filter( 'show_admin_bar', '__return_false' );
     add_action( 'template_redirect', array( $this, 'load' ), 0 );
+    add_action( 'x_late_template_redirect', array( $this, 'load_late' ), 10000 );
     add_action( 'shutdown', array( $this, 'frame_signature' ), 1000 );
     add_filter( 'wp_die_handler', array( $this, 'remove_preview_signature' ) );
 
@@ -55,6 +56,14 @@ class Cornerstone_Preview_Frame_Loader extends Cornerstone_Plugin_Component {
 
   public function load() {
     nocache_headers();
+    do_action( 'cs_preview_frame_load' );
+  }
+
+  public function load_late() {
+    add_filter( 'x_masthead_atts',      array( $this, 'nav_overlay_header' ) );
+    add_filter( 'x_colophon_atts',      array( $this, 'nav_overlay_footer' ) );
+    add_filter( 'cs_content_atts',      array( $this, 'nav_overlay_content' ) );
+    add_filter( 'cs_global_block_atts', array( $this, 'nav_overlay_global_block' ), 10, 2 );
   }
 
   public function zone_output() {
@@ -144,6 +153,87 @@ class Cornerstone_Preview_Frame_Loader extends Cornerstone_Plugin_Component {
       }
     }
     return $value;
+  }
+
+  public function nav_overlay_header( $atts ) {
+
+    $header = $this->plugin->loadComponent('Regions')->get_last_active_header();
+
+    if ( $header ) {
+      $atts['data-cs-observeable-nav'] = cs_prepare_json_att( array(
+        'action' => array(
+          'route'   => 'headers.header',
+          'id'      => $header->get_id(),
+          'context' => 'Header'
+        ),
+        'label' => 'Edit Header'
+      ) );
+    }
+
+    return $atts;
+  }
+
+  public function nav_overlay_footer( $atts ) {
+
+    $footer = $this->plugin->loadComponent('Regions')->get_last_active_footer();
+
+    if ( $footer ) {
+      $atts['data-cs-observeable-nav'] = cs_prepare_json_att( array(
+        'action' => array(
+          'route'   => 'footers.footer',
+          'id'      => $footer->get_id(),
+          'context' => 'Footer'
+        ),
+        'label' => 'Edit Footer'
+      ) );
+    }
+
+    return $atts;
+
+  }
+
+  public function nav_overlay_content( $atts ) {
+
+    $id = get_the_ID();
+
+    if ( $id ) {
+
+      $post_type = get_post_type_object( get_post_type() );
+
+      $atts['data-cs-observeable-nav'] = cs_prepare_json_att( array(
+        'action' => array(
+          'route'   => 'content.builder',
+          'id'      => $id,
+          'context' => $post_type->labels->singular_name
+        ),
+        'label' => 'Edit ' . $post_type->labels->singular_name
+      ) );
+
+    }
+
+    return $atts;
+
+  }
+
+  public function nav_overlay_global_block( $atts, $global_block_id ) {
+
+    if ( $global_block_id ) {
+
+      $post_type = get_post_type_object( 'cs_global_block' );
+
+      $atts['data-cs-observeable-nav'] = cs_prepare_json_att( array(
+        'action' => array(
+          'route'   => 'global-blocks.builder',
+          'id'      => $global_block_id,
+          'context' => $post_type->labels->singular_name
+        ),
+        'label' => 'Edit ' . $post_type->labels->singular_name
+      ) );
+
+    }
+
+    return $atts;
+
   }
 
 }

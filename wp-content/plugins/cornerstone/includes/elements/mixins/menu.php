@@ -214,7 +214,7 @@ function x_values_menu( $settings = array() ) {
 
   $values = array(
     'menu_type' => x_module_value( $type, 'all' ), // 01
-    'menu'      => x_module_value( 'sample:default', 'all' ),
+    'menu'      => x_module_value( 'sample:default', 'all', true ),
   );
 
   if ( $type !== 'dropdown' ) {

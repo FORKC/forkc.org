@@ -9,7 +9,8 @@ class CS_Widget_Area extends Cornerstone_Element_Base {
       'section'     => 'content',
       'description' => __( 'Widget Area description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'empty'       => array( 'sidebar' => 'none' )
+      'empty'       => array( 'sidebar' => 'none' ),
+      'protected_keys' => array( 'sidebar' )
     );
   }
 

@@ -95,10 +95,10 @@ function x_controls_graphic( $settings = array() ) {
 
   $controls_graphic_setup = array(
     array(
-      'key'     => $k_pre . 'graphic',
-      'type'    => 'choose',
-      'label'   => __( 'Enable', '__x__' ),
-      'options' => array(
+      'key'        => $k_pre . 'graphic',
+      'type'       => 'choose',
+      'label'      => __( 'Enable', '__x__' ),
+      'options'    => array(
         'choices' => array(
           array( 'value' => false, 'label' => __( 'Off', '__x__' ) ),
           array( 'value' => true,  'label' => __( 'On', '__x__' ) ),
@@ -433,13 +433,16 @@ function x_controls_graphic( $settings = array() ) {
             'type'    => 'unit-slider',
             'label'   => __( 'Max Width', '__x__' ),
             'options' => array(
-              'available_units' => array( 'px', 'em', 'rem' ),
+              'available_units' => array( 'px', 'em', 'rem', '%', 'vw', 'vh' ),
               'valid_keywords'  => array( 'none', 'calc' ),
               'fallback_value'  => 'none',
               'ranges'          => array(
                 'px'  => array( 'min' => 20, 'max' => 40,  'step' => 1    ),
                 'em'  => array( 'min' => 1,  'max' => 2.5, 'step' => 0.01 ),
                 'rem' => array( 'min' => 1,  'max' => 2.5, 'step' => 0.01 ),
+                '%'   => array( 'min' => 1,  'max' => 100, 'step' => 1    ),
+                'vw'  => array( 'min' => 1,  'max' => 100, 'step' => 1    ),
+                'vh'  => array( 'min' => 1,  'max' => 100, 'step' => 1    ),
               ),
             ),
           ),
@@ -519,7 +522,7 @@ function x_values_graphic( $settings = array() ) {
     $k_pre . 'graphic_has_toggle'                  => x_module_value( $has_toggle, 'all' ),          // 01
 
     $k_pre . 'graphic'                             => x_module_value( false, 'all' ),
-    $k_pre . 'graphic_type'                        => x_module_value( 'icon', 'all' ),
+    $k_pre . 'graphic_type'                        => x_module_value( 'icon', 'all', true ),
 
     $k_pre . 'graphic_margin'                      => x_module_value( '5px', 'style' ),
 
@@ -539,7 +542,7 @@ function x_values_graphic( $settings = array() ) {
     $k_pre . 'graphic_icon_text_shadow_color'      => x_module_value( 'transparent', 'style:color' ),
 
     $k_pre . 'graphic_image_max_width'             => x_module_value( 'none', 'style' ),
-    $k_pre . 'graphic_image_retina'                => x_module_value( true, 'markup' ),
+    $k_pre . 'graphic_image_retina'                => x_module_value( true, 'markup', true ),
 
   );
 
@@ -561,8 +564,8 @@ function x_values_graphic( $settings = array() ) {
     $values = array_merge(
       $values,
       array(
-        $k_pre . 'graphic_icon_alt'      => x_module_value( 'hand-spock-o', 'markup' ),
-        $k_pre . 'graphic_image_src_alt' => x_module_value( '', 'markup' ),
+        $k_pre . 'graphic_icon_alt'      => x_module_value( 'hand-spock-o', 'markup', true ),
+        $k_pre . 'graphic_image_src_alt' => x_module_value( '', 'markup', true ),
       )
     );
   }
@@ -580,10 +583,10 @@ function x_values_graphic( $settings = array() ) {
     $values = array_merge(
       $values,
       array(
-        $k_pre . 'graphic_icon'         => x_module_value( 'hand-pointer-o', 'markup' ),
-        $k_pre . 'graphic_image_src'    => x_module_value( '', 'markup' ),
-        $k_pre . 'graphic_image_width'  => x_module_value( 48, 'markup' ),
-        $k_pre . 'graphic_image_height' => x_module_value( 48, 'markup' ),
+        $k_pre . 'graphic_icon'         => x_module_value( 'hand-pointer-o', 'markup', true ),
+        $k_pre . 'graphic_image_src'    => x_module_value( '', 'markup', true ),
+        $k_pre . 'graphic_image_width'  => x_module_value( 48, 'markup', true ),
+        $k_pre . 'graphic_image_height' => x_module_value( 48, 'markup', true ),
       )
     );
   }

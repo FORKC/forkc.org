@@ -79,7 +79,7 @@ class Cornerstone_Preview_Window extends Cornerstone_Plugin_Component {
 	  $output = preg_replace( '/\s*([{}|:;,])\s+/', '$1', $output );  // 2
 	  $output = preg_replace( '/\s\s+(.*)/', '$1', $output );         // 3
 
-	  echo '<style id="cornerstone-generated-preview-css" type="text/css">' . $output . '</style>';
+	  echo '<style id="cornerstone-generated-preview-css">' . $output . '</style>';
 	}
 
 	/**

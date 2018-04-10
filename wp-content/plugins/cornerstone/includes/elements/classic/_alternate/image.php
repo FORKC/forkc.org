@@ -9,7 +9,8 @@ class CS_Image extends Cornerstone_Element_Base {
       'section'     => 'media',
       'description' => __( 'Image description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'empty'       => array( 'src' => '' )
+      'empty'       => array( 'src' => '' ),
+      'protected_keys' => array( 'src', 'alt', 'link', 'href', 'href_title', 'href_target', 'info_content' )
     );
   }
 

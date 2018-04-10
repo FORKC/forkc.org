@@ -20,6 +20,10 @@ class EM_Multiple_Bookings_Widget extends WP_Widget {
 		$widget_ops = array('description' => __( "Display a shopping cart widget for currently booked events to check out.", 'em-pro') );
 		parent::__construct(false, $name = 'Event Bookings Cart', $widget_ops);
 	}
+	
+	public static function widgets_init(){
+		return register_widget("EM_Multiple_Bookings_Widget");
+	}
 
 	/** @see WP_Widget::widget */
 	function widget($args, $instance) {
@@ -67,4 +71,4 @@ class EM_Multiple_Bookings_Widget extends WP_Widget {
         <?php 
     }
 }
-add_action('widgets_init', create_function('', 'return register_widget("EM_Multiple_Bookings_Widget");'));
+add_action('widgets_init', 'EM_Multiple_Bookings_Widget::widgets_init');

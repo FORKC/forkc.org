@@ -9,7 +9,8 @@ class CS_Self_Hosted_Video extends Cornerstone_Element_Base {
       'section'     => 'media',
       'description' => __( 'Video Player description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'empty'       => array( 'src' => '' )
+      'empty'       => array( 'src' => '' ),
+      'protected_keys' => array( 'src' )
     );
   }
 

@@ -326,7 +326,7 @@ class EM_Coupons extends EM_Object {
 	
 	public static function em_event_save_meta($result, $EM_Event){
 		global $wpdb;
-		if($result){
+		if( $result && !empty($EM_Event->event_id) ){
 			$wpdb->query("DELETE FROM ".EM_META_TABLE." WHERE meta_key='event-coupon' AND object_id=".$EM_Event->event_id);
 			$inserts = array();
 			foreach(self::event_get_coupons($EM_Event) as $EM_Coupon){
@@ -343,8 +343,10 @@ class EM_Coupons extends EM_Object {
 	public static function em_event_save_events($result, $EM_Event, $event_ids){
 		global $wpdb;
 		if( $result ){
-			$insert_templates = $inserts = array();
+			//delete all previous records of event coupons
+			$wpdb->query("DELETE FROM ".EM_META_TABLE." WHERE meta_key='event-coupon' AND object_id IN (".implode(',',$event_ids).")");
 			//build template insert
+			$insert_templates = $inserts = array();
 			foreach(self::event_get_coupons($EM_Event) as $EM_Coupon){
 				$insert_templates[] = "( %d, 'event-coupon', ". $wpdb->prepare("%d )", array($EM_Coupon->coupon_id));
 			}
@@ -436,8 +438,12 @@ class EM_Coupons extends EM_Object {
 		return apply_filters('em_coupons_refresh_counts', $result, $EM_Booking);
 	}
 	
+	/**
+	 * Outputs coupon code input field at bottom of booking form.
+	 * @param EM_Event $EM_Event
+	 */
 	public static function em_booking_form_footer($EM_Event){
-		if( EM_Coupons::event_has_coupons($EM_Event) > 0){
+		if( !$EM_Event->is_free(true) && EM_Coupons::event_has_coupons($EM_Event) > 0){
 			?>
 			<p class="em-bookings-form-coupon">
 				<label><?php _e('Coupon Code','em-pro'); ?></label>
@@ -450,10 +456,10 @@ class EM_Coupons extends EM_Object {
 	
 	/**
 	 * Echoes a coupon code field in the footer of the cart page. Currently used in MB mode only.
-	 * @param EM_Multiple_Booking $EM_Booking
+	 * @param EM_Multiple_Booking $EM_Multiple_Booking
 	 */
-	public static function em_cart_footer($EM_Booking){
-		if( !self::booking_has_coupons($EM_Booking) && EM_Coupons::count(array('limit'=>1)) > 0 ){
+	public static function em_cart_footer($EM_Multiple_Booking){
+		if( $EM_Multiple_Booking->get_price() > 0 && !self::booking_has_coupons($EM_Multiple_Booking) && EM_Coupons::count(array('limit'=>1)) > 0 ){
 		?>
 		<form id='em-cart-coupons-form' class="em-cart-coupons-form em-cart-actions" name='cart-coupons-form' method='post' action='<?php echo apply_filters('em_checkout_coupons_form_action_url',''); ?>#em-booking'>
 		 	<input type='hidden' name='action' value='em_coupon_apply'/>
@@ -464,9 +470,9 @@ class EM_Coupons extends EM_Object {
 			</div>
 		</form>
 		<?php
-		}
 		add_action('em_cart_js_footer', array('EM_Coupons', 'em_cart_gateway_js') );
 		add_action('em_cart_gateway_js', array('EM_Coupons', 'em_cart_gateway_js') );
+		}
 	}
 	
 	public static function wp_head(){

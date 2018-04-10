@@ -644,7 +644,7 @@ function x_cornerstone_options_map() {
 
     'x-typography' => array(
       'title'       => __( 'Typography', '__x__' ),
-      'description' => __( 'Here you will find global typography options for your body copy and headings, while more specific typography options for elements like your navbar are found grouped with that element to make customization more streamlined. If you are using Google Fonts, you can also enable custom subsets here for expanded character sets.<br><br>Disabling the font manager is not recommended, but will allow direct usage of System and Google Fonts.', '__x__' ),
+      'description' => __( 'Here you will find global typography options for your body copy and headings, while more specific typography options for elements like your navbar are found grouped with that element to make customization more streamlined. If you are using Google Fonts, you can also enable custom subsets here for expanded character sets.<br><br>Enable the font manager to assign your own font selections instead of directly using System or Google Fonts.', '__x__' ),
       'controls' => array(
         'x_enable_font_manager' => array(
           'type' => 'toggle',
@@ -733,7 +733,7 @@ function x_cornerstone_options_map() {
               'title' => __( 'Upper Limit (Breakpoint)', '__x__' ),
               'condition' => array( 'x_root_font_size_mode' => 'scaling' )
             ),
-          ),  
+          ),
         ),
         'google-subsets' => array(
           'title' => __('Google Subsets', '__x__' ),
@@ -790,7 +790,7 @@ function x_cornerstone_options_map() {
               'type' => 'color',
               'title' => __( 'Body Font Color', '__x__' )
             ),
-            'x_content_font_size' => array(
+            'x_content_font_size_rem' => array(
               'type' => 'text',
               'title' => __( 'Content Font Size (rem)', '__x__' )
             ),
@@ -1042,6 +1042,17 @@ function x_cornerstone_options_map() {
                 )
               )
             ),
+            'x_fixed_menu_scroll' => array(
+              'type' => 'select',
+              'title' => __( 'Navbar Scrolling', '__x__' ),
+              'condition' => array( 'option' => 'x_navbar_positioning', 'value' => array( 'fixed-right', 'fixed-left' ), 'op' => 'IN' ),
+              'options' => array(
+                'choices' => array(
+                  'overflow-scroll'  => __( 'On (no submenu support)', '__x__' ),
+                  'overflow-visible' => __( 'Off', '__x__' ),
+                )
+              )
+            ),
             'x_navbar_height' => array(
               'type' => 'text',
               'title' => __( 'Navbar Top Height (px)', '__x__' )
@@ -1135,11 +1146,9 @@ function x_cornerstone_options_map() {
               'condition' => array( 'x_enable_font_manager' => false )
             ),
             'x_logo_letter_spacing' => array(
-              'type' => 'slider',
+              'type' => 'unit-slider',
               'title' => __( 'Logo Letter Spacing (em)', '__x__' ),
-              'options' => array(
-                'choices' => $list_letter_spacing
-              )
+              'options' => $list_letter_spacing
             ),
             'x_logo_uppercase_enable' => array(
               'type' => 'toggle',
@@ -1236,11 +1245,9 @@ function x_cornerstone_options_map() {
               'condition' => array( 'x_enable_font_manager' => false )
             ),
             'x_navbar_letter_spacing' => array(
-              'type' => 'slider',
+              'type' => 'unit-slider',
               'title' => __( 'Navbar Letter Spacing (em)', '__x__' ),
-              'options' => array(
-                'choices' => $list_letter_spacing
-              )
+              'options' => $list_letter_spacing
             ),
             'x_navbar_uppercase_enable' => array(
               'type' => 'toggle',
@@ -1465,7 +1472,7 @@ function x_cornerstone_options_map() {
             'x_blog_excerpt_length' => array(
               'type' => 'text',
               'title' => __( 'Excerpt Length', '__x__' ),
-              'condition' => array( 'x_blog_enable_full_post_content' => true )
+              'condition' => array( 'x_blog_enable_full_post_content' => false )
             ),
           ),
         )

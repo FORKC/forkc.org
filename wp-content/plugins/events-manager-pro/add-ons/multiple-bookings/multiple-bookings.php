@@ -46,9 +46,11 @@ class EM_Multiple_Bookings{
 			if( !empty($_REQUEST['emp_no_user_mb_global_change']) && !empty($_REQUEST['action']) && $_REQUEST['action'] == 'booking_modify_person'){ //only hook in if we're editing a no-user booking
 				add_filter('em_booking_get_person_post', 'EM_Multiple_Bookings::em_booking_get_person_post', 100, 2);
 			}
+		//price adjustment on booking admin page
+		add_action('em_bookings_admin_ticket_totals_footer', 'EM_Multiple_Bookings::em_bookings_admin_ticket_totals_footer', 100,1);
 		//booking table and csv filters
-		add_filter('em_bookings_table_rows_col', array('EM_Multiple_Bookings','em_bookings_table_rows_col'),10,5);
-		add_filter('em_bookings_table_cols_template', array('EM_Multiple_Bookings','em_bookings_table_cols_template'),10,2);
+		add_filter('em_bookings_table_rows_col', 'EM_Multiple_Bookings::em_bookings_table_rows_col',100,6);
+		add_filter('em_bookings_table_cols_template', 'EM_Multiple_Bookings::em_bookings_table_cols_template',100,2);
 		add_action('shutdown', 'EM_Multiple_Bookings::session_save');
 		//multilingual hook
 		add_action('em_ml_init', 'EM_Multiple_Bookings::em_ml_init');
@@ -133,7 +135,7 @@ class EM_Multiple_Bookings{
     }
     
     public static function prevent_user_fields(){
-		add_filter('emp_form_show_reg_fields', create_function('','return false;'));
+		add_filter('emp_form_show_reg_fields', '__return_false');
     }
     
     public static function prevent_user_validation($result){
@@ -441,35 +443,89 @@ class EM_Multiple_Bookings{
     * ----------------------------------------------------------
     */
     
-    public static function em_bookings_table_rows_col($value, $col, $EM_Booking, $EM_Bookings_Table, $csv){
-        if( preg_match('/^mb_/', $col) ){
-            $col = preg_replace('/^mb_/', '', $col);
-	    	if( !empty($EM_Booking) && get_class($EM_Booking) != 'EM_Multiple_Booking' ){
-				//is this part of a multiple booking?
-				$EM_Multiple_Booking = self::get_main_booking( $EM_Booking );
-				if( $EM_Multiple_Booking !== false ){
-                	$EM_Form = EM_Booking_Form::get_form(false, get_option('dbem_multiple_bookings_form'));
-                	if( array_key_exists($col, $EM_Form->form_fields) ){
-                		$field = $EM_Form->form_fields[$col];
-                		if( isset($EM_Multiple_Booking->booking_meta['booking'][$col]) ){
-                			$value = $EM_Form->get_formatted_value($field, $EM_Multiple_Booking->booking_meta['booking'][$col]);
-                		}
-                	}
-                }
-            }
-        }
-    	return $value;
-    }
+    public static function em_bookings_table_rows_col($value, $col, $EM_Booking, $EM_Bookings_Table, $format, $object){
+    	if( !empty($EM_Booking) && get_class($EM_Booking) != 'EM_Multiple_Booking' ){
+			//is this part of a multiple booking?
+			$EM_Multiple_Booking = self::get_main_booking( $EM_Booking );
+			if( $EM_Multiple_Booking !== false ){
+				if( $col == 'payment_total' ){
+					$value = $EM_Multiple_Booking->get_total_paid(true);
+					if( $format == 'html' ) $value = '<a href="'.$EM_Multiple_Booking->get_admin_url().'">'.$value.'</a>';
+				}elseif( $col == 'booking_price' ){
+					$value = $EM_Multiple_Booking->get_booking_price($EM_Booking);
+					if( $format == 'html' && $EM_Booking->get_price(true) != $value ) $value .= '*'; //add asterisk if MB price had an adjustment
+				}elseif( $col == 'mb_booking_price' ){
+					$value = $EM_Multiple_Booking->get_price(true);
+					if( $format == 'html' ) $value = '<a href="'.$EM_Multiple_Booking->get_admin_url().'">'.$value.'</a>';
+				}else{
+					if( preg_match('/^mb_/', $col) ){
+						$col = preg_replace('/^mb_/', '', $col);
+						$EM_Form = EM_Booking_Form::get_form(false, get_option('dbem_multiple_bookings_form'));
+						if( array_key_exists($col, $EM_Form->form_fields) ){
+							$field = $EM_Form->form_fields[$col];
+							if( isset($EM_Multiple_Booking->booking_meta['booking'][$col]) ){
+								$value = $EM_Form->get_formatted_value($field, $EM_Multiple_Booking->booking_meta['booking'][$col]);
+							}
+						}
+					}
+				}
+			}else{
+				if( $col == 'mb_booking_price' ){
+					$value = '-';
+				}
+			}
+		}
+		if( $col == 'booking_price_gross' ){
+			$value = $EM_Booking->get_price(true);
+		}
+		return $value;
+	}
     
      public static function em_bookings_table_cols_template($template, $EM_Bookings_Table){
     	$EM_Form = EM_Booking_Form::get_form(false, get_option('dbem_multiple_bookings_form'));
     	foreach($EM_Form->form_fields as $field_id => $field ){
             if( $EM_Form->is_normal_field($field) ){ //user fields already handled, htmls shouldn't show
                 //prefix MB fields with mb_ to avoid clashes with normal booking forms
+            	$field = $EM_Form->translate_field($field);
         		$template['mb_'.$field_id] = $field['label'];
         	}
     	}
+    	$template ['payment_total'] = '[MB] ' . $template['payment_total']; 
+    	$template ['mb_booking_price'] = '[MB] ' . $template['booking_price'];
+    	$template ['booking_price_gross'] = __('Total (Gross)', 'em-pro');
     	return $template;
+    }
+    
+    public static function em_bookings_admin_ticket_totals_footer( $EM_Booking ){
+    	if( get_class($EM_Booking) != 'EM_Multiple_Booking' ){
+    		//is this part of a multiple booking?
+    		$EM_Multiple_Booking = self::get_main_booking( $EM_Booking );
+    		if( $EM_Multiple_Booking !== false ){
+    			//get adjusted price and if different, print it out
+    			$booking_mb_price = $EM_Multiple_Booking->get_booking_price($EM_Booking, false);
+    			$booking_total = $EM_Booking->get_price(false);
+    			if( $booking_mb_price != $EM_Booking->get_price(false) ){
+    			?>
+				<tr class="em-hr">
+					<th>* <?php esc_html_e('Further Adjustments','em-pro'); ?></th>
+					<th>&nbsp;</th>
+					<th><?php echo $EM_Multiple_Booking->format_price($booking_mb_price - $booking_total); ?></th>
+				</tr>
+				<tr>
+					<th>
+						* <?php esc_html_e('Total Adjusted Price','em-pro'); ?><br>
+						<em>* <?php esc_html_e('price estimate is calculated by proportionally applying discounts from the main booking','em-pro'); ?></em>
+					</th>
+					<th>&nbsp;</th>
+					<th>
+						<?php echo $EM_Multiple_Booking->format_price($booking_mb_price); ?><br>
+						<em>[<a href="<?php echo $EM_Multiple_Booking->get_admin_url(); ?>"><?php esc_html_e('View Main Booking','em-pro'); ?></a>]</em>
+					</th>
+				</tr>
+		    	<?php
+    			}
+    		}
+    	}
     }
 
     /*
@@ -560,6 +616,11 @@ class EM_Multiple_Bookings{
 		}
     }
     
+    /**
+     * Returns the main booking object of a supplied EM_Booking object, itself if it is in fact the parent booking, or returns false if booking doesn't have a parent booking.
+     * @param EM_Booking $EM_Booking
+     * @return false|EM_Multiple_Booking
+     */
     public static function get_main_booking( $EM_Booking ){
 		global $wpdb;
 		if( get_class($EM_Booking) == 'EM_Multiple_Booking' ) return $EM_Booking; //If already main booking, return that

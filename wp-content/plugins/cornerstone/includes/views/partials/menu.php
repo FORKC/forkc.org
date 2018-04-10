@@ -10,24 +10,35 @@ $mod_id           = ( isset( $mod_id )       ) ? $mod_id       : '';
 $menu_type        = ( isset( $menu_type )    ) ? $menu_type    : 'inline';
 $menu_data_walker = ( isset( $_custom_data ) ) ? $_custom_data : array();
 
-$menu_is_collapsed = $menu_type === 'collapsed';
-$menu_is_dropdown  = $menu_type === 'dropdown';
-$menu_is_inline    = $menu_type === 'inline';
-$menu_is_modal     = $menu_type === 'modal';
+$menu_is_collapsed         = $menu_type === 'collapsed';
+$menu_is_collapsed_tbf     = $menu_is_collapsed && ( $_region === 'top' || $_region === 'bottom' || $_region === 'footer' );
+$menu_is_collapsed_not_tbf = $menu_is_collapsed && ! ( $_region === 'top' || $_region === 'bottom' || $_region === 'footer' );
+$menu_is_dropdown          = $menu_type === 'dropdown';
+$menu_is_inline            = $menu_type === 'inline';
+$menu_is_modal             = $menu_type === 'modal';
 
 
 // Atts
 // ----
 
-$atts = array(
-  'id'    => '%1$s',
-  'class' => '%2$s',
-);
+$atts = array();
 
-if ( $menu_is_dropdown || $menu_is_inline ) {
-  if ( isset( $id ) && ! empty( $id ) ) {
+if ( isset( $id ) && ! empty( $id ) ) {
+  if ( $menu_is_collapsed_not_tbf || $menu_is_inline ) {
     $atts['id'] = $id;
+  } else if ( $menu_is_dropdown ) {
+    $atts['id'] = $id . '-dropdown';
   }
+} else {
+  if ( $menu_is_dropdown ) {
+    $atts['id'] = $mod_id . '-dropdown';
+  }
+}
+
+$atts['class'] = '%2$s';
+
+if ( $menu_is_dropdown ) {
+  $atts['aria-hidden'] = 'true';
 }
 
 
@@ -62,7 +73,7 @@ if ( $menu_is_dropdown ) {
 // Prepare Arg Values
 // ------------------
 
-if ( $menu_is_collapsed || $menu_is_modal ) {
+if ( $menu_is_collapsed_tbf || $menu_is_modal ) {
   $class = '';
 }
 

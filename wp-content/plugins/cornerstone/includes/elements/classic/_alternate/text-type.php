@@ -13,7 +13,8 @@ class CS_Text_Type extends Cornerstone_Element_Base {
 				'prefix' => '.x-text-type .prefix',
 		 		'strings' => '.x-text-type .text',
 				'suffix' => '.x-text-type .suffix'
-    	)
+    	),
+      'protected_keys' => array( 'prefix', 'strings', 'suffix', 'tag', 'looks_like' )
     );
   }
 

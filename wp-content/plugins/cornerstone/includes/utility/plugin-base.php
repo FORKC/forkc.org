@@ -97,6 +97,7 @@ abstract class Cornerstone_Plugin_Base {
     // Load init files and components
     $this->loadFiles( 'init' );
     $this->loadComponents( 'init' );
+    $this->versionMigration();
 
     $this->initAfter();
 
@@ -134,7 +135,6 @@ abstract class Cornerstone_Plugin_Base {
     // Load logged-in files and components
     $this->loadFiles( 'admin' );
     $this->loadComponents( 'admin' );
-    $this->versionMigration();
 
     $this->adminAfter();
 
@@ -283,7 +283,7 @@ abstract class Cornerstone_Plugin_Base {
   }
 
   /**
-   * Returns a component instance via it's name
+   * Returns a component instance via its name
    * @return object Component instance
    */
   public function component( $handle ) {
@@ -364,6 +364,8 @@ abstract class Cornerstone_Plugin_Base {
     do_action( $this->slug . '_deactivation' );
   }
 
+
+
   /**
    * Simple version migration system
    * Hook into `myplugin_updated` and test against the supplied
@@ -371,16 +373,16 @@ abstract class Cornerstone_Plugin_Base {
    * @return none
    */
   public function versionMigration() {
-
     $prior = get_option( $this->slug . '_version', 0 );
+    $current = $this->version();
 
-    if ( version_compare( $prior, $this->version(), '>' ) ) {
+    if ( version_compare( $prior, $current, '>=' ) ) {
       return;
     }
 
     do_action( $this->slug .'_updated', $prior );
 
-    update_option( $this->slug . '_version', $this->version() );
+    update_option( $this->slug . '_version', $current, true );
 
   }
 
@@ -482,7 +484,7 @@ abstract class Cornerstone_Plugin_Base {
   }
 
   /**
-   * Include a view file, optionally outputting it's contents.
+   * Include a view file, optionally outputting its contents.
    */
   public function view( $name, $echo = true, $data = array(), $extract = false ) {
 
@@ -713,7 +715,7 @@ abstract class Cornerstone_Plugin_Component {
   }
 
   /**
-   * Returns a component instance via it's name
+   * Returns a component instance via its name
    * @return object Component instance
    */
   public function component( $handle ) {
@@ -761,7 +763,7 @@ abstract class Cornerstone_Plugin_Component {
   }
 
   /**
-   * Include a view file, optionally outputting it's contents.
+   * Include a view file, optionally outputting its contents.
    */
   public function view( $name, $echo = true, $data = array(), $extract = false ) {
 

@@ -18,7 +18,7 @@ switch ( $video_type ) {
   // -----
 
   case 'embed' :
-    $video_content = ( ! empty( $video_embed_code ) ) ? $video_embed_code : '<img src="' . cornerstone_make_placeholder_image_uri( 280, 500, 'rgba(0, 0, 0, 0.35)' ) . '" width="500" height="280" alt="Placeholder">';
+    $video_content = ( ! empty( $video_embed_code ) ) ? $video_embed_code : '<img style="object-fit: cover; width: 100%; height: 100%;" src="' . cornerstone_make_placeholder_image_uri( 1, 1, 'rgba(0, 0, 0, 0.35)' ) . '" width="1" height="1" alt="Placeholder">';
     break;
 
 
@@ -120,9 +120,7 @@ switch ( $video_type ) {
     } else {
 
       $video_content = $mejs_bg_start
-                       . '<span class="x-mejs-no-source">'
-                         . '<img src="' . cornerstone_make_placeholder_image_uri( 280, 500, 'rgba(0, 0, 0, 0.35)' ) . '" width="500" height="280" alt="Placeholder">'
-                       . '</span>'
+                       . '<img style="object-fit: cover; width: 100%; height: 100%;" src="' . cornerstone_make_placeholder_image_uri( 1, 1, 'rgba(0, 0, 0, 0.35)' ) . '" width="1" height="1" alt="Placeholder">'
                      . $mejs_bg_end;
 
     }

@@ -198,7 +198,7 @@ function x_visual_composer_hide_design_options_callback() {
 // Remove Default Shortcodes
 // =============================================================================
 
-if ( ! function_exists( 'x_visual_composer_remove_default_shortcodes' && x_visual_composer_integration_on() ) ) {
+if ( ! function_exists( 'x_visual_composer_remove_default_shortcodes' ) && x_visual_composer_integration_on() ) {
 
   function x_visual_composer_remove_default_shortcodes() {
 
@@ -5146,14 +5146,14 @@ if ( ! function_exists( 'x_visual_composer_overwrite_layout_error_message' ) && 
 }
 
 if ( x_visual_composer_integration_on() ) {
-	
+
 // VC Column Inner template
 // =============================================================================
 
 // Make [vc_column_inner] behave like the [column] shortcode.
 // =============================================================================
 
-function vc_theme_vc_column_inner( $atts, $content = '' ) { 
+function vc_theme_vc_column_inner( $atts, $content = '' ) {
 	ob_start();
 
 extract( shortcode_atts( array(
@@ -5200,7 +5200,7 @@ switch ( $width ) {
 }
 
 if ( $fade == 'true' ) {
-  
+
   $fade = 'data-fade="true"';
 
   $data = ( function_exists( 'cs_generate_data_attributes' ) ) ? cs_generate_data_attributes( 'column', array( 'fade' => true ) ) : '';
@@ -5224,7 +5224,7 @@ if ( $fade == 'true' ) {
     }
 
   $fade_animation_style = 'opacity: 0;' . $fade_animation_offset . 'transition-duration: ' . $fade_duration . 'ms;';
-  
+
 } else {
   $data                 = '';
     $fade                 = '';
@@ -5293,7 +5293,7 @@ switch ( $width ) {
 }
 
 if ( $fade == 'true' ) {
-  
+
   $fade = 'data-fade="true"';
 
   $data = ( function_exists( 'cs_generate_data_attributes' ) ) ? cs_generate_data_attributes( 'column', array( 'fade' => true ) ) : '';

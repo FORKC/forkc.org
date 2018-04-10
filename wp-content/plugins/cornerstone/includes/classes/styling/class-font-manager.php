@@ -5,6 +5,7 @@ class Cornerstone_Font_Manager extends Cornerstone_Plugin_Component {
   public $queue = array();
   protected $font_items;
   protected $font_config;
+  protected $previewing = false;
 
   public function setup() {
     add_filter( 'cornerstone_option_model_whitelist', array( $this, 'whitelist_options' ) );
@@ -17,14 +18,18 @@ class Cornerstone_Font_Manager extends Cornerstone_Plugin_Component {
     add_filter('cornerstone_css_post_process_font-family', array( $this, 'css_post_process_font_family') );
     add_filter('cornerstone_css_post_process_font-weight', array( $this, 'css_post_process_font_weight') );
 
-    add_action( 'cornerstone_load_font_sources_typekit', array( $this, 'load_typekit_fonts' ) );
-    add_action( 'cornerstone_load_font_sources_google', array( $this, 'load_google_fonts' ) );
+    add_action( 'cornerstone_head_css', array( $this, 'output_typekit_loading_styles' ) );
+    add_action( 'x_head_css', array( $this, 'output_typekit_loading_styles' ) );
+  }
+
+  public function set_previewing() {
+    $this->previewing = true;
   }
 
   public function default_font_items( $data ) {
     return array(
       array(
-        'id'      => 'default-body-copy',
+        '_id'     => bin2hex('Body Copy'),
         'title'   => 'Body Copy',
         'family'  => 'Helvetica',
         'stack'   => 'Helvetica, Arial, sans-serif',
@@ -32,7 +37,7 @@ class Cornerstone_Font_Manager extends Cornerstone_Plugin_Component {
         'source'  => 'system'
       ),
       array(
-        'id'      => 'default-headings',
+        '_id'     => bin2hex('Headings'),
         'title'   => 'Headings',
         'family'  => 'Helvetica',
         'stack'   => 'Helvetica, Arial, sans-serif',
@@ -120,6 +125,22 @@ class Cornerstone_Font_Manager extends Cornerstone_Plugin_Component {
       $this->queue[$font['stack']]['weights'] = array();
     }
 
+    $this->should_flush_queue();
+
+  }
+
+  protected function should_flush_queue() {
+
+    $method = array( $this, 'flush_queue' );
+
+    $hooks = array( 'cs_head_late', 'wp_footer' );
+
+    foreach ($hooks as $hook) {
+      if ( ! has_action( $hook, $method ) ) {
+        add_action( $hook, array( $this, 'flush_queue' ) );
+      }
+    }
+
   }
 
   protected function queue_font_weight( $font, $weight ) {
@@ -156,6 +177,7 @@ class Cornerstone_Font_Manager extends Cornerstone_Plugin_Component {
   public function load_queued_fonts() {
 
     $sources = array();
+
     foreach ($this->queue as $font) {
       if ( ! isset( $font['source'] ) ) {
         continue;
@@ -171,35 +193,94 @@ class Cornerstone_Font_Manager extends Cornerstone_Plugin_Component {
 
     ksort($sources);
 
+    do_action( 'cs_load_queued_fonts', $this->queue, $sources );
+
+    if ( $this->previewing ) {
+      return;
+    }
+
     foreach ($sources as $source => $fonts) {
-      do_action("cornerstone_load_font_sources_$source", $fonts );
+      $method = array( $this, "load_fonts_$source" );
+      if ( is_callable( $method ) ) {
+        call_user_func_array( $method, array( $fonts ) );
+      }
     }
 
   }
 
-  public function load_google_fonts( $fonts ) {
+
+  public function flush_queue() {
+
+    $method = array( $this, 'flush_queue' );
+    remove_action( 'cs_head_late', $method );
+    remove_action( 'wp_footer', $method );
+
+    $this->load_queued_fonts();
+    $this->queue = array();
+
+  }
+
+  public function load_fonts_google( $fonts ) {
+
+    $in_footer = 'wp_footer' === current_action();
 
     $config = $this->get_font_config();
     $additional_subsets = is_array( $config['googleSubsets'] ) ? $config['googleSubsets'] : array();
     $subsets = array_merge( array('latin', 'latin-ext'), $additional_subsets );
 
-    $families = array();
+    $family_strings = array();
+
     foreach ($fonts as $font) {
-      $families[] = str_replace(' ', '+', $font['family'] ) . ':' . implode(',', $font['weights'] );
+      $family_strings[] = str_replace(' ', '+', $font['family'] ) . ':' . implode(',', $font['weights'] );
     }
 
     $request = add_query_arg( array(
-      'family' => implode('|', $families),
+      'family' => implode('|', $family_strings),
       'subset' => implode(',', $subsets )
     ), '//fonts.googleapis.com/css' );
 
-    wp_enqueue_style( 'cs-google-fonts', esc_url( $request ), NULL, $this->plugin->version(), 'all' );
+    $url = add_query_arg( array(
+      'ver' => $this->plugin->version(),
+    ), esc_url( $request ) );
+
+    $atts = cs_atts( array(
+      'rel'   => 'stylesheet',
+      'href'  => $url,
+      'type'  => 'text/css',
+      'media' => 'all',
+      'data-x-google-fonts' => null,
+    ));
+
+    $output = "<link $atts/>";
+
+    if ( $in_footer ) {
+      $output = $this->late_google_font_script( $output );
+    }
+
+    echo $output;
 
   }
 
-  public function load_typekit_fonts( $fonts ) {
-    $action = apply_filters('cs_typekit_hook', 'wp_head');
-    add_action( did_action($action) ? 'wp_footer' : $action, array( $this, 'output_typekit_script'), 999 );
+  public function late_google_font_script( $output ) {
+
+    ob_start();
+
+    ?>
+    <script>
+      (function($){
+        if ( ! $ ) return;
+        var $gf = $('<?php echo $output; ?>');
+        $('head').append($gf);
+      })(jQuery);
+    </script>
+    <?php
+
+    return ob_get_clean();
+
+  }
+
+  public function load_fonts_typekit( $fonts ) {
+    add_action( did_action('cs_head_late_after') ? 'wp_footer' : 'cs_head_late_after', array( $this, 'output_typekit_script') );
   }
 
   public function output_typekit_script() {
@@ -213,6 +294,18 @@ class Cornerstone_Font_Manager extends Cornerstone_Plugin_Component {
     ?>
     <script id="cs-typekit-loader">(function(d){var config={kitId:'<?php echo $config['typekitKitID']; ?>',scriptTimeout:3000,async:true},h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)})(document);</script>
     <?php
+
+  }
+
+  public function output_typekit_loading_styles() {
+
+    $config = $this->get_font_config();
+
+    if ( ! $config['typekitKitID'] ) {
+      return;
+    }
+
+    echo '.wf-loading a, .wf-loading p, .wf-loading ul, .wf-loading ol, .wf-loading dl, .wf-loading h1, .wf-loading h2, .wf-loading h3, .wf-loading h4, .wf-loading h5, .wf-loading h6, .wf-loading em, .wf-loading pre, .wf-loading cite, .wf-loading span, .wf-loading table, .wf-loading strong, .wf-loading blockquote { visibility: hidden !important; }';
 
   }
 

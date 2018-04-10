@@ -13,7 +13,8 @@ class CS_Feature_Headline extends Cornerstone_Element_Base {
       'autofocus' => array(
         'content' => '.h-feature-headline',
       ),
-      'attr_keys' => array( 'text_color', 'icon_color', 'icon_bg_color', 'text_align' )
+      'attr_keys' => array( 'text_color', 'icon_color', 'icon_bg_color', 'text_align' ),
+      'protected_keys' => array( 'content', 'level', 'looks_like', 'icon_type' )
     );
   }
 

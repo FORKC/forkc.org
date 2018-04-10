@@ -9,6 +9,7 @@ class Cornerstone_Integration_Conflict_Resolution {
     add_action( 'cornerstone_before_custom_endpoint', array( $this, 'disable_caching' ) );
     add_action( 'cornerstone_before_ajax', array( $this, 'before_render' ) );
     add_action( 'cornerstone_before_load_preview', array( $this, 'before_load_preview' ) );
+    add_action( 'cs_preview_frame_load', array( $this, 'before_load_preview' ) );
 
   }
 

@@ -9,7 +9,8 @@ class CS_Icon extends Cornerstone_Element_Base {
       'section'     => 'typography',
       'description' => __( 'Icon description.', 'cornerstone' ),
       'supports'    => array( 'id', 'class', 'style' ),
-      'attr_keys'   => array( 'icon_color', 'bg_color' )
+      'attr_keys'   => array( 'icon_color', 'bg_color' ),
+      'protected_keys' => array( 'type' )
     );
   }
 

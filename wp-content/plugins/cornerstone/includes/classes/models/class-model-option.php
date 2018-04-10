@@ -44,6 +44,10 @@ class Cornerstone_Model_Option extends Cornerstone_Plugin_Component {
 
   public function update( $params ) {
 
+    if ( ! current_user_can( 'manage_options' ) ) {
+      throw new Exception( 'Unauthorized' );
+    }
+
     $atts = $this->atts_from_request( $params );
 
     if ( ! $atts['id'] ) {
@@ -67,6 +71,10 @@ class Cornerstone_Model_Option extends Cornerstone_Plugin_Component {
   }
 
   public function delete( $params ) {
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+      throw new Exception( 'Unauthorized' );
+    }
 
     $atts = $this->atts_from_request( $params );
 

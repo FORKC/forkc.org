@@ -6,10 +6,10 @@
 // Masthead markup.
 // =============================================================================
 
-$atts = x_atts( array(
+$atts = x_atts( apply_filters( 'x_masthead_atts', array(
   'class' => 'x-masthead',
   'role'  => 'banner'
-) );
+) ) );
 
 ?>
 

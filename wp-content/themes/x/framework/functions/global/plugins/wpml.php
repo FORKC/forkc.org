@@ -26,19 +26,32 @@ function x_wpml_add_classes_for_language_switcher( $menu_items ) {
 
 add_filter( 'wp_nav_menu_items', 'x_wpml_add_classes_for_language_switcher' );
 
-// Add template override to force WPML to use the correct search & archive templates
+
+
+// Translate page and term ids in custom sidebar settings
 // ======================================================================================
 
-add_filter( 'template_include', 'x_force_template_override', 99 );
-
-function x_force_template_override( $template ) {
-	
-  if ( x_is_shop() || x_is_product_category() || x_is_product_tag() )  return $template;
-  
-  if( is_search() || is_archive() ) {
-    $p = pathinfo($template);
-    return $p['dirname'].'/index.php';
-  }
-
-  return $template;
+function x_wpml_translate_ups_sidebar_settings( $sidebars ) {
+	foreach ( $sidebars as $id => &$sidebar ) {
+		if ( array_key_exists( 'pages', $sidebar ) ) {
+			$pages = array();
+			foreach ( $sidebar['pages'] as $id => $title ) {
+				$id = apply_filters( 'wpml_object_id', $id, get_post_type( $id ) );
+				$pages[ $id ] = $title;
+			}
+			$sidebar['pages']= $pages;
+		}
+		if ( array_key_exists( 'taxonomies', $sidebar ) ) {
+			$taxonomies = array();
+			foreach ( $sidebar['taxonomies'] as $id => $title ) {
+				$term = get_term( $id );
+				$id = apply_filters( 'wpml_object_id', $id, $term->taxonomy );
+				$taxonomies[ $id ] = $term->name;
+			}
+			$sidebar['taxonomies'] = $taxonomies;
+		}
+	}
+	return $sidebars;
 }
+
+add_filter( 'option_ups_sidebars', 'x_wpml_translate_ups_sidebar_settings' );

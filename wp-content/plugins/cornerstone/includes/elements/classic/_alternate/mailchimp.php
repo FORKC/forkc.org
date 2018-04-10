@@ -8,7 +8,8 @@ class CS_Mailchimp extends Cornerstone_Element_Base {
       'title'       => __( 'Mailchimp', 'cornerstone' ),
       'section'     => 'content',
       'description' => __( 'Mailchimp description.', 'cornerstone' ),
-      'empty'       => array( 'form_id' => 'none' )
+      'empty'       => array( 'form_id' => 'none' ),
+      'protected_keys' => array( 'form_id' )
     );
   }
 

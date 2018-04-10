@@ -17,7 +17,7 @@ class Cornerstone_Layout_Manager extends Cornerstone_Plugin_Component {
 	}
 
 	public function load() {
-		$this->source_path = $this->path( 'includes/native_templates/' );
+		$this->source_path = $this->path( 'includes/templates/' );
 		$this->loadNativeBlocks();
 		$this->loadNativePages();
 		$this->loadUserLayouts();
@@ -43,7 +43,7 @@ class Cornerstone_Layout_Manager extends Cornerstone_Plugin_Component {
 	public function data_migration( $data ) {
 
 		if ( !isset( $data['elements'] ) )
-			return new WP_Error( 'cornertone', 'Elements missing.' );
+			return new WP_Error( 'cornerstone', 'Elements missing.' );
 
 		$version = isset( $data['version'] ) ? $data['version'] : 0;
 
@@ -216,7 +216,6 @@ class Cornerstone_Layout_Manager extends Cornerstone_Plugin_Component {
 
 			);
 			$version = get_post_meta( $post->ID, 'cs_template_version', true );
-			//jsond($version);
 			$template['section'] = ( $template['type'] == 'page' ) ? 'user-pages' : 'user-blocks';
 			$this->register( $template );
 		}

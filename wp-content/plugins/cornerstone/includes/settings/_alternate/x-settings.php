@@ -5,7 +5,7 @@ class CS_Settings_X_Settings extends Cornerstone_Legacy_Setting_Section {
   public function data() {
     return array(
       'name'        => 'x-settings',
-      'title'       => __( 'X Settings', 'cornerstone' ),
+      'title'       => __( 'Meta Settings', 'cornerstone' ),
       'priority' => '20'
     );
   }
@@ -358,7 +358,7 @@ class CS_Settings_X_Settings extends Cornerstone_Legacy_Setting_Section {
       'featured_content',
       'select',
       __( 'Featured Content', 'cornerstone' ),
-      __( 'Select "Media" if you would like to show your video or gallery on the index page in place of the featured image.', 'cornerstone' ),
+      __( 'Select "Media" if you would like to show your video or gallery on the index page in place of the featured image. Note: will always use "Thumbnail" in Ethos due to Stack styling.', 'cornerstone' ),
       get_post_meta( $post->ID, '_x_portfolio_index_media', true ),
       array(
         'choices' => array(

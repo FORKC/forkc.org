@@ -38,6 +38,17 @@ if ( X_REVOLUTION_SLIDER_IS_ACTIVE || X_LAYERSLIDER_IS_ACTIVE ) :
           <i class="x-icon-angle-down" data-x-icon="&#xf107;" aria-hidden="true"></i>
         </a>
 
+        <script>
+          jQuery(function($) {
+            $('.x-slider-container.above .x-slider-scroll-bottom').on('touchstart click', function(e) {
+              e.preventDefault();
+              $('html, body').animate({
+                scrollTop: $('.x-slider-container.above').outerHeight()
+              }, 850, 'xEaseInOutExpo');
+            });
+          });
+        </script>
+
       <?php endif; ?>
 
       <?php echo do_shortcode( x_get_slider_shortcode( $slider ) ); ?>

@@ -10,7 +10,8 @@ class CS_Envira_Gallery extends Cornerstone_Element_Base {
       'description' => __( 'Place an Envira Gallery element into your content.', 'cornerstone' ),
       'supports'    => array(),
       'can_preview' => false,
-      'undefined_message' => __('This element can not render because Envira Gallery is not active.', 'cornerstone' )
+      'undefined_message' => __('This element can not render because Envira Gallery is not active.', 'cornerstone' ),
+      'protected_keys' => array( 'source_id' )
     );
   }
 

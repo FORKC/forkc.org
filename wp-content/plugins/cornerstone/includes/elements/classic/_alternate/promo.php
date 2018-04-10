@@ -11,7 +11,8 @@ class CS_Promo extends Cornerstone_Element_Base {
       'supports'    => array( 'id', 'class', 'style' ),
       'autofocus' => array(
     		'content' => '.x-promo-content',
-    	)
+    	),
+      'protected_keys' => array( 'content', 'image', 'alt' )
     );
   }
 

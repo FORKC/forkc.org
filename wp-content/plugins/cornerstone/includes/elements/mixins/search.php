@@ -24,6 +24,7 @@ function x_controls_search( $settings = array() ) {
   // 01. Available types:
   //     -- 'inline'
   //     -- 'modal'
+  //     -- 'dropdown'
 
   $group     = ( isset( $settings['group'] )     ) ? $settings['group']     : 'search';
   $condition = ( isset( $settings['condition'] ) ) ? $settings['condition'] : array();
@@ -437,6 +438,7 @@ function x_values_search( $settings = array() ) {
   // 01. Available types:
   //     -- 'inline'
   //     -- 'modal'
+  //     -- 'dropdown'
 
   $type = ( isset( $settings['type'] ) ) ? $settings['type'] : 'inline'; // 01
 
@@ -448,7 +450,7 @@ function x_values_search( $settings = array() ) {
 
     'search_type'                         => x_module_value( $type, 'all' ),
 
-    'search_placeholder'                  => x_module_value( __( 'Search', '__x__' ), 'markup' ),
+    'search_placeholder'                  => x_module_value( __( 'Search', '__x__' ), 'markup', true ),
     'search_order_input'                  => x_module_value( '2', 'style' ),
     'search_order_submit'                 => x_module_value( '1', 'style' ),
     'search_order_clear'                  => x_module_value( '3', 'style' ),
@@ -471,8 +473,8 @@ function x_values_search( $settings = array() ) {
     'search_box_shadow_color_alt'         => x_module_value( 'rgba(0, 0, 0, 0.15)', 'style:color' ),
 
     'search_input_margin'                 => x_module_value( '0em', 'style' ),
-    'search_input_font_family'            => x_module_value( 'fw_fallback', 'style:font-family' ),
-    'search_input_font_weight'            => x_module_value( 'fw_fallback:400', 'style:font-weight' ),
+    'search_input_font_family'            => x_module_value( 'inherit', 'style:font-family' ),
+    'search_input_font_weight'            => x_module_value( 'inherit:400', 'style:font-weight' ),
     'search_input_font_size'              => x_module_value( '1em', 'style' ),
     'search_input_letter_spacing'         => x_module_value( '0em', 'style' ),
     'search_input_line_height'            => x_module_value( '1.3', 'style' ),
