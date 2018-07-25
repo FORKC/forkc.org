@@ -3,10 +3,10 @@
 /**
  * Plugin Name: Stripe Payments
  * Description: Easily accept credit card payments via Stripe payment gateway in WordPress.
- * Version: 1.7.9.1
+ * Version: 1.9.3
  * Author: Tips and Tricks HQ, wptipsntricks
  * Author URI: https://www.tipsandtricks-hq.com/
- * Plugin URI: https://stripe-plugins.com
+ * Plugin URI: https://s-plugins.com
  * License: GPLv2 or later
  * Text Domain: stripe-payments
  * Domain Path: /languages
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; //Exit if accessed directly
 }
 
-define( 'WP_ASP_PLUGIN_VERSION', '1.7.9.1' );
+define( 'WP_ASP_PLUGIN_VERSION', '1.9.3' );
 define( 'WP_ASP_PLUGIN_URL', plugins_url( '', __FILE__ ) );
 define( 'WP_ASP_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -48,7 +48,9 @@ require_once( WP_ASP_PLUGIN_PATH . 'includes/class-debug-logger.php' );
 require_once( WP_ASP_PLUGIN_PATH . 'public/class-asp.php' );
 require_once( WP_ASP_PLUGIN_PATH . 'public/includes/class-shortcode-asp.php' );
 require_once( WP_ASP_PLUGIN_PATH . 'admin/includes/class-products.php' );
+require_once( WP_ASP_PLUGIN_PATH . 'admin/includes/class-coupons.php' );
 require_once( WP_ASP_PLUGIN_PATH . 'admin/includes/class-order.php' );
+require_once( WP_ASP_PLUGIN_PATH . 'includes/addons-helper-class.php' );
 
 /*
  * Register hooks that are fired when the plugin is activated or deactivated.

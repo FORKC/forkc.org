@@ -70,6 +70,10 @@ class WPSEO_Configuration_Page {
 	public function enqueue_assets() {
 		wp_enqueue_media();
 
+		if ( ! wp_script_is( 'wp-element', 'registered' ) && function_exists( 'gutenberg_register_scripts_and_styles' ) ) {
+			gutenberg_register_scripts_and_styles();
+		}
+
 		/*
 		 * Print the `forms.css` WP stylesheet before any Yoast style, this way
 		 * it's easier to override selectors with the same specificity later.
@@ -83,6 +87,9 @@ class WPSEO_Configuration_Page {
 		$config = $this->get_config();
 
 		wp_localize_script( WPSEO_Admin_Asset_Manager::PREFIX . 'configuration-wizard', 'yoastWizardConfig', $config );
+
+		$yoast_components_l10n = new WPSEO_Admin_Asset_Yoast_Components_L10n();
+		$yoast_components_l10n->localize_script( WPSEO_Admin_Asset_Manager::PREFIX . 'configuration-wizard' );
 	}
 
 	/**

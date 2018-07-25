@@ -149,6 +149,12 @@ class WPSEO_Meta {
 				'default_value' => '0',
 				'description'   => '',
 			),
+			'is_cornerstone' => array(
+				'type'          => 'non-form',
+				'title'         => 'is_cornerstone',
+				'default_value' => '0',
+				'description'   => '',
+			),
 			'pageanalysis' => array(
 				'type'         => 'pageanalysis',
 				'title'        => '', // Translation added later.
@@ -358,11 +364,11 @@ class WPSEO_Meta {
 				 * @deprecated use the 'wpseo_metabox_entries_general' filter instead
 				 * @see        WPSEO_Meta::get_meta_field_defs()
 				 *
-				 * @param      array $field_defs Metabox orm definitions.
+				 * @param      array $field_defs Metabox form field definitions.
 				 *
 				 * @return     array
 				 */
-				$field_defs = apply_filters_deprecated( 'wpseo_metabox_entries', array( $field_defs ), 'WPSEO 7.0','wpseo_metabox_entries_general' );
+				$field_defs = apply_filters_deprecated( 'wpseo_metabox_entries', array( $field_defs ), 'WPSEO 7.0', 'wpseo_metabox_entries_general' );
 				break;
 
 
@@ -412,7 +418,7 @@ class WPSEO_Meta {
 		 * Filter the WPSEO metabox form field definitions for a tab
 		 * {tab} can be 'general', 'advanced' or 'social'
 		 *
-		 * @param  array  $field_defs Metabox form definitions.
+		 * @param  array  $field_defs Metabox form field definitions.
 		 * @param  string $post_type  Post type of the post the metabox is for, defaults to 'post'.
 		 *
 		 * @return array
@@ -516,6 +522,7 @@ class WPSEO_Meta {
 						'`',
 					), '', $clean );
 				}
+
 				break;
 		}
 

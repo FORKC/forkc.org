@@ -54,6 +54,8 @@ class Postman {
 		require_once 'PostmanConfigTextHelper.php';
 		require_once 'Postman-Email-Log/PostmanEmailLogPostType.php';
 		require_once 'Postman-Mail/PostmanMyMailConnector.php';
+		require_once 'Postman-Mail/PostmanContactForm7.php';
+		//require_once 'Postman-Mail/PostmanWooCommerce.php';
 
 		// get plugin metadata - alternative to get_plugin_data
 		$this->pluginData = array(
@@ -105,6 +107,12 @@ class Postman {
 		// MyMail integration
 		new PostmanMyMailConnector( $rootPluginFilenameAndPath );
 
+		// Contact form 7
+		new Postsmtp_ContactForm7;
+
+		// WooCommerce Integration
+		//new PostmanWoocommerce();
+
 		// register the shortcode handler on the add_shortcode event
 		add_shortcode( 'postman-version', array(
 				$this,
@@ -117,12 +125,19 @@ class Postman {
 				'on_plugins_loaded',
 		) );
 
-		$active_plugins = (array) get_option( 'active_plugins', array() );
-		if ( in_array( 'sitepress-multilingual-cms/sitepress.php', $active_plugins ) && !get_option( 'postman_wpml_fixed' ) ) {
-			add_action( 'admin_notices', array( $this, 'post_smtp_wpml_admin_notice' ) );
+		/**
+		 * @todo: WPML say they fix the issue in version 3.9
+		 * https://wordpress.org/support/topic/error-in-pluggable-php173/#post-10021301
+		 */
+		if ( get_option( 'icl_sitepress_version' ) && version_compare( get_option( 'icl_sitepress_version' ), '3.9', '<' ) ) {
 
-			// Temp: Just a quick solution, need to find a better option.
-			add_action( 'admin_init', array( $this, 'postman_fix_wpml' ) );
+			$active_plugins = (array)get_option('active_plugins', array());
+			if (in_array('sitepress-multilingual-cms/sitepress.php', $active_plugins) && !get_option('postman_wpml_fixed')) {
+				add_action('admin_notices', array($this, 'post_smtp_wpml_admin_notice'));
+
+				// Temp: Just a quick solution, need to find a better option.
+				add_action('admin_init', array($this, 'postman_fix_wpml'));
+			}
 		}
 
 		// hook on the wp_loaded event
@@ -142,12 +157,13 @@ class Postman {
 				$this,
 				'on_deactivation',
 		) );
+
 	}
 
 	public function post_smtp_wpml_admin_notice() {
 		$class = 'notice notice-error';
 		$title =  __( 'Post SMTP notice!', Postman::TEXT_DOMAIN );
-		$intro = __( 'WPML is installed and has a known bug with Post SMTP and few other plugins.', Postman::TEXT_DOMAIN );
+		$intro = __( 'WPML is installed and has a known bug with Post SMTP and few other plugins - you better upgrade, but we can try to fix it.', Postman::TEXT_DOMAIN );
 		$text = __( 'Click here to fix', Postman::TEXT_DOMAIN );
 		$message = '<br><a href="' . esc_url( add_query_arg( 'action', 'postman_fix_wpml', get_permalink() ) ) . '">' . $text . '</a>';
 
@@ -363,15 +379,21 @@ class Postman {
 			if ( $this->logger->isDebug() ) {
 				$this->logger->debug( 'Displaying configuration required warning' );
 			}
-			$message = sprintf( PostmanTransportRegistry::getInstance()->getReadyMessage() );
+			$msg = PostmanTransportRegistry::getInstance()->getReadyMessage();
+			$message = sprintf( $msg['message'] );
 			$goToSettings = sprintf( '<a href="%s">%s</a>', PostmanUtils::getSettingsPageUrl(), __( 'Settings', Postman::TEXT_DOMAIN ) );
 			$goToEmailLog = sprintf( '%s', _x( 'Email Log', 'The log of Emails that have been delivered', Postman::TEXT_DOMAIN ) );
 			if ( PostmanOptions::getInstance()->isMailLoggingEnabled() ) {
 				$goToEmailLog = sprintf( '<a href="%s">%s</a>', PostmanUtils::getEmailLogPageUrl(), $goToEmailLog );
 			}
 			$message .= (sprintf( ' %s | %s', $goToEmailLog, $goToSettings ));
-			;
-			$this->messageHandler->printMessage( $message, PostmanMessageHandler::WARNING_CLASS );
+			$message .= '<input type="hidden" name="security" class="security" value="' . wp_create_nonce('postsmtp') . '">';
+			
+			$hide = get_option('postman_release_version_not_configured' );
+
+			if ( $msg['error'] == true && ! $hide ) {
+				$this->messageHandler->printMessage( $message, 'postman-not-configured-notice notice notice-error is-dismissible' );
+			}
 		}
 	}
 
@@ -409,7 +431,7 @@ class Postman {
 		// because __FILE__ returns the wrong path if the plugin is installed as a symlink
 		$shortLocale = substr( get_locale(), 0, 2 );
 		if ( $shortLocale != 'en' ) {
-			$langDir = 'postman-smtp/Postman/languages';
+			$langDir = 'post-smtp/Postman/languages';
 			$success = load_plugin_textdomain( Postman::TEXT_DOMAIN, false, $langDir );
 			if ( $this->logger->isDebug() ) {
 				if ( $success ) {

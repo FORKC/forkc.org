@@ -492,6 +492,26 @@ function handleConfigurationResponse(response) {
 		}
 
 	}
+
+	jQuery('select#input_notification_service').change(function() {
+		var selected = jQuery( this ).val();
+		
+		if ( selected == 'default' ) {
+			jQuery('#slack_cred').fadeOut('fast');
+			jQuery('#pushover_cred').fadeOut('fast');
+		}
+
+		if ( selected == 'pushover' ) {
+			jQuery('#slack_cred').fadeOut('fast');
+			jQuery('#pushover_cred').fadeIn();
+		}
+
+		if ( selected == 'slack' ) {
+			jQuery('#pushover_cred').fadeOut('fast');
+			jQuery('#slack_cred').fadeIn();
+		}
+	});
+
 	// add an event on the user port override field
 	jQuery('input.user_socket_override').change(function() {
 		userOverrideMenu();

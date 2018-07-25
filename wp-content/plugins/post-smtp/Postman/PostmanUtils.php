@@ -227,6 +227,13 @@ class PostmanUtils {
 			}
 		}
 	}
+
+	static function lockFileExists() {
+		$path = PostmanUtils::calculateTemporaryLockPath( null );
+
+		return file_exists($path);
+	}
+
 	static function deleteLockFile( $tempDirectory = null ) {
 		$path = PostmanUtils::calculateTemporaryLockPath( $tempDirectory );
 		$success = @unlink( $path );
@@ -236,6 +243,9 @@ class PostmanUtils {
 		return $success;
 	}
 	static function createLockFile( $tempDirectory = null ) {
+		if ( self::lockFileExists() ) {
+			self::deleteLockFile();
+		}
 		$path = PostmanUtils::calculateTemporaryLockPath( $tempDirectory );
 		$success = @fopen( $path, 'xb' );
 		if ( PostmanUtils::$logger->isTrace() ) {
@@ -432,25 +442,40 @@ class PostmanUtils {
 	}
 
 	public static function getServerName() {
-		$ip = '';
+        $result = 'localhost.localdomain';
+        
+        if (isset($_SERVER) and array_key_exists('SERVER_NAME', $_SERVER)) {
+            $result = $_SERVER['SERVER_NAME'];
+        } elseif (function_exists('gethostname') and gethostname() !== false) {
+            $result = gethostname();
+        } elseif (php_uname('n') !== false) {
+            $result = php_uname('n');
+        }
 
-		if ( strpos( $_SERVER['SERVER_SOFTWARE'], 'iis' ) !== false ) {
-			$ip = $_SERVER['LOCAL_ADDR'];
+		if ( $result !== 'localhost.localdomain' ) {
+			// get the current result ip
+			$ip = gethostbyname($result);
+
+			// dns query failed
+			if ( $ip == $result ) {
+				return $result;
+			}
+
+			// get the current ip hostname - reverse dns
+			$host = gethostbyaddr($ip);
+
+			// dns query failed
+			if ( $host == $ip ) {
+				return $result;
+			}
+
+			// if hostname is not equal to the result set the ptr
+			if ( $result !== $host ) {
+				$result = $host;
+			}
 		}
 
-		if ( empty( $ip ) ) {
-			$ip = $_SERVER['SERVER_ADDR'];
-		}
-
-	    if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
-		    $host = gethostbyaddr( $ip );
-	    }
-
-	    if ( $host == $ip || $host == false ) {
-		    $host = filter_var( $_SERVER['HTTP_HOST'], FILTER_SANITIZE_STRING );
-	    }
-
-	    return $host ? $host : 'localhost';
+        return $result;
 	}
 
 	public static function getHost( $url ) {

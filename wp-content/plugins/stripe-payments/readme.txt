@@ -1,10 +1,10 @@
 === Stripe Payments ===
 Contributors: Tips and Tricks HQ, wptipsntricks, alexanderfoxc
-Donate link: https://stripe-plugins.com
+Donate link: https://s-plugins.com
 Tags: stripe, stripe payments, stripe gateway, payment, payments, button, shortcode, digital goods, payment gateway, instant payment, commerce, digital downloads, downloads, e-commerce, e-store, ecommerce, eshop, donation
 Requires at least: 4.7
 Tested up to: 4.9
-Stable tag: 1.7.9.1
+Stable tag: 1.9.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,6 +59,9 @@ https://www.youtube.com/watch?v=upWqk069Khg
 * Ability to customize the price display with currency symbol.
 * Option to send receipt email to your customers from Stripe for each transaction.
 * Option to collect a custom input from your customers for products (useful if you are selling products that need special instructions from the customers).
+* Stock control option. You can limit the number of quantity available for a product.
+* Option to enable Alipay payments. So your customers can pay using their Alipay accounts.
+* Option to enable Terms and Conditions that your customers have to accept before they can make a purchase.
 
 The setup is very easy. Once you have installed the plugin, all you need to do is enter your Stripe API credentials in the plugin settings and your website will be ready to accept credit card payments.
 
@@ -70,11 +73,11 @@ There are two ways you can use this plugin to create a "Buy Now" or "Pay" button
 
 Option 1) Create a product in the admin dashboard of this plugin then use a shortcode to put a buy button for that product.
 
-[Check this tutorial](https://stripe-plugins.com/creating-product-stripe-payments-plugin/) for step by step instructions.
+[Check this tutorial](https://s-plugins.com/creating-product-stripe-payments-plugin/) for step by step instructions.
 
 Option 2) You can specify the item details in a shortcode to dynamically create a Stripe payment button.
 
-[Check this tutorial](https://stripe-plugins.com/creating-payment-button-dynamically-adding-details-shortcode/) for step by step instructions.
+[Check this tutorial](https://s-plugins.com/creating-payment-button-dynamically-adding-details-shortcode/) for step by step instructions.
 
 = Detailed Documentation =
 
@@ -142,9 +145,90 @@ Yes, please visit Stripe Payments > Settings screen for options.
 3. Stripe Plugin Orders Menu
 
 == Upgrade Notice ==
-None
+None.
 
 == Changelog ==
+
+= 1.9.3 =
+- Coupon discount is now applied to the product price, not the total amount.
+- Coupon input is no longer displayed for custom amount products.
+- Added Dropbox support for Secure Downloads addon (requires addon version 1.1.7+).
+- Added WP eMember plugin integration options.
+
+= 1.9.2 =
+- Added Russian Ruble (RUB) currency.
+- Fixed Secure Downloads addon was showing real download URL for products.
+- Fixed per-product thank you page setting was ignored when payment error occurs.
+- Added {paid_amount_curr} custom checkout result page merge tag. It displays formatted amount with currency code (example: $12.99).
+
+= 1.9.1.1 =
+- Fixed per-product coupons settings were set to "Disabled" in some circumstances (thanks to abelfinance for reporting).
+
+= 1.9.1 =
+- Added Coupons functionality. Coupons for subscriptions are not supported at the moment, we're working on it.
+- Added {charge_date} checkout result merge tag.
+- Advanced Payment Methods addon is now properly collecting Billing and\or shipping addresses.
+- Clicking on "Shortcode" input on product page now selects the shortcode.
+
+= 1.9.0 =
+- Added "Validate ZIP code" option. In order for this to work, corresponding option should be enabled in your Stripe Dashboard as well.
+- Added support for Custom Messages addon. You can use it to customize various text messages displayed by the plugin.
+- Added {customer_name} email merge tag.
+
+= 1.8.9 =
+- Fixed "You passed an empty string for referrer" error which was caused by recent changes in Stripe API.
+- Added option to apply decimal separator settings to customer input as well.
+
+= 1.8.8 =
+- Added option to add mandatory "I accept the Terms and Conditions" checkbox. Should help to comply with the EU GDPR. Go to Settings -> Advanced Settings tab to configure it as per your needs.
+- Fixed zero-decimal currencies tax value was calculated improperly.
+- More text available for translation. You can help in translating the plugin to your language [here](https://translate.wordpress.org/projects/wp-plugins/stripe-payments)
+- Inline CSS is now minified.
+- Some addons-related changes.
+
+= 1.8.7 =
+- Added some debug logging message after the notification email is sent by the plugin. This will be useful for troubleshooting email related issue.
+- Added Alipay payment option as a free addon - https://s-plugins.com/alipay-addon-stripe-payments-plugin/
+
+= 1.8.6 =
+- Added basic products stock control functionality.
+- Added option to select custom text field description location (placeholder or below input).
+- Added links to documentation and add-ons on Settings page.
+
+= 1.8.5 =
+- Fixed "Invalid Stripe token" error in Safari on iPad (thanks to temparcweb for reporting and helping to debug).
+- Fixed IE11 incompatibility (thanks to temparcweb).
+- Additional information is put into debug log and error email if error occurs.
+- Customer no longer redirected to download URL if error occurs during payment process.
+
+= 1.8.4 =
+- Fixed "Invalid positive integer" error when price is set to 0 in [accept_stripe_payment name] shortcode.
+
+= 1.8.3 =
+- Added some more hooks for better addons support.
+
+= 1.8.2 =
+- Tax and shipping info is now displayed in standard checkout result page, emails and order info (if applicable).
+- New email tags added: {tax}, {tax_amt}, {shipping_amt}.
+- Added proper check for minimum amount for following currencies: DKK (2.50-kr.), GPB (£0.30), HKD ($4.00), JPY (¥50), MXN ($10), NOK (3.00-kr.), SEK (3.00-kr.).
+- Fixed products page was displaying incorrect number of products per row.
+- Fixed product template was improperly displaying price if quantity was greater than 1.
+- Fixed tax and shipping being improperly calculated when custom quantity was enabled.
+- Various small bugfixes and improvements.
+
+= 1.8.1 =
+- New shortcode parameter added: compat_mode="1". Useful if you get "Invalid Stripe Token" error if using visual page builders.
+- Added additional email tags: {item_price}, {item_price_curr}, {currency}, {currency_code}.
+- Added {purchase_amt_curr} email tag to display formatted amount with currency symbol.
+- Fixed {purchase_amt} email tag wasn't showing total purchase amount (was showing item price instead). Also made {purchase_amt} to be formatted according to Price Display Settings.
+
+= 1.8.0 =
+- Fixed variable price was improperly handled for products in some cases.
+- Added option to make payment buttons not clickable until Javascript libraries are loaded on page view. This prevents "Invalid Stripe Token" errors on some configurations.
+- You can customize currency symbol on settings page now.
+- Prioritized button_text parameter for product shortcode (useful if you want to have several buttons with different text for same product).
+- {custom_field} tag is now supported on custom Thank You page.
+- Custom field name and value are now added to Stripe metadata.
 
 = 1.7.9.1 =
 - Fixed minor bug related to product quantity.
@@ -232,7 +316,7 @@ None
 = 1.6.1 =
 - Stripe plugin's admin menu interface has been reworked to facilitate the addition of new features.
 - Added a new interface to add/edit products from the wp admin dashboard. Usage instructions at the following URL:
-  https://stripe-plugins.com/creating-product-stripe-payments-plugin/
+  https://s-plugins.com/creating-product-stripe-payments-plugin/
 
 - There is a new shortcode to embed a Stripe payment button for the products you create in the admin dashboard.
 - The existing shortcodes will continue to work as is (no change there).
@@ -248,7 +332,7 @@ None
 - Added "thankyou_page_url" shortcode parameter to specify a custom thank you page URL for an item. This can be used to override the default thank you page URL on a per item basis.
 - Extended checkout results page customization using [accept_stripe_payment_checkout] and [accept_stripe_payment_checkout_error] shortcodes.
 - Instructions on how to customize the thank you page using tags can be found at the following URL:
-https://stripe-plugins.com/customize-the-thank-page-message-of-stripe-payments-plugin/
+https://s-plugins.com/customize-the-thank-page-message-of-stripe-payments-plugin/
 
 = 1.5.8 =
 - Zero-decimal currencies (like JPY) are no longer multiplied by 100.

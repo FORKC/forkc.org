@@ -1,7 +1,7 @@
 var transports = [];
 
 jQuery(document).ready(
-		function() {
+		function($) {
 
 			// display password on entry
 			enablePasswordDisplayOnEntry('input_basic_auth_password',
@@ -22,6 +22,26 @@ jQuery(document).ready(
 				reloadOauthSection();
 				switchBetweenPasswordAndOAuth();
 			});
+
+			jQuery('select#input_notification_service').change(function() {
+				var selected = $( this ).val();
+
+				if ( selected == 'default' ) {
+					$('#slack_cred').fadeOut('fast');
+					$('#pushover_cred').fadeOut('fast');
+				}
+
+				if ( selected == 'pushover' ) {
+					$('#slack_cred').fadeOut('fast');
+					$('#pushover_cred').fadeIn();
+				}
+
+				if ( selected == 'slack' ) {
+					$('#pushover_cred').fadeOut('fast');
+					$('#slack_cred').fadeIn();
+				}
+			});
+			
 
 			// add an event on the authentication input field
 			// on user changing the auth type, determine whether to show
@@ -52,6 +72,7 @@ jQuery(document).ready(
 				}
 			}
 		});
+
 function reloadOauthSection() {
 	var hostname = jQuery(postman_hostname_element_name).val();
 	var transport = jQuery('#input_transport_type').val();
@@ -74,5 +95,5 @@ function switchBetweenPasswordAndOAuth() {
 	var transportName = jQuery('select#input_transport_type').val();
 	transports.forEach(function(item) {
 		item.handleTransportChange(transportName);
-	})
+	});
 }

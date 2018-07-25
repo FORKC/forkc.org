@@ -6,6 +6,7 @@ class AcceptStripePaymentsShortcode {
     var $StripeCSSInserted	 = false;
     var $ProductCSSInserted	 = false;
     var $ButtonCSSInserted	 = false;
+    var $CompatMode		 = false;
 
     /**
      * Instance of this class.
@@ -57,26 +58,46 @@ class AcceptStripePaymentsShortcode {
 	return self::$instance;
     }
 
+    function get_loc_data() {
+	//localization data, some settings and Stripe API key
+	$key		 = $this->AcceptStripePayments->APIPubKey;
+	$minAmounts	 = $this->AcceptStripePayments->minAmounts;
+	$zeroCents	 = $this->AcceptStripePayments->zeroCents;
+
+	$amountOpts = array(
+	    'applySepOpts'	 => $this->AcceptStripePayments->get_setting( 'price_apply_for_input' ),
+	    'decimalSep'	 => $this->AcceptStripePayments->get_setting( 'price_decimal_sep' ),
+	    'thousandSep'	 => $this->AcceptStripePayments->get_setting( 'price_thousand_sep' ),
+	);
+
+	$loc_data = array(
+	    'strEnterValidAmount'	 => apply_filters( 'asp_customize_text_msg', __( 'Please enter a valid amount', 'stripe-payments' ), 'enter_valid_amount' ),
+	    'strMinAmount'		 => apply_filters( 'asp_customize_text_msg', __( 'Minimum amount is', 'stripe-payments' ), 'min_amount_is' ),
+	    'strEnterQuantity'	 => apply_filters( 'asp_customize_text_msg', __( 'Please enter quantity.', 'stripe-payments' ), 'enter_quantity' ),
+	    'strQuantityIsZero'	 => apply_filters( 'asp_customize_text_msg', __( 'Quantity can\'t be zero.', 'stripe-payments' ), 'quantity_is_zero' ),
+	    'strQuantityIsFloat'	 => apply_filters( 'asp_customize_text_msg', __( 'Quantity should be integer value.', 'stripe-payments' ), 'quantity_is_float' ),
+	    'strTax'		 => __( 'Tax', 'stripe-payments' ),
+	    'strShipping'		 => __( 'Shipping', 'stripe-payments' ),
+	    'strTotal'		 => __( 'Total:', 'stripe-payments' ),
+	    'strPleaseFillIn'	 => apply_filters( 'asp_customize_text_msg', __( 'Please fill in this field.', 'stripe-payments' ), 'fill_in_field' ),
+	    'strPleaseCheckCheckbox' => __( 'Please check this checkbox.', 'stripe-payments' ),
+	    'strMustAcceptTos'	 => apply_filters( 'asp_customize_text_msg', __( 'You must accept the terms before you can proceed.', 'stripe-payments' ), 'accept_terms' ),
+	    'strRemoveCoupon'	 => apply_filters( 'asp_customize_text_msg', __( 'Remove coupon', 'stripe-payments' ), 'remove_coupon' ),
+	    'strRemove'		 => apply_filters( 'asp_customize_text_msg', __( 'Remove', 'stripe-payments' ), 'remove' ),
+	    'key'			 => $key,
+	    'ajax_url'		 => admin_url( 'admin-ajax.php' ),
+	    'minAmounts'		 => $minAmounts,
+	    'zeroCents'		 => $zeroCents,
+	    'amountOpts'		 => $amountOpts,
+	);
+	return $loc_data;
+    }
+
     function register_stripe_script() {
 	wp_register_script( 'stripe-script', 'https://checkout.stripe.com/checkout.js', array(), null, true );
 	wp_register_script( 'stripe-handler', WP_ASP_PLUGIN_URL . '/public/assets/js/stripe-handler.js', array( 'jquery' ), WP_ASP_PLUGIN_VERSION, true );
-	//localization data and Stripe API key
-	if ( $this->AcceptStripePayments->get_setting( 'is_live' ) == 0 ) {
-	    //use test keys
-	    $key = $this->AcceptStripePayments->get_setting( 'api_publishable_key_test' );
-	} else {
-	    //use live keys
-	    $key = $this->AcceptStripePayments->get_setting( 'api_publishable_key' );
-	}
-	$loc_data = array(
-	    'strEnterValidAmount'	 => __( 'Please enter a valid amount', 'stripe-payments' ),
-	    'strMinAmount'		 => __( 'Minimum amount is 0.5', 'stripe-payments' ),
-	    'key'			 => $key,
-	    'strEnterQuantity'	 => __( 'Please enter quantity.', 'stripe-payments' ),
-	    'strQuantityIsZero'	 => __( 'Quantity can\'t be zero.', 'stripe-payments' ),
-	    'strQuantityIsFloat'	 => __( 'Quantity should be integer value.', 'stripe-payments' ),
-	);
-	wp_localize_script( 'stripe-handler', 'stripehandler', $loc_data );
+
+	wp_localize_script( 'stripe-handler', 'stripehandler', $this->get_loc_data() );
 	// addons can register their scripts if needed
 	do_action( 'asp-button-output-register-script' );
     }
@@ -108,6 +129,12 @@ class AcceptStripePaymentsShortcode {
 	    $button_text = $this->AcceptStripePayments->get_setting( 'button_text' );
 	}
 
+	//check if we have button_text shortcode parameter. If it's not empty, this should be our button text
+
+	if ( isset( $atts[ 'button_text' ] ) && ! empty( $atts[ 'button_text' ] ) ) {
+	    $button_text = esc_attr( $atts[ 'button_text' ] );
+	}
+
 	$thumb_img	 = '';
 	$thumb_url	 = get_post_meta( $id, 'asp_product_thumbnail', true );
 
@@ -124,7 +151,14 @@ class AcceptStripePaymentsShortcode {
 	$template_name	 = 'default'; //this could be made configurable
 	$button_color	 = 'blue'; //this could be made configurable
 
-	$price	 = get_post_meta( $id, 'asp_product_price', true );
+	$price		 = get_post_meta( $id, 'asp_product_price', true );
+	$shipping	 = get_post_meta( $id, 'asp_product_shipping', true );
+
+	//let's apply filter so addons can change price, currency and shipping if needed
+	$price_arr	 = array( 'price' => $price, 'currency' => $currency, 'shipping' => empty( $shipping ) ? false : $shipping );
+	$price_arr	 = apply_filters( 'asp_modify_price_currency_shipping', $price_arr );
+	extract( $price_arr, EXTR_OVERWRITE );
+
 	$buy_btn = '';
 
 	$button_class = get_post_meta( $id, 'asp_product_button_class', true );
@@ -141,9 +175,13 @@ class AcceptStripePaymentsShortcode {
 	    $custom_field = intval( $custom_field );
 	}
 
-	$thankyou_page = get_post_meta( $id, 'asp_product_thankyou_page', true );
+	$coupons_enabled = get_post_meta( $id, 'asp_product_coupons_setting', true );
 
-	$shipping = get_post_meta( $id, 'asp_product_shipping', true );
+	if ( ( $coupons_enabled === "" ) || $coupons_enabled === "2" ) {
+	    $coupons_enabled = $this->AcceptStripePayments->get_setting( 'coupons_enabled' );
+	}
+
+	$thankyou_page = get_post_meta( $id, 'asp_product_thankyou_page', true );
 
 	if ( ! $shipping ) {
 	    $shipping = 0;
@@ -155,12 +193,14 @@ class AcceptStripePaymentsShortcode {
 	    $tax = 0;
 	}
 
+	$quantity = get_post_meta( $id, 'asp_product_quantity', true );
+
 	$under_price_line	 = '';
-	$tot_price		 = $price;
+	$tot_price		 = $quantity ? $price * $quantity : $price;
 
 	if ( $tax !== 0 ) {
 	    if ( ! empty( $price ) ) {
-		$tax_amount		 = round( ($price * $tax / 100 ), 2 );
+		$tax_amount		 = AcceptStripePayments::get_tax_amount( $tot_price, $tax, AcceptStripePayments::is_zero_cents( $currency ) );
 		$tot_price		 += $tax_amount;
 		$under_price_line	 = '<span class="asp_price_tax_section">' . AcceptStripePayments::formatted_price( $tax_amount, $currency ) . __( ' (tax)', 'stripe-payments' ) . '</span>';
 	    } else {
@@ -178,7 +218,7 @@ class AcceptStripePaymentsShortcode {
 	}
 
 	if ( ! empty( $price ) && ! empty( $under_price_line ) ) {
-	    $under_price_line .= '<div class="asp_price_full_total">Total: ' . AcceptStripePayments::formatted_price( $tot_price, $currency ) . '</div>';
+	    $under_price_line .= '<div class="asp_price_full_total">' . __( 'Total:', 'stripe-payments' ) . ' <span class="asp_tot_current_price">' . AcceptStripePayments::formatted_price( $tot_price, $currency ) . '</span> <span class="asp_tot_new_price"></span></div>';
 	}
 
 	if ( get_post_meta( $id, 'asp_product_no_popup_thumbnail', true ) != 1 ) {
@@ -186,6 +226,10 @@ class AcceptStripePaymentsShortcode {
 	} else {
 	    $item_logo = '';
 	}
+
+	$compat_mode = isset( $atts[ 'compat_mode' ] ) ? 1 : 0;
+
+	$this->CompatMode = ($compat_mode) ? true : false;
 
 	//Let's only output buy button if we're in the loop. Since the_content hook could be called several times (for example, by a plugin like Yoast SEO for its purposes), we should only output the button only when it's actually needed.
 	if ( ! isset( $atts[ 'in_the_loop' ] ) || $atts[ 'in_the_loop' ] === "1" ) {
@@ -207,6 +251,8 @@ class AcceptStripePaymentsShortcode {
 		'billing_address'	 => get_post_meta( $id, 'asp_product_collect_billing_addr', true ),
 		'shipping_address'	 => get_post_meta( $id, 'asp_product_collect_shipping_addr', true ),
 		'custom_field'		 => $custom_field,
+		'coupons_enabled'	 => $coupons_enabled,
+		'compat_mode'		 => $compat_mode,
 	    );
 	    //this would pass additional shortcode parameters from asp_product shortcode
 	    $sc_params	 = array_merge( $atts, $sc_params );
@@ -217,9 +263,11 @@ class AcceptStripePaymentsShortcode {
 
 	if ( (isset( $atts[ "fancy" ] ) && $atts[ "fancy" ] == '0') || $button_only == 1 ) {
 	    //Just show the stripe payment button (no fancy template)
-	    $tpl				 = '<div class="asp_product_buy_button">' . $buy_btn . '</div>';
-	    $tpl				 = "<link rel='stylesheet' href='" . WP_ASP_PLUGIN_URL . '/public/views/templates/default/style.css' . "' type='text/css' media='all' />" . $tpl;
-	    $this->productCSSInserted	 = true;
+	    $tpl	 = '<div class="asp_product_buy_button">' . $buy_btn . '</div>';
+	    $tpl	 = "<link rel='stylesheet' href='" . WP_ASP_PLUGIN_URL . '/public/views/templates/default/style.css' . "' type='text/css' media='all' />" . $tpl;
+	    if ( ! $this->CompatMode ) {
+		$this->productCSSInserted = true;
+	    }
 	    return $tpl;
 	}
 
@@ -230,8 +278,31 @@ class AcceptStripePaymentsShortcode {
 	} else {
 	    $tpl = asp_get_template( $this->ProductCSSInserted );
 	}
-	$this->productCSSInserted	 = true;
-	$tpl				 = str_replace( array( '%_thumb_img_%', '%_name_%', '%_description_%', '%_price_%', '%_under_price_line_%', '%_buy_btn_%' ), array( $thumb_img, $post->post_title, do_shortcode( wpautop( $post->post_content ) ), AcceptStripePayments::formatted_price( $price, $currency ), $under_price_line, $buy_btn ), $tpl );
+	if ( ! $this->CompatMode ) {
+	    $this->productCSSInserted = true;
+	}
+
+	$price_line = AcceptStripePayments::formatted_price( $price, $currency );
+
+	if ( $quantity && $quantity != 1 ) {
+	    $price_line = AcceptStripePayments::formatted_price( $price, $currency ) . ' x ' . $quantity;
+	}
+
+	$product_tags = array(
+	    'thumb_img'		 => $thumb_img,
+	    'name'			 => $post->post_title,
+	    'description'		 => do_shortcode( wpautop( $post->post_content ) ),
+	    'price'			 => $price_line,
+	    'under_price_line'	 => $under_price_line,
+	    'buy_btn'		 => $buy_btn,
+	);
+
+	$product_tags = apply_filters( 'asp_product_tpl_tags_arr', $product_tags, $id );
+
+	foreach ( $product_tags as $tag => $repl ) {
+	    $tpl = str_replace( '%_' . $tag . '_%', $repl, $tpl );
+	}
+
 	return $tpl;
     }
 
@@ -255,7 +326,10 @@ class AcceptStripePaymentsShortcode {
 	    'customer_email'	 => '',
 	    'currency'		 => $this->AcceptStripePayments->get_setting( 'currency_code' ),
 	    'button_text'		 => $this->AcceptStripePayments->get_setting( 'button_text' ),
+	    'compat_mode'		 => 0,
 	), $atts ) );
+
+	$this->CompatMode = ($compat_mode) ? true : false;
 
 	if ( empty( $name ) ) {
 	    $error_msg	 = '<div class="stripe_payments_error_msg" style="color: red;">';
@@ -287,20 +361,24 @@ class AcceptStripePaymentsShortcode {
 	if ( $quantity == "N/A" ) {
 	    $quantity = "NA";
 	}
+	$price			 = floatval( $price );
 	$uniq_id		 = count( self::$payment_buttons );
 	$button_id		 = 'stripe_button_' . $uniq_id;
 	self::$payment_buttons[] = $button_id;
-	$paymentAmount		 = ($custom_quantity == "1" ? $price : (floatval( $price ) * $quantity));
-	if ( in_array( $currency, $this->AcceptStripePayments->zeroCents ) ) {
+
+	$item_price	 = $price;
+	$paymentAmount	 = ($custom_quantity == "1" ? $price : (floatval( $price ) * $quantity));
+	if ( AcceptStripePayments::is_zero_cents( $currency ) ) {
 	    //this is zero-cents currency, amount shouldn't be multiplied by 100
 	    $priceInCents = $paymentAmount;
 	} else {
-	    $priceInCents = $paymentAmount * 100;
+	    $priceInCents	 = $paymentAmount * 100;
+	    $item_price	 = $price * 100;
 	}
 
 	if ( ! empty( $shipping ) ) {
 	    $shipping = round( $shipping, 2 );
-	    if ( ! in_array( $currency, $this->AcceptStripePayments->zeroCents ) ) {
+	    if ( ! AcceptStripePayments::is_zero_cents( $currency ) ) {
 		$shipping = $shipping * 100;
 	    }
 	}
@@ -323,19 +401,42 @@ class AcceptStripePaymentsShortcode {
 	//Charge description
 	//We only generate it if it's empty and if custom qunatity and price is not used
 	//If custom quantity and\or price are used, description will be generated by javascript
+	$descr_generated = false;
 	if ( empty( $description ) && $custom_quantity !== '1' && ( ! empty( $price ) && $price !== 0) ) {
 	    //Create a description using quantity, payment amount and currency
 	    if ( ! empty( $tax ) || ! empty( $shipping ) ) {
-		$formatted_amount = AcceptStripePayments::formatted_price( in_array( $currency, $this->AcceptStripePayments->zeroCents ) ? $priceInCents : $priceInCents / 100, $currency );
+		$formatted_amount = AcceptStripePayments::formatted_price( AcceptStripePayments::is_zero_cents( $currency ) ? $priceInCents : $priceInCents / 100, $currency );
 	    } else {
 		$formatted_amount = AcceptStripePayments::formatted_price( $paymentAmount, $currency );
 	    }
-	    $description = "{$quantity} X " . $formatted_amount;
+	    $description	 = "{$quantity} X " . $formatted_amount;
+	    $descr_generated = true;
 	}
+
+	// Check if "Disable Buttons Before Javascript Loads" option is set
+	$is_disabled = '';
+	if ( $this->AcceptStripePayments->get_setting( 'disable_buttons_before_js_loads' ) ) {
+	    $is_disabled = " disabled";
+	}
+
 	//This is public.css stylesheet
 	//wp_enqueue_style('stripe-button-public');
 	//$button = "<button id = '{$button_id}' type = 'submit' class = '{$class}'><span>{$button_text}</span></button>";
-	$button = sprintf( '<button id="%s" type="submit" class="%s"><span>%s</span></button>', esc_attr( $button_id ), esc_attr( $class ), sanitize_text_field( $button_text ) );
+	$button = sprintf( '<div class="asp_product_buy_btn_container"><button id="%s" type="submit" class="%s"%s><span>%s</span></button></div>', esc_attr( $button_id ), esc_attr( $class ), $is_disabled, sanitize_text_field( $button_text ) );
+
+	$out_of_stock = false;
+	//check if stock enabled
+	if ( isset( $product_id ) && get_post_meta( $product_id, 'asp_product_enable_stock', true ) ) {
+	    //check if product is not out of stock
+	    $stock_items = get_post_meta( $product_id, 'asp_product_stock_items', true );
+	    if ( empty( $stock_items ) ) {
+		$button		 = '<div class="asp_out_of_stock">' . __( "Out of stock", 'stripe-payments' ) . '</div>';
+		$out_of_stock	 = true;
+	    }
+	}
+
+	//add message if no javascript is enabled
+	$button .= '<noscript>' . __( 'Stripe Payments requires Javascript to be supported by the browser in order to operate.', 'stripe-payments' ) . '</noscript>';
 
 	$checkout_lang = $this->AcceptStripePayments->get_setting( 'checkout_lang' );
 
@@ -348,13 +449,24 @@ class AcceptStripePaymentsShortcode {
 	    $custom_field = $atts[ 'custom_field' ];
 	}
 
+	$coupons_enabled = $this->AcceptStripePayments->get_setting( 'coupons_enabled' );
+	if ( isset( $atts[ 'coupons_enabled' ] ) ) {
+	    $coupons_enabled = $atts[ 'coupons_enabled' ];
+	}
+
+	$tos = $this->AcceptStripePayments->get_setting( 'tos_enabled' );
+
+	$verifyZip = $this->AcceptStripePayments->get_setting( 'enable_zip_validation' );
+
 	$data = array(
 	    'product_id'		 => $product_id,
 	    'button_key'		 => $button_key,
+	    'item_price'		 => isset( $item_price ) ? $item_price : 0,
 	    'allowRememberMe'	 => $allowRememberMe,
 	    'quantity'		 => $quantity,
 	    'custom_quantity'	 => $custom_quantity,
 	    'description'		 => $description,
+	    'descrGenerated'	 => $descr_generated,
 	    'shipping'		 => $shipping,
 	    'tax'			 => $tax,
 	    'image'			 => $item_logo,
@@ -371,6 +483,11 @@ class AcceptStripePaymentsShortcode {
 	    'zeroCents'		 => $this->AcceptStripePayments->zeroCents,
 	    'addonHooks'		 => array(),
 	    'custom_field'		 => $custom_field,
+	    'coupons_enabled'	 => $coupons_enabled,
+	    'tos'			 => $tos,
+	    'button_text'		 => esc_attr( $button_text ),
+	    'out_of_stock'		 => $out_of_stock,
+	    'verifyZip'		 => ( ! $verifyZip) ? 0 : 1,
 	);
 
 	$data = apply_filters( 'asp-button-output-data-ready', $data, $atts );
@@ -378,20 +495,17 @@ class AcceptStripePaymentsShortcode {
 	$output = '';
 
 	//Let's insert Stripe default stylesheet only when it's needed
-	if ( $class == 'stripe-button-el' && ! ($this->StripeCSSInserted) ) {
+	if ( $class == 'stripe-button-el' && ! ( ! $this->CompatMode && $this->StripeCSSInserted) ) {
 	    $output			 = "<link rel = 'stylesheet' href = 'https://checkout.stripe.com/v3/checkout/button.css' type = 'text/css' media = 'all' />";
 	    $this->StripeCSSInserted = true;
 	}
 
+	$output .= $this->get_styles();
+
 	$output .= "<form id = 'stripe_form_{$uniq_id}' class='asp-stripe-form' action = '' METHOD = 'POST'> ";
 
-//	if ( $price == 0 || $custom_quantity !== false || $this->AcceptStripePayments->get_setting( 'use_new_button_method' ) ) {
-	// variable amount or new method option is set in settings
-	$output	 .= $this->get_button_code_new_method( $data );
-//	} else {
-	// use old method instead
-//	    $output .= $this->get_button_code_old_method( $data, $price, $button_text );
-//	}
+	$output .= $this->get_button_code_new_method( $data );
+
 	$output	 .= '<input type="hidden" name="asp_action" value="process_ipn" />';
 	$output	 .= "<input type = 'hidden' value = '{$data[ 'name' ]}' name = 'item_name' />";
 	$output	 .= "<input type = 'hidden' value = '{$data[ 'quantity' ]}' name = 'item_quantity' />";
@@ -400,145 +514,149 @@ class AcceptStripePaymentsShortcode {
 	$output	 .= "<input type = 'hidden' value = '{$thankyou_page_url}' name = 'thankyou_page_url' />";
 	$output	 .= "<input type = 'hidden' value = '{$data[ 'description' ]}' name = 'charge_description' />"; //
 
-	$trans_name	 = 'stripe-payments-' . $button_key; //Create key using the item name.
-	set_transient( $trans_name, $price, 2 * 3600 ); //Save the price for this item for 2 hours.
-	$output		 .= wp_nonce_field( 'stripe_payments', '_wpnonce', true, false );
-	$output		 .= $button;
+	$trans_name		 = 'stripe-payments-' . $button_key; //Create key using the item name.
+	$trans[ 'tax' ]		 = $tax;
+	$trans[ 'shipping' ]	 = $shipping;
+	$trans[ 'price' ]	 = $price;
+	set_transient( $trans_name, $trans, 2 * 3600 ); //Save the price for this item for 2 hours.
+	$output			 .= wp_nonce_field( 'stripe_payments', '_wpnonce', true, false );
+	$output			 .= "</form>";
+	//before button filter
+	if ( ! $out_of_stock ) {
+	    $output = apply_filters( 'asp_button_output_before_button', $output, $data, $class );
+	}
+	$output .= $button;
 	//after button filter
-	$output		 = apply_filters( 'asp-button-output-after-button', $output, $data, $class );
-	$output		 .= "</form>";
+	if ( ! $out_of_stock ) {
+	    $output = apply_filters( 'asp-button-output-after-button', $output, $data, $class );
+	}
+	$output .= $this->get_scripts( $data );
+
 	return $output;
     }
 
-    function get_button_code_old_method( $data, $price, $button_text ) {
-	if ( $this->AcceptStripePayments->get_setting( 'is_live' ) == 0 ) {
-	    //use test keys
-	    $key = $this->AcceptStripePayments->get_setting( 'api_publishable_key_test' );
-	} else {
-	    //use live keys
-	    $key = $this->AcceptStripePayments->get_setting( 'api_publishable_key' );
+    function get_styles() {
+	$output = '';
+	if ( ! $this->ButtonCSSInserted || $this->CompatMode ) {
+//	    $this->ButtonCSSInserted = true;
+	    // we need to style custom inputs
+	    $style	 = file_get_contents( WP_ASP_PLUGIN_PATH . 'public/assets/css/public.min.css' );
+	    $output	 .= '<style type="text/css">' . $style . '</style>';
+	    //addons can output their styles if needed
+	    $output	 = apply_filters( 'asp-button-output-additional-styles', $output );
+	    ob_start();
+	    ?>
+	    <div class="asp-processing-cont"><span class="asp-processing">Processing <i>.</i><i>.</i><i>.</i></span></div>
+	    <?php
+	    $output	 .= ob_get_clean();
 	}
-	$output	 = "<input type = 'hidden' value = '{$data[ 'amount' ]}' name = 'stripeItemPrice' />";
-	$output	 .= "<input type = 'hidden' value = '{$data[ 'button_key' ]}' name='stripeButtonKey'>";
-	//Lets hide default Stripe button. We'll be using our own instead for styling purposes
-	$output	 .= "<div style = 'display: none !important'>";
-	$output	 .= "<script src = 'https://checkout.stripe.com/checkout.js' class = 'stripe-button'
-	data-key = '" . $key . "'
-	data-panel-label = 'Pay'
-	data-amount = '{$data[ 'amount' ]}'
-	data-name = '{$data[ 'name' ]}'
-	data-allow-remember-me = '{$data[ 'allowRememberMe' ]}'
-	data-description = '{$data[ 'description' ]}'
-	data-label = '{$button_text}'
-	data-currency = '{$data[ 'currency' ]}'";
-	$output	 .= "data-locale = '{$data[ 'locale' ]}'";
-	if ( ! empty( $data[ 'image' ] ) ) {//Show item logo/thumbnail in the stripe payment window
-	    $output .= "data-image = '{$data[ 'image' ]}'";
-	}
+	return $output;
+    }
 
-	if ( $data[ 'billingAddress' ] ) {
-	    $output .= "data-billing-address = '{$data[ 'billingAddress' ]}'";
+    function get_scripts( $data ) {
+	$output = '';
+	if ( $this->CompatMode ) {
+	    ob_start();
+	    ?>
+
+	    <script type='text/javascript'>
+	        var stripehandler = <?php echo json_encode( $this->get_loc_data() ); ?>;
+	    </script>
+	    <script type='text/javascript'>
+	        var stripehandler<?php echo $data[ 'uniq_id' ]; ?> = <?php echo json_encode( array( 'data' => $data ) ); ?>;
+	    </script>
+	    <script type='text/javascript' src='https://checkout.stripe.com/checkout.js'></script>
+	    <script type='text/javascript' src='<?php echo WP_ASP_PLUGIN_URL; ?>/public/assets/js/stripe-handler.js?ver=<?php echo WP_ASP_PLUGIN_VERSION; ?>'></script>
+	    <?php
+	    $output .= ob_get_clean();
+	} else {
+	    //Let's enqueue Stripe js
+	    wp_enqueue_script( 'stripe-script' );
+	    //using nested array in order to ensure boolean values are not converted to strings by wp_localize_script function
+	    wp_localize_script( 'stripe-handler', 'stripehandler' . $data[ 'uniq_id' ], array( 'data' => $data ) );
+	    //enqueue our script that handles the stuff
+	    wp_enqueue_script( 'stripe-handler' );
 	}
-	if ( $data[ 'shippingAddress' ] ) {
-	    $output .= "data-shipping-address = '{$data[ 'shippingAddress' ]}'";
-	}
-	$output	 .= apply_filters( 'asp_additional_stripe_checkout_data_parameters', '' ); //Filter to allow the addition of extra data parameters for stripe checkout.
-	$output	 .= "></script>";
-	$output	 .= '</div>';
+	//addons can enqueue their scripts if needed
+	do_action( 'asp-button-output-enqueue-script' );
 	return $output;
     }
 
     function get_button_code_new_method( $data ) {
 	$output = '';
-	if ( ! $this->ButtonCSSInserted ) {
-	    $this->ButtonCSSInserted = true;
-	    // we need to style custom inputs
-	    ob_start();
-	    ?>
 
-	    <style>
-	        .asp_product_buy_button input {
-	    	display: inline-block;
-	    	line-height: 1;
-	    	padding: 8px 10px;
-	        }
+	if ( ! $data[ 'out_of_stock' ] ) {
 
-	        .asp_product_buy_button input::placeholder {
-	    	font-style: italic;
-	    	color: #bbb;
-	        }
-	        @keyframes blink {
-	    	0% {
-	    	    opacity: .2;
-	    	}
-	    	20% {
-	    	    opacity: 1;
-	    	}
-	    	100% {
-	    	    opacity: 0;
-	    	}
-	        }
-	        .asp-processing-cont {
-	    	display: none;
-	        }
-	        .asp-processing i {
-	    	animation-name: blink;
-	    	animation-duration: 1s;
-	    	animation-iteration-count: infinite;
-	    	animation-fill-mode: both;
-	        }
-	        .asp-processing i:nth-child(2) {
-	    	animation-delay: .1s;
-	        }
-	        .asp-processing i:nth-child(3) {
-	    	animation-delay: .2s;
-	        }
-	    </style>
-	    <?php
-	    $output			 .= ob_get_clean();
-	    //addons can output their styles if needed
-	    $output			 = apply_filters( 'asp-button-output-additional-styles', $output );
-	    ob_start();
-	    ?>
-	    <div class="asp-processing-cont"><span class="asp-processing">Processing <i>.</i><i>.</i><i>.</i></span></div>
-	    <?php
-	    $output			 .= ob_get_clean();
-	}
-	if ( $data[ 'amount' ] == 0 ) { //price not specified, let's add an input box for user to specify the amount
-	    $output .= "<div class='asp_product_item_amount_input_container'>"
-	    . "<input type='text' size='10' class='asp_product_item_amount_input' id='stripeAmount_{$data[ 'uniq_id' ]}' value='' name='stripeAmount' placeholder='" . __( 'Enter amount', 'stripe-payments' ) . "' required/>"
-	    . "<span class='asp_product_item_amount_currency_label' style='margin-left: 5px; display: inline-block'> {$data[ 'currency' ]}</span>"
-	    . "<span style='display: block;' id='error_explanation_{$data[ 'uniq_id' ]}'></span>"
-	    . "</div>";
-	}
-	if ( $data[ 'custom_quantity' ] === "1" ) { //we should output input for customer to input custom quantity
-	    if ( empty( $data[ 'quantity' ] ) ) {
-		//If quantity option is enabled and the value is empty then set default quantity to 1 so the number field type can handle it better.
-		$data[ 'quantity' ] = 1;
+	    if ( $data[ 'amount' ] == 0 ) { //price not specified, let's add an input box for user to specify the amount
+		$str_enter_amount	 = apply_filters( 'asp_customize_text_msg', __( 'Enter amount', 'stripe-payments' ), 'enter_amount' );
+		$output			 .= "<div class='asp_product_item_amount_input_container'>"
+		. "<input type='text' size='10' class='asp_product_item_amount_input' id='stripeAmount_{$data[ 'uniq_id' ]}' value='' name='stripeAmount' placeholder='" . $str_enter_amount . "' required/>"
+		. "<span class='asp_product_item_amount_currency_label' style='margin-left: 5px; display: inline-block'> {$data[ 'currency' ]}</span>"
+		. "<span style='display: block;' id='error_explanation_{$data[ 'uniq_id' ]}'></span>"
+		. "</div>";
 	    }
-	    $output .= "<div class='asp_product_item_qty_input_container'>"
-	    . "<input type='number' min='1' size='6' class='asp_product_item_qty_input' id='stripeCustomQuantity_{$data[ 'uniq_id' ]}' value='{$data[ 'quantity' ]}' name='stripeCustomQuantity' placeholder='" . __( 'Enter quantity', 'stripe-payments' ) . "' value='{$data[ 'quantity' ]}' required/>"
-	    . "<span class='asp_product_item_qty_label' style='margin-left: 5px; display: inline-block'> " . __( 'X item(s)', 'stripe-payments' ) . "</span>"
-	    . "<span style='display: block;' id='error_explanation_quantity_{$data[ 'uniq_id' ]}'></span>"
-	    . "</div>";
-	}
-	if ( $data[ 'custom_field' ] == 1 ) {
-	    $field_type	 = $this->AcceptStripePayments->get_setting( 'custom_field_type' );
-	    $field_name	 = $this->AcceptStripePayments->get_setting( 'custom_field_name' );
-	    $field_descr	 = $this->AcceptStripePayments->get_setting( 'custom_field_descr' );
-	    $mandatory	 = $this->AcceptStripePayments->get_setting( 'custom_field_mandatory' );
-	    $output		 .= "<div class='asp_product_custom_field_input_container'>";
-	    $output		 .= '<input type="hidden" name="stripeCustomFieldName" value="' . esc_attr( $field_name ) . '">';
-	    switch ( $field_type ) {
-		case 'text':
-		    $output	 .= '<label class="asp_product_custom_field_label">' . $field_name . ' ' . '</label><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="text"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField" placeholder="' . $field_descr . '"' . ($mandatory ? ' required' : '' ) . '>';
-		    break;
-		case 'checkbox':
-		    $output	 .= '<label class="asp_product_custom_field_label"><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="checkbox"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField"' . ($mandatory ? ' required' : '' ) . '>' . $field_descr . '</label>';
-		    break;
+	    if ( $data[ 'custom_quantity' ] === "1" ) { //we should output input for customer to input custom quantity
+		if ( empty( $data[ 'quantity' ] ) ) {
+		    //If quantity option is enabled and the value is empty then set default quantity to 1 so the number field type can handle it better.
+		    $data[ 'quantity' ] = 1;
+		}
+		$output .= "<div class='asp_product_item_qty_input_container'>"
+		. "<input type='number' min='1' size='6' class='asp_product_item_qty_input' id='stripeCustomQuantity_{$data[ 'uniq_id' ]}' value='{$data[ 'quantity' ]}' name='stripeCustomQuantity' placeholder='" . __( 'Enter quantity', 'stripe-payments' ) . "' value='{$data[ 'quantity' ]}' required/>"
+		. "<span class='asp_product_item_qty_label' style='margin-left: 5px; display: inline-block'> " . __( 'X item(s)', 'stripe-payments' ) . "</span>"
+		. "<span style='display: block;' id='error_explanation_quantity_{$data[ 'uniq_id' ]}'></span>"
+		. "</div>";
 	    }
-	    $output .= "<span style='display: block;' id='custom_field_error_explanation_{$data[ 'uniq_id' ]}'></span>" .
-	    "</div>";
+	    apply_filters( 'asp_button_output_before_custom_field', $output, $data );
+	    if ( $data[ 'custom_field' ] == 1 ) {
+		$field_type	 = $this->AcceptStripePayments->get_setting( 'custom_field_type' );
+		$field_name	 = $this->AcceptStripePayments->get_setting( 'custom_field_name' );
+		$field_descr	 = $this->AcceptStripePayments->get_setting( 'custom_field_descr' );
+		$descr_loc	 = $this->AcceptStripePayments->get_setting( 'custom_field_descr_location' );
+		$mandatory	 = $this->AcceptStripePayments->get_setting( 'custom_field_mandatory' );
+		$output		 .= "<div class='asp_product_custom_field_input_container'>";
+		$output		 .= '<input type="hidden" name="stripeCustomFieldName" value="' . esc_attr( $field_name ) . '">';
+		switch ( $field_type ) {
+		    case 'text':
+			if ( $descr_loc !== 'below' ) {
+			    $output .= '<label class="asp_product_custom_field_label">' . $field_name . ' ' . '</label><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="text"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField" placeholder="' . $field_descr . '"' . ($mandatory ? ' required' : '' ) . '>';
+			} else {
+			    $output	 .= '<label class="asp_product_custom_field_label">' . $field_name . ' ' . '</label><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="text"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField"' . ($mandatory ? ' required' : '' ) . '>';
+			    $output	 .= '<div class="asp_product_custom_field_descr">' . $field_descr . '</div>';
+			}
+			break;
+		    case 'checkbox':
+			$output .= '<label class="asp_product_custom_field_label"><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="checkbox"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField"' . ($mandatory ? ' required' : '' ) . '>' . $field_descr . '</label>';
+			break;
+		}
+		$output .= "<span style='display: block;' id='custom_field_error_explanation_{$data[ 'uniq_id' ]}'></span>" .
+		"</div>";
+	    }
+	    apply_filters( 'asp_button_output_before_tos', $output, $data );
+	    //Terms and Conditions
+	    if ( $data[ 'tos' ] == 1 ) {
+		$tos_text	 = $this->AcceptStripePayments->get_setting( 'tos_text' );
+		$output		 .= '<div class="asp_product_tos_input_container">';
+		$output		 .= '<label class="asp_product_tos_label"><input id="asp-tos-' . $data[ 'uniq_id' ] . '" class="asp_product_tos_input" type="checkbox" required>' . html_entity_decode( $tos_text ) . '</label>';
+		$output		 .= "<span style='display: block;' id='tos_error_explanation_{$data[ 'uniq_id' ]}'></span>";
+		$output		 .= '</div>';
+	    }
+	    //Coupons
+	    if ( isset( $data[ 'coupons_enabled' ] ) && $data[ 'coupons_enabled' ] == "1" && ! $data[ 'variable' ] ) {
+		if ( isset( $data[ 'product_id' ] ) ) {
+		    //check if this is subscription product. If it is, we will only display coupon field if subs addon version is >=1.2.5
+//		    if ( get_post_meta( $data[ 'product_id' ], 'asp_sub_plan_id', true ) !== false &&
+//		    (class_exists( 'ASPSUB_main' ) && version_compare( '1.2.5', ASPSUB_main::ADDON_VER ) >= 0 ) ) {
+		    //disable coupons for subscriptions for now
+                    $asp_sub_plan_id = get_post_meta( $data[ 'product_id' ], 'asp_sub_plan_id', true );
+		    if ( empty( $asp_sub_plan_id ) ) {
+			$str_coupon_label	 = __( 'Coupon Code', 'stripe-payments' );
+			$output			 .= '<div class="asp_product_coupon_input_container"><label class="asp_product_coupon_field_label">' . $str_coupon_label . ' ' . '</label><input id="asp-coupon-field-' . $data[ 'uniq_id' ] . '" class="asp_product_coupon_field_input" type="text" name="stripeCoupon">'
+			. '<input type="button" id="asp-redeem-coupon-btn-' . $data[ 'uniq_id' ] . '" type="button" class="asp_btn_normalize asp_coupon_apply_btn" value="' . __( 'Apply', 'stripe-payments' ) . '">'
+			. '<div id="asp-coupon-info-' . $data[ 'uniq_id' ] . '" class="asp_product_coupon_info"></div>'
+			. '</div>';
+		    }
+		}
+	    }
 	}
 	if ( $data ) {
 	    if ( $data[ 'product_id' ] !== 0 ) {
@@ -549,16 +667,12 @@ class AcceptStripePaymentsShortcode {
 	    . "<input type='hidden' id='stripeEmail_{$data[ 'uniq_id' ]}' name='stripeEmail' />"
 	    . "<input type='hidden' name='stripeButtonKey' value='{$data[ 'button_key' ]}' />"
 	    . "<input type='hidden' name='stripeItemPrice' value='{$data[ 'amount' ]}' />"
-	    . "<input type='hidden' data-stripe-button-uid='{$data[ 'uniq_id' ]}' />";
+	    . "<input type='hidden' data-stripe-button-uid='{$data[ 'uniq_id' ]}' />"
+	    . "<input type='hidden' name='stripeTax' value='{$data[ 'tax' ]}' />"
+	    . "<input type='hidden' name='stripeShipping' value='{$data[ 'shipping' ]}' />"
+	    . "<input type='hidden' name='stripeItemCost' value='{$data[ 'item_price' ]}' />";
 	}
-	//Let's enqueue Stripe js
-	wp_enqueue_script( 'stripe-script' );
-	//using nested array in order to ensure boolean values are not converted to strings by wp_localize_script function
-	wp_localize_script( 'stripe-handler', 'stripehandler' . $data[ 'uniq_id' ], array( 'data' => $data ) );
-	//enqueue our script that handles the stuff
-	wp_enqueue_script( 'stripe-handler' );
-	//addons can enqueue their scripts if needed
-	do_action( 'asp-button-output-enqueue-script' );
+
 	return $output;
     }
 
@@ -585,7 +699,11 @@ class AcceptStripePaymentsShortcode {
 	    $output	 .= '<div class="asp-thank-you-page-product-name">' . __( "Product Name: ", "stripe-payments" ) . $aspData[ 'item_name' ] . '</div>';
 	    $output	 .= '<div class="asp-thank-you-page-qty">' . __( "Quantity: ", "stripe-payments" ) . $aspData[ 'item_quantity' ] . '</div>';
 	    $output	 .= '<div class="asp-thank-you-page-qty">' . __( "Item Price: ", "stripe-payments" ) . AcceptStripePayments::formatted_price( $aspData[ 'item_price' ], $aspData[ 'currency_code' ] ) . '</div>';
+	    //check if there are any additional items available like tax and shipping cost
+	    $output	 .= AcceptStripePayments::gen_additional_items( $aspData, '<br />' );
+	    $output	 .= '<hr />';
 	    $output	 .= '<div class="asp-thank-you-page-qty">' . __( "Total Amount: ", "stripe-payments" ) . AcceptStripePayments::formatted_price( $aspData[ 'paid_amount' ], $aspData[ 'currency_code' ] ) . '</div>';
+	    $output	 .= '<br />';
 	    $output	 .= '<div class="asp-thank-you-page-txn-id">' . __( "Transaction ID: ", "stripe-payments" ) . $aspData[ 'txn_id' ] . '</div>';
 
 	    if ( ! empty( $aspData[ 'item_url' ] ) ) {
@@ -658,7 +776,7 @@ class AcceptStripePaymentsShortcode {
 	    //query returned no results. Let's see if that was a search query
 	    if ( $search === false ) {
 		//that wasn't search query. That means there is no products configured
-		return 'No products have been configured yet';
+		return __( 'No products have been configured yet', 'stripe-payments' );
 	    }
 	}
 
@@ -667,7 +785,7 @@ class AcceptStripePaymentsShortcode {
 	} else {
 	    if ( $search !== false ) {
 		$tpl[ 'clear_search_url' ]	 = esc_url( remove_query_arg( array( 'asp_search', 'asp_page' ) ) );
-		$tpl[ 'search_result_text' ]	 = $products->found_posts === 0 ? 'Nothing found for "%s".' : 'Search results for "%s".';
+		$tpl[ 'search_result_text' ]	 = $products->found_posts === 0 ? __( 'Nothing found for', 'stripe-payments' ) . ' "%s".' : __( 'Search results for', 'stripe-payments' ) . ' "%s".';
 		$tpl[ 'search_result_text' ]	 = sprintf( $tpl[ 'search_result_text' ], htmlentities( $search ) );
 		$tpl[ 'search_term' ]		 = htmlentities( $search );
 	    } else {
@@ -686,7 +804,7 @@ class AcceptStripePaymentsShortcode {
 	    if ( $i < 0 ) { //new row
 		$tpl[ 'products_list' ]	 .= $tpl[ 'products_row_end' ];
 		$tpl[ 'products_list' ]	 .= $tpl[ 'products_row_start' ];
-		$i			 = $tpl[ 'products_per_row' ];
+		$i			 = $tpl[ 'products_per_row' ] - 1;
 	    }
 
 	    $id = get_the_ID();
@@ -751,8 +869,17 @@ class AcceptStripePaymentsShortcode {
     }
 
     function apply_content_tags( $content, $data ) {
+
 	$tags	 = array();
 	$vals	 = array();
+
+	if ( isset( $data[ 'custom_field_value' ] ) ) {
+	    $data[ 'custom_field' ] = $data[ 'custom_field_name' ] . ': ' . $data[ 'custom_field_value' ];
+	} else {
+	    $data[ 'custom_field' ] = '';
+	}
+
+	$data[ 'paid_amount_curr' ] = AcceptStripePayments::formatted_price( $data[ 'paid_amount' ], $data[ 'currency_code' ] );
 
 	foreach ( $data as $key => $value ) {
 	    if ( $key == 'stripeEmail' ) {
@@ -762,7 +889,7 @@ class AcceptStripePaymentsShortcode {
 		$key = 'transaction_id';
 	    }
 	    $tags[]	 = '{' . $key . '}';
-	    $vals[]	 = $value;
+	    $vals[]	 = is_array( $value ) ? '' : $value;
 	}
 
 	$content = str_replace( $tags, $vals, $content );

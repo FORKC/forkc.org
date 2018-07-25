@@ -1,8 +1,8 @@
 # WP Super Cache #
 * Contributors: donncha, automattic, kraftbj
 * Tags: performance, caching, wp-cache, wp-super-cache, cache
-* Tested up to: 4.9.1
-* Stable tag: 1.5.9
+* Tested up to: 4.9.6
+* Stable tag: 1.6.2
 * Requires at least: 3.0
 * Requires PHP: 5.2.4
 * License: GPLv2 or later
@@ -89,7 +89,7 @@ There is one regular WordPress filter too. Use the "do_createsupercache" filter
 to customize the checks made before caching. The filter accepts one parameter.
 The output of WP-Cache's wp_cache_get_cookies_values() function.
 
-See plugins/searchengine.php as an example I use for my [No Adverts for Friends](https://odd.blog/no-adverts-for-friends/) plugin.
+See [plugins/searchengine.php](https://github.com/Automattic/wp-super-cache/blob/4cda5c0f2218e40e118232b5bf22d227fb3206b7/plugins/searchengine.php) as an example I use for my [No Adverts for Friends](https://odd.blog/no-adverts-for-friends/) plugin.
 
 ### Troubleshooting ###
 If things don't work when you installed the plugin here are a few things to check:
@@ -136,7 +136,7 @@ If that doesn't work, add this line to your wp-config.php:
 27. Use [Cron View](https://wordpress.org/plugins/cron-view/) to help diagnose garbage collection and preload problems. Use the plugin to make sure jobs are scheduled and for what time. Look for the wp_cache_gc and wp_cache_full_preload_hook jobs.
 18. The error message, "WP Super Cache is installed but broken. The constant WPCACHEHOME must be set in the file wp-config.php and point at the WP Super Cache plugin directory." appears at the end of every page. You can delete wp-content/advanced-cache.php and reload the plugin settings page or edit wp-config.php and look for WPCACHEHOME and make sure it points at the wp-super-cache folder. This will normally be wp-content/plugins/wp-super-cache/ but you'll likely need the full path to that file (so it's easier to let the settings page fix it). If it is not correct the caching engine will not load.
 19. If your server is running into trouble because of the number of semaphores used by the plugin it's because your users are using file locking which is not recommended (but is needed by a small number of users). You can globally disable file locking by defining the constant WPSC_DISABLE_LOCKING, or defining the constant WPSC_REMOVE_SEMAPHORE so that sem_remove() is called after every page is cached but that seems to cause problems for other processes requesting the same semaphore. Best to disable it.
-
+20. Set the variable $htaccess_path in wp-config.php or wp-cache-config.php to the path of your global .htaccess if the plugin is looking for that file in the wrong directory. This might happen if you have WordPress installed in an unusual way.
 
 ## Installation ##
 Install like any other plugin, directly from your plugins page but make sure you have custom permalinks enabled. Go to the plugin settings page at Settings->WP Super Cache and enable caching.
@@ -260,6 +260,41 @@ Your theme is probably responsive which means it resizes the page to suit whatev
 
 
 ## Changelog ##
+
+### 1.6.2 ###
+* Fixed serving expired supercache files (#562)
+* Write directly to the config file to avoid permission problems with wp-content. (#563)
+* Correctly set the .htaccess rules on the main site of a multisite. (#557)
+* Check if set_transient() exists before using it. (#565)
+* Removed searchengine.php example plugin as it sets a cookie to track users. Still available [here](https://github.com/Automattic/wp-super-cache/blob/4cda5c0f2218e40e118232b5bf22d227fb3206b7/plugins/searchengine.php). (#567)
+* For advanced users only. Change the vary and cache control headers. See https://github.com/Automattic/wp-super-cache/pull/555 (#555)
+
+### 1.6.1 ###
+* Fix the name of the WP Crontrol plugin. (#549)
+* Handle errors during deactivation/uninstall by email rather than exiting. (#551)
+* Add a notice when settings can't be updated. (#552 and #553)
+
+### 1.6.0 ###
+* Fix issues in multisite plugin (#501)
+* Fixes wp-cli plugin deactivate/activate (#499)
+* Cleanup - change quotes. (#495)
+* $htaccess_path defines the path to the global .htacess file. (#507)
+* Fix 'cannot redeclare gzip_accepted()' (#511)
+* Correct the renaming of tmp_wpcache_filename (removed unnecessary slash in path) which caused renaming to fail. (#516)
+* Add check for Jetpack mobile theme cookie (#515)
+* Optimize wp_cache_phase2 and create wpsc_register_post_hooks (#508)
+* WPCACHEHOME has a trailing slash (#513)
+* Cleanup cache enable/disable and update_mod_rewrite_rules (#500)
+* Post Update now clears category cache (#519)
+* Various fixes for saving the debug page form (#542)
+* Expert-caching and empty parameters, like ?amp, should not serve cached page (#533)
+* Tiny Yslow description fix (#527)
+* Add ipad to mobile list (#525)
+* Hide opcache_invalidate() warnings since it's disabled some places. (#543)
+* Check that HTTP_REFERER exists before checking it. (#544)
+* Replace Cron View" with WP Crontrol because it's still updated. (#546)
+* adding hook (wp_cache_cleared) for full cache purges (#537)
+
 
 ### 1.5.9 ###
 * Fixed fatal error if the debug log was deleted while debugging was enabled and a visitor came to the site.
@@ -628,4 +663,4 @@ Your theme is probably responsive which means it resizes the page to suit whatev
 
 
 ## Upgrade Notice ##
-Fixes rare fatal error when using debug log
+Fix problems writing to the config file for some users.

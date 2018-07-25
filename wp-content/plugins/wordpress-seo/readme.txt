@@ -5,8 +5,8 @@ License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 Tags: SEO, XML sitemap, Google Search Console, Content analysis, Readability
 Requires at least: 4.8
-Tested up to: 4.9.4
-Stable tag: 7.2
+Tested up to: 4.9.7
+Stable tag: 7.9
 Requires PHP: 5.2.4
 
 Improve your WordPress SEO: Write better content and have a fully optimized WordPress site using the Yoast SEO plugin.
@@ -15,7 +15,7 @@ Improve your WordPress SEO: Write better content and have a fully optimized Word
 
 ### Yoast SEO: the #1 WordPress SEO plugin
 
-Need an SEO plugin that helps you reach for the stars? Yoast SEO is the original WordPress SEO plugin since 2008. It is the favorite tool of millions of users, ranging from the bakery around the corner to some of the most popular sites on the planet. With Yoast SEO, you get a solid toolset that helps you aim for that number one spot in the search results. Yoast: SEO for everyone.
+Need some help with your search engine optimization? Need an SEO plugin that helps you reach for the stars? Yoast SEO is the original WordPress SEO plugin since 2008. It is the favorite tool of millions of users, ranging from the bakery around the corner to some of the most popular sites on the planet. With Yoast SEO, you get a solid toolset that helps you aim for that number one spot in the search results. Yoast: SEO for everyone.
 
 Yoast SEO does everything in its power to please both visitors and search engine spiders. How? Below you’ll find a small sampling of the powers of Yoast SEO:
 
@@ -62,7 +62,7 @@ Bug reports for Yoast SEO are [welcomed on GitHub](https://github.com/Yoast/word
 
 ### Further Reading
 
-For more info, check out the following articles:
+For more info on search engine optimization, check out the following:
 
 * The [Yoast SEO Plugin](https://yoa.st/1v8) official homepage.
 * The [Yoast SEO Knowledgebase](https://yoa.st/1va).
@@ -106,47 +106,54 @@ You'll find answers to many of your questions on [kb.yoast.com](https://yoa.st/1
 
 == Changelog ==
 
-= 7.2.0 =
-Release Date: April 3rd, 2018
+= 7.9.0 =
+Release Date: July 24th, 2018
 
 Enhancements:
-* Updates all Help Center videos with new recordings.
-* Adds functionality to import noindex, nofollow and OpenGraph tags from All in One SEO Pack.
-* Improves consistency of capitalization in settings and tabs.
-* Improves the traffic light icon accessibility.
-* Changes the words 'post type' into 'content type' throughout the plugin.
+* Introduces the collapsible sections to all the tabs in Search Appearance.
+* Improves accessibility of the collapsible sections in Search Appearance.
 
 Bugfixes:
-* Fixes a bug where the Facebook app-id could no longer be set in the Social settings.
-* Fixes a bug where existing Yoast SEO data could be overwritten when importing data from All in One SEO Pack.
-* Fixes a bug where the Ryte notification is not removed when disabling the Ryte feature.
-* Fixes a bug where setting a page to `noindex` through the `wpseo_robots` filter did not properly remove the `canonical` element.
-* Fixes a bug where attachments connected to password-protected parents are included in the sitemaps. Props [Scott Carter](https://gobarrelroll.com).
-* Fixes alignment of the `Go Premium` notice.
+* Fixes a bug where archive settings for post types aren't shown on the search appearance page when the `has_archive` for that post type contains an archive slug. Props to [schurig](https://github.com/schurig).
+* Fixes a bug where a notice ("Notice: Trying to get property of non-object") is given when the `$term->taxonomy` isn't set before it is used.` Props to [nesinervink](https://github.com/nesinervink), [bainternet](https://github.com/bainternet).
+* Fixes a bug where an uppercased encode URI isn't redirected to the category. Props to [dawnbirth](https://github.com/dawnbirth).
+* Fixes a bug where HTML entities were not always decoded in the Snippet Variables.
+* Fixes a bug where custom field labels would be separated by spaces in the classic editor, but in Gutenberg they would be separated by underscores instead.
+* Fixes a bug where the conversion of `&#039;`, which is PHP's HTML entity for the apostrophy, did not happen.
+* Fixes a bug where the same notification is shown multiple times when trashing multiple posts.
+* Fixes a bug where a possibly non-existent key would be retrieved when generating the `article:section` OpenGraph tag. Props to [mikeschinkel](https://github.com/mikeschinkel).
+* Fixes a bug in the UI that happend when `do_shortcode` was run on category descriptions in the admin list. Additionally, fixes rendering of shortcodes in category descriptions on the frontend.
+* Fixes a bug where saved templates in Search Appearance would be saved incorrectly into the database, resulting in them never being loaded when editing a post, page, etc. This meant that the default template would always be used.
+* Fixes a bug where the "Tagline" / `%%sitedesc%%` snippet editor variable was not selectable in the Search Appearance settings.
+* Fixes a bug where the newsletter signup in the configuration wizard would not work.
 
-= 7.1.0 =
-Release Date: March 20th, 2018
+Other:
+* Moves some snippet variables to only appear within specific editors. Adds a filter `wpseo_editor_specific_replace_vars` to make this pluggable.
+* Adds the white background to the template of media on the Search Appearance page.
+* Changes feedback in the keyword density assessment to make it more explicit that synonyms are not taken into consideration when calculating the score.
+* Shows a notification with the message that you should check your post type archive settings when these are possibly reset to their defaults in 7.7 or 7.8.
+
+= 7.8.0 =
+Release Date: July 10th, 2018
 
 Enhancements:
-* Adds a filter to mark Spanish sentences as non-passive when certain exception words occur between the auxiliary and the participle. The list of exception words includes all forms of the copula 'estar'.
-* Adds transition words assessment for Portuguese, props [amesdigital](https://github.com/amesdigital).
-* Increases the height of the meta description box so it matches the maximum amount of characters without needing a scrollbar.
-* Detects when you need to import old SEO plugin data and allows you to import it on the import plugins page. After importing you can check whether the import was completed successfully and then delete the data.
-* Changes the formatting of text in the dashboard widget to improve the reading experience.
-* Adds an extra argument to `wpseo_replacements` filter. This makes it possible to access post, taxonomy or term instances when applying the filter.
-* Adds support for a new template variable `%%archive_title%%`.
-* Remove all Facebook Insights functionality as it's no longer supported.
+* Improves the way that the OpenGraph is determined for front pages, especially in the case of static front pages.
+* Adds links to relevant articles to all SEO assessments.
+* Adds Flesch Reading Ease assessment for French.
+* Adds Flesch Reading Ease assessment for Spanish.
+* Adds passive voice assessment for Italian.
 
 Bugfixes:
-* Fixes a bug that broke a filter which marks Spanish and French sentences as non-passive when certain exception words occur between the auxiliary and the participle.
-* Fixes a bug where the `page` and `paged` values could cause errors if they weren't properly handled as integers.
-* Fixes a bug where division by zero errors in the passive voice assessment would cause `NaN%` to show up in the feedback.
-* Fixes a bug where multiple `rel` arguments prevented correct `nofollow` detection.
-* Fixes a bug where enabling the Show blog page in the breadcrumb settings had the inverse effect. Internally renamed `breadcrumbs-blog-remove` to `breadcrumbs-display-blog-page` to fix logic issues.
-* Fixes a bug where the rewrite rules weren't removed after stripping the category base. This resulted in an unaccessible page.
-* Fixes a bug where adding a `wpseo_sitemap_entries_per_page` was not being used when rendering the sitemaps.
-* Fixes a bug where the Yoast logo in the Configuration Wizard was showing the old version.
-* Removes the backfill hooks when calling `WPSEO_Options::get()` to improve performance.
+* Fixes a bug where images from password protected posts could potentially end up in OpenGraph image tags.
+* Fixes a bug where very old notifications could not be be dismissed or restored.
+* Fixes a bug where the `Insert snippet variable` button alignment was incorrect.
+* Fixes a bug where the snippet variables had a different label in the Search Appearance settings compared to the snippet variables when writing a post, pages and taxonomies.
+* Fixes a bug where instances of the same keyword with different kinds of apostrophes (e.g., brain’s and brain's) were not recognized as the same. This affects the following assessments: keyword in meta description, keyword in subheading, keyword in first paragraph, keyword in title and keyword in URL.
+* Fixes a bug where the custom set breadcrumb title for the WooCommerce Shop page wasn't used.
+
+Other:
+* Adds a reminder message to create a redirect if a user deletes a category or tag.
+* Removes a banner spot in the admin.
 
 = Earlier versions =
 

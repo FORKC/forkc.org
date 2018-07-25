@@ -11,7 +11,29 @@
  */
 class AcceptStripePayments {
 
-    var $zeroCents = array( 'JPY', 'MGA', 'VND', 'KRW' );
+    var $zeroCents	 = array( 'JPY', 'MGA', 'VND', 'KRW' );
+    var $minAmounts	 = array(
+	'USD'	 => 50,
+	'AUD'	 => 50,
+	'BRL'	 => 50,
+	'CAD'	 => 50,
+	'CHF'	 => 50,
+	'DKK'	 => 250,
+	'EUR'	 => 50,
+	'GBP'	 => 30,
+	'HKD'	 => 400,
+	'JPY'	 => 50,
+	'MXN'	 => 1000,
+	'NOK'	 => 300,
+	'NZD'	 => 50,
+	'SEK'	 => 300,
+	'SGD'	 => 50,
+    );
+    var $APISecKey	 = '';
+    var $APIPubKey	 = '';
+    var $APISecKeyLive	 = '';
+    var $APISecKeyTest	 = '';
+    var $is_live		 = false;
 
     /**
      * Plugin version, used for cache-busting of style and script file references.
@@ -55,6 +77,20 @@ class AcceptStripePayments {
     private function __construct() {
 	$this->settings = (array) get_option( 'AcceptStripePayments-settings' );
 
+	if ( $this->get_setting( 'is_live' ) == 0 ) {
+	    //use test keys
+	    $this->is_live	 = false;
+	    $this->APIPubKey = $this->get_setting( 'api_publishable_key_test' );
+	    $this->APISecKey = $this->get_setting( 'api_secret_key_test' );
+	} else {
+	    //use live keys
+	    $this->is_live	 = true;
+	    $this->APIPubKey = $this->get_setting( 'api_publishable_key' );
+	    $this->APISecKey = $this->get_setting( 'api_secret_key' );
+	}
+	$this->APISecKeyLive	 = $this->get_setting( 'api_secret_key' );
+	$this->APISecKeyTest	 = $this->get_setting( 'api_secret_key_test' );
+
 	// Load plugin text domain
 	add_action( 'plugins_loaded', array( $this, 'load_asp_plugin_textdomain' ) );
 
@@ -79,9 +115,8 @@ class AcceptStripePayments {
     }
 
     public function get_setting( $field ) {
-	if ( isset( $this->settings[ $field ] ) )
-	    return $this->settings[ $field ];
-	return false;
+	$this->settings = (array) get_option( 'AcceptStripePayments-settings' );
+	return isset( $this->settings[ $field ] ) ? $this->settings[ $field ] : false;
     }
 
     /**
@@ -231,38 +266,40 @@ class AcceptStripePayments {
 	}
 	// Check if its a first install
 	$default = array(
-	    'is_live'			 => 0,
-	    'debug_log_enable'		 => 0,
-	    'dont_save_card'		 => 0,
-	    'currency_code'			 => 'USD',
-	    'button_text'			 => __( 'Buy Now', 'stripe-payments' ),
-	    'use_new_button_method'		 => 0,
-	    'checkout_url'			 => site_url( 'checkout' ),
-	    'from_email_address'		 => get_bloginfo( 'name' ) . ' <sales@your-domain.com>',
-	    'buyer_email_subject'		 => __( 'Thank you for the purchase', 'strip-payments' ),
-	    'buyer_email_body'		 => __( "Hello", 'stripe-payments' ) . "\r\n\r\n"
+	    'is_live'				 => 0,
+	    'debug_log_enable'			 => 0,
+	    'dont_save_card'			 => 0,
+	    'currency_code'				 => 'USD',
+	    'button_text'				 => __( 'Buy Now', 'stripe-payments' ),
+	    'use_new_button_method'			 => 0,
+	    'checkout_url'				 => site_url( 'checkout' ),
+	    'from_email_address'			 => get_bloginfo( 'name' ) . ' <sales@your-domain.com>',
+	    'buyer_email_subject'			 => __( 'Thank you for the purchase', 'strip-payments' ),
+	    'buyer_email_body'			 => __( "Hello", 'stripe-payments' ) . "\r\n\r\n"
 	    . __( "Thank you for your purchase! You ordered the following item(s):", 'stripe-payments' ) . "\r\n\r\n"
 	    . "{product_details}",
-	    'seller_notification_email'	 => get_bloginfo( 'admin_email' ),
-	    'seller_email_subject'		 => __( 'Notification of product sale', 'stripe-payments' ),
-	    'seller_email_body'		 => __( "Dear Seller", 'stripe-payments' ) . "\r\n\r\n"
+	    'seller_notification_email'		 => get_bloginfo( 'admin_email' ),
+	    'seller_email_subject'			 => __( 'Notification of product sale', 'stripe-payments' ),
+	    'seller_email_body'			 => __( "Dear Seller", 'stripe-payments' ) . "\r\n\r\n"
 	    . __( "This mail is to notify you of a product sale.", 'stripe-payments' ) . "\r\n\r\n"
 	    . "{product_details}\r\n\r\n"
 	    . __( "The sale was made to", 'stripe-payments' ) . " {payer_email}\r\n\r\n"
 	    . __( "Thanks", 'stripe-payments' ),
-	    'price_currency_pos'		 => 'left',
-	    'price_decimal_sep'		 => '.',
-	    'price_thousand_sep'		 => ',',
-	    'price_decimals_num'		 => '2',
-	    'api_keys_separated'		 => true,
-	    'stripe_receipt_email'		 => 0,
-	    'custom_field_enabled'		 => 0,
-	    'custom_field_name'		 => '',
-	    'custom_field_descr'		 => '',
-	    'custom_field_type'		 => 'text',
-	    'custom_field_mandatory'	 => 0,
-	    'send_email_on_error'		 => 0,
-	    'send_email_on_error_to'	 => $admin_email,
+	    'price_currency_pos'			 => 'left',
+	    'price_decimal_sep'			 => '.',
+	    'price_thousand_sep'			 => ',',
+	    'price_decimals_num'			 => '2',
+	    'api_keys_separated'			 => true,
+	    'stripe_receipt_email'			 => 0,
+	    'custom_field_enabled'			 => 0,
+	    'custom_field_name'			 => '',
+	    'custom_field_descr'			 => '',
+	    'custom_field_type'			 => 'text',
+	    'custom_field_mandatory'		 => 0,
+	    'send_email_on_error'			 => 0,
+	    'send_email_on_error_to'		 => $admin_email,
+	    'disable_buttons_before_js_loads'	 => 0,
+	    'tos_text'				 => __( 'I accept the <a href="https://example.com/terms-and-conditions/" target="_blank">Terms and Conditions</a>', 'stripe-payments' ),
 	);
 	$opt	 = get_option( 'AcceptStripePayments-settings' );
 	if ( ! is_array( $opt ) ) {
@@ -381,7 +418,7 @@ class AcceptStripePayments {
     }
 
     static function get_currencies() {
-	$currencies = array(
+	$currencies	 = array(
 	    ""	 => array( "(Default)", "" ),
 	    "USD"	 => array( "US Dollars (USD)", "$" ),
 	    "EUR"	 => array( "Euros (EUR)", "€" ),
@@ -404,6 +441,7 @@ class AcceptStripePayments {
 	    "NOK"	 => array( "Norwegian Krone (NOK)", "kr" ),
 	    "PHP"	 => array( "Philippine Pesos (PHP)", "₱" ),
 	    "PLN"	 => array( "Polish Zloty (PLN)", "zł" ),
+	    "RUB"	 => array( "Russian Ruble (RUB)", "₽" ),
 	    "SGD"	 => array( "Singapore Dollar (SGD)", "SG$" ),
 	    "ZAR"	 => array( "South African Rand (ZAR)", "R" ),
 	    "KRW"	 => array( "South Korean Won (KRW)", "₩" ),
@@ -414,10 +452,15 @@ class AcceptStripePayments {
 	    "TRY"	 => array( "Turkish Lira (TRY)", "₺" ),
 	    "VND"	 => array( "Vietnamese Dong (VND)", "₫" ),
 	);
+	$opts		 = get_option( 'AcceptStripePayments-settings' );
+	if ( isset( $opts[ 'custom_currency_symbols' ] ) && is_array( $opts[ 'custom_currency_symbols' ] ) ) {
+	    $currencies = array_merge( $currencies, $opts[ 'custom_currency_symbols' ] );
+	}
+
 	return $currencies;
     }
 
-    static function formatted_price( $price, $curr = '' ) {
+    static function formatted_price( $price, $curr = '', $price_is_cents = false ) {
 
 	if ( empty( $price ) ) {
 	    return '';
@@ -425,16 +468,30 @@ class AcceptStripePayments {
 
 	$opts = get_option( 'AcceptStripePayments-settings' );
 
-	if ( empty( $curr ) ) {
-	    //if currency not specified, let's use default currency set in options
-	    $curr = $opts[ 'currency_code' ];
-	}
-	$currencies = AcceptStripePayments::get_currencies();
-	if ( isset( $currencies[ $curr ] ) ) {
-	    $curr_sym = $currencies[ $curr ][ 1 ];
+	if ( $curr === false ) {
+	    //if curr set to false, we format price without currency symbol or code
+	    $curr_sym = '';
 	} else {
-	    //no currency code found, let's just use currency code instead of symbol
-	    $curr_sym = $curr;
+
+	    if ( $curr === '' ) {
+		//if currency not specified, let's use default currency set in options
+		$curr = $opts[ 'currency_code' ];
+	    }
+
+	    $curr = strtoupper( $curr );
+
+	    $currencies = AcceptStripePayments::get_currencies();
+	    if ( isset( $currencies[ $curr ] ) ) {
+		$curr_sym = $currencies[ $curr ][ 1 ];
+	    } else {
+		//no currency code found, let's just use currency code instead of symbol
+		$curr_sym = $curr;
+	    }
+	}
+
+	//check if price is in cents
+	if ( $price_is_cents && ! AcceptStripePayments::is_zero_cents( $curr ) ) {
+	    $price = intval( $price ) / 100;
 	}
 
 	$out = number_format( $price, $opts[ 'price_decimals_num' ], $opts[ 'price_decimal_sep' ], $opts[ 'price_thousand_sep' ] );
@@ -454,9 +511,13 @@ class AcceptStripePayments {
 	return $out;
     }
 
-    static function apply_tax( $price, $tax ) {
+    static function apply_tax( $price, $tax, $is_zero_cents = false ) {
 	if ( ! empty( $tax ) ) {
-	    $tax_amount	 = round( ($price * $tax / 100 ), 2 );
+	    $prec = 2;
+	    if ( $is_zero_cents ) {
+		$prec = 0;
+	    }
+	    $tax_amount	 = round( ($price * $tax / 100 ), $prec );
 	    $price		 += $tax_amount;
 	}
 	return $price;
@@ -464,9 +525,42 @@ class AcceptStripePayments {
 
     static function apply_shipping( $price, $shipping ) {
 	if ( ! empty( $shipping ) ) {
-	    $price += $shipping;
+	    $price += floatval( $shipping );
 	}
 	return $price;
+    }
+
+    static function get_tax_amount( $price, $tax, $is_zero_cents = false ) {
+	if ( ! empty( $tax ) ) {
+	    $prec = 2;
+	    if ( $is_zero_cents ) {
+		$prec = 0;
+	    }
+	    $tax_amount = round( ($price * $tax / 100 ), $prec );
+	    return $tax_amount;
+	} else {
+	    return 0;
+	}
+    }
+
+    static function is_zero_cents( $curr ) {
+	$zeroCents = array( 'JPY', 'MGA', 'VND', 'KRW' );
+	return in_array( strtoupper( $curr ), $zeroCents );
+    }
+
+    static function gen_additional_items( $data, $sep = "\n" ) {
+	$out = '';
+	if ( ! empty( $data[ 'additional_items' ] ) ) {
+	    foreach ( $data[ 'additional_items' ] as $item => $price ) {
+		if ( $price < 0 ) {
+		    $amnt_str = '-' . AcceptStripePayments::formatted_price( abs( $price ), $data[ 'currency_code' ] );
+		} else {
+		    $amnt_str = AcceptStripePayments::formatted_price( $price, $data[ 'currency_code' ] );
+		}
+		$out .= $item . ": " . $amnt_str . $sep;
+	    }
+	}
+	return $out;
     }
 
 }

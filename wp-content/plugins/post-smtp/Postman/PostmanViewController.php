@@ -36,8 +36,29 @@ if ( ! class_exists( 'PostmanViewController' ) ) {
 
 			// initialize the scripts, stylesheets and form fields
 			add_action( 'admin_init', array( $this, 'registerStylesAndScripts' ), 0 );
+			add_action( 'wp_ajax_delete_lock_file', array( $this, 'delete_lock_file' ) );
+			add_action( 'wp_ajax_dismiss_version_notify', array( $this, 'dismiss_version_notify' ) );
 			//add_action( 'admin_init', array( $this, 'do_activation_redirect' ) );
 
+		}
+
+		function dismiss_version_notify() {
+			check_ajax_referer( 'postsmtp', 'security' );
+
+			$version = sanitize_text_field($_POST['version']);
+			$result = update_option('postman_release_version_'. $version, true );
+		}
+
+		function delete_lock_file() {
+			check_ajax_referer( 'postman', 'security' );
+
+			if ( ! PostmanUtils::lockFileExists() ) {
+				echo __('No lock file found.', Postman::TEXT_DOMAIN );
+				die();
+			}
+
+			echo PostmanUtils::deleteLockFile() == true ? __('Success, try to send test email.', Postman::TEXT_DOMAIN ) : __('Failed, try again.', Postman::TEXT_DOMAIN );
+			die();
 		}
 
 		function do_activation_redirect() {
@@ -156,7 +177,8 @@ if ( ! class_exists( 'PostmanViewController' ) ) {
 			if ( ! PostmanPreRequisitesCheck::isReady() ) {
 				printf( '<p><span style="color:red; padding:2px 0; font-size:1.1em">%s</span></p>', __( 'Postman is unable to run. Email delivery is being handled by WordPress (or another plugin).', Postman::TEXT_DOMAIN ) );
 			} else {
-				$statusMessage = PostmanTransportRegistry::getInstance()->getReadyMessage();
+				$ready_messsage = PostmanTransportRegistry::getInstance()->getReadyMessage();
+				$statusMessage = $ready_messsage['message'];
 				if ( PostmanTransportRegistry::getInstance()->getActiveTransport()->isConfiguredAndReady() ) {
 					if ( $this->options->getRunMode() != PostmanOptions::RUN_MODE_PRODUCTION ) {
 						printf( '<p><span style="background-color:yellow">%s</span></p>', $statusMessage );
@@ -277,7 +299,22 @@ if ( ! class_exists( 'PostmanViewController' ) ) {
 		/**
 		 */
 		private function displayTopNavigation() {
+			$version = PostmanState::getInstance()->getVersion();
+			$show = get_option('postman_release_version_'. $version );
 			printf( '<h2>%s</h2>', sprintf( __( '%s Setup', Postman::TEXT_DOMAIN ), __( 'Post SMTP', Postman::TEXT_DOMAIN ) ) );
+
+			if ( ! $show ) {
+				echo '
+				<div class="updated settings-error notice is-dismissible"> 
+					<p>
+					<strong>Version ' . $version . ' released with better compability for secure ports:</strong> <a target="_blank" href="https://postmansmtp.com/post-smtp-1-9-0-better-support-for-secure-delivery">Read Here</a>
+					</p>
+					<button style="z-index: 100;" data-version="'. $version . '" data-security="' . wp_create_nonce('postsmtp') .'" type="button" class="notice-dismiss postman-release-message">
+						<span class="screen-reader-text">Dismiss this notice.</span>
+					</button>
+				</div>';
+			}
+
 			print '<div id="postman-main-menu" class="welcome-panel">';
 			print '<div class="welcome-panel-content">';
 			print '<div class="welcome-panel-column-container">';
@@ -317,6 +354,7 @@ if ( ! class_exists( 'PostmanViewController' ) ) {
 			print '<ul>';
 			printf( '<li><a href="%s" class="welcome-icon run-port-test">%s</a></li>', $this->getPageUrl( PostmanConnectivityTestController::PORT_TEST_SLUG ), __( 'Connectivity Test', Postman::TEXT_DOMAIN ) );
 			printf( '<li><a href="%s" class="welcome-icon run-port-test">%s</a></li>', $this->getPageUrl( PostmanDiagnosticTestController::DIAGNOSTICS_SLUG ), __( 'Diagnostic Test', Postman::TEXT_DOMAIN ) );
+			printf( '<li><a href="%s" data-security="%s" class="welcome-icon release-lock-file">%s</a></li>', '#', wp_create_nonce( "postman" ), __( 'Release Lock File Error', Postman::TEXT_DOMAIN ) );
 			printf( '<li><a href="https://postmansmtp.com/forums/" class="welcome-icon postman_support">%s</a></li>', __( 'Online Support', Postman::TEXT_DOMAIN ) );
 			printf( '<li><img class="align-middle" src="' . plugins_url( 'style/images/new.gif', dirname( __DIR__ ) . '/postman-smtp.php' ) . '"><a target="blank" class="align-middle" href="https://postmansmtp.com/category/guides/" class="welcome-icon postman_guides">%s</a></li>', __( 'Guides', Postman::TEXT_DOMAIN ) );
 			print '</ul></div></div></div></div>';
