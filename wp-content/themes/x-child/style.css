@@ -21,7 +21,7 @@ background-image: none!important;}
     overflow: visible;
     border-bottom: none!important;
     text-align: center;
-    background-image: url("https://www.forkc.org/wp-content/uploads/2018/02/for-kc-header.jpg")!important;
+    background-image: url("https://forkc.org/wp-content/uploads/2018/02/for-kc-header.jpg")!important;
 	background-repeat: no-repeat;
 	background-size: cover;
     	z-index: 1030;
@@ -61,7 +61,7 @@ top: 275px;
 
 footer.x-colophon.bottom {
 color: white; 
-background-image: url("https://www.forkc.org/wp-content/uploads/2018/02/mo-river-footer.png");
+background-image: url("https://forkc.org/wp-content/uploads/2018/02/mo-river-footer.png");
 	background-repeat: no-repeat;
 	background-size: cover;
 min-height: 300px;
@@ -90,7 +90,7 @@ footer.x-colophon{
 	}*/
 }
 footer.x-colophon {
-  	background-image: url("https://www.forkc.org/wp-content/uploads/2018/02/bottom-footer-swoosh.png");
+  	background-image: url("https://forkc.org/wp-content/uploads/2018/02/bottom-footer-swoosh.png");
 	background-repeat: no-repeat;
     	background-size: cover;
     	background-position: center;
@@ -101,7 +101,7 @@ footer.x-colophon.top{
 	border-top: none!important;}
 
 .x-logobar-inner{
-	background-image: url("https://www.forkc.org/wp-content/uploads/2018/03/river-fest-ad.png");
+	background-image: url("https://forkc.org/wp-content/uploads/2018/03/river-fest-ad.png");
 	background-repeat: no-repeat;
 	background-position: center right;
 	background-size: 20%;}
