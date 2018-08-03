@@ -35,6 +35,8 @@ class EM_Attendees_Form {
 			//custom form chooser in event bookings meta box:
 			add_action('emp_bookings_form_select_footer',array('EM_Attendees_Form', 'event_attendee_custom_form'),20,1);
 			add_action('em_event_save_meta_pre',array('EM_Attendees_Form', 'em_event_save_meta_pre'),10,1);
+			//data privacy
+			add_filter('em_data_privacy_export_bookings_item', 'EM_Attendees_Form::data_privacy_export', 10, 2);
 		}
 	}
 	
@@ -853,6 +855,28 @@ class EM_Attendees_Form {
 			</div>
 		</div>
 		<?php
+	}
+
+	public static function data_privacy_export( $export_item, $EM_Booking ){
+	    if( get_class($EM_Booking) == 'EM_Multiple_Booking' ) return $export_item; //skip multiple bookings
+		$EM_Tickets_Bookings = $EM_Booking->get_tickets_bookings();
+		$attendee_datas = EM_Attendees_Form::get_booking_attendees($EM_Booking);
+		$attendee_string = array();
+		foreach( $EM_Tickets_Bookings->tickets_bookings as $EM_Ticket_Booking ){
+			//Display ticket info
+			if( !empty($attendee_datas[$EM_Ticket_Booking->ticket_id]) ){
+				$attendee_string[$EM_Ticket_Booking->ticket_id] = emp__('Ticket','events-manager').' - '. $EM_Ticket_Booking->get_ticket()->ticket_name ."<br>-----------------------------";
+				//display a row for each space booked on this ticket
+				foreach( $attendee_datas[$EM_Ticket_Booking->ticket_id] as $attendee_title => $attendee_data ){
+					$attendee_string[$EM_Ticket_Booking->ticket_id] .= '<br>'. $attendee_title ."<br>------------";
+					foreach( $attendee_data as $field_label => $field_value){
+						$attendee_string[$EM_Ticket_Booking->ticket_id] .= "<br>". $field_label .': '. $field_value;
+					}
+				}
+			}
+		}
+		if( !empty($attendee_string) ) $export_item['data']['attendees'] = array('name'=> __('Attendees', 'events-manager-pro'), 'value' => implode('<br><br>', $attendee_string));
+		return $export_item;
 	}
 }
 EM_Attendees_Form::init();

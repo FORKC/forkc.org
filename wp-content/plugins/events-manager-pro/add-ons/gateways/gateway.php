@@ -363,17 +363,17 @@ class EM_Gateway {
 	 * @param string $currency
 	 * @param int $timestamp
 	 * @param string $txn_id
-	 * @param int $status
+	 * @param int $payment_status
 	 * @param string $note
 	 */
-	function record_transaction($EM_Booking, $amount, $currency, $timestamp, $txn_id, $status, $note) {
+	function record_transaction($EM_Booking, $amount, $currency, $timestamp, $txn_id, $payment_status, $note) {
 		global $wpdb;
 		$data = array();
 		$data['booking_id'] = $EM_Booking->booking_id;
 		$data['transaction_gateway_id'] = $txn_id;
 		$data['transaction_timestamp'] = $timestamp;
 		$data['transaction_currency'] = $currency;
-		$data['transaction_status'] = $status;
+		$data['transaction_status'] = $payment_status;
 		$data['transaction_total_amount'] = $amount;
 		$data['transaction_note'] = $note;
 		$data['transaction_gateway'] = $this->gateway;
@@ -382,14 +382,14 @@ class EM_Gateway {
 			$existing = $wpdb->get_row( $wpdb->prepare( "SELECT transaction_id, transaction_status, transaction_gateway_id, transaction_total_amount FROM ".EM_TRANSACTIONS_TABLE." WHERE transaction_gateway = %s AND transaction_gateway_id = %s", $this->gateway, $txn_id ) );
 		}
 		$table = EM_TRANSACTIONS_TABLE;
-		if( is_multisite() && !EM_MS_GLOBAL && !empty($EM_Event->blog_id) && !is_main_site($EM_Event->blog_id) ){ 
+		if( is_multisite() && !EM_MS_GLOBAL && !empty($EM_Booking->get_event()->blog_id) && !is_main_site($EM_Booking->get_event()->blog_id) ){
 			//we must get the prefix of the transaction table for this event's blog if it is not the root blog
-			$table = $wpdb->get_blog_prefix($EM_Event->blog_id).'em_transactions';
+			$table = $wpdb->get_blog_prefix($EM_Booking->get_event()->blog_id).'em_transactions';
 		}
-		if( !empty($existing->transaction_gateway_id) && $amount == $existing->transaction_total_amount && $status == $existing->transaction_status ) {
+		if( !empty($existing->transaction_gateway_id) && $amount == $existing->transaction_total_amount && $payment_status == $existing->transaction_status ) {
 			//Duplicate, so we log and ignore it.
 			EM_Pro::log( array('Duplicate Transaction Received and Ignored', '$data' => $data, '$_REQUEST'=> $_REQUEST), $this->gateway);
-		}elseif( !empty($existing->transaction_gateway_id) && $amount == $existing->transaction_total_amount && $status != $existing->transaction_status ) {
+		}elseif( !empty($existing->transaction_gateway_id) && $amount == $existing->transaction_total_amount && $payment_status != $existing->transaction_status ) {
 			// Update only if txn id and amounts are the same (e.g. pending payments changing status)
 			EM_Pro::log( array('Updated Transaction Notification', '$data' => $data, '$_REQUEST'=> $_REQUEST), $this->gateway);
 			$wpdb->update( $table, $data, array('transaction_id' => $existing->transaction_id) );

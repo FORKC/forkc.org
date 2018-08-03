@@ -53,6 +53,8 @@ class EM_Gateways {
 			'fax' => __('Fax','em-pro'),
 			'company' => __('Company','em-pro')
 		);
+		//data privacy - transaction history
+        add_filter('em_data_privacy_export_bookings_items_after_item', 'EM_Gateways::data_privacy_export', 10, 3);
 	}
 	
 	static function em_wp_localize_script( $vars ){
@@ -481,6 +483,52 @@ class EM_Gateways {
 		if($button != '') $button .= '<style type="text/css">input.em-booking-submit { display:none; } .em-gateway-button input.em-booking-submit { display:block; }</style>'; //hide normal button if we have buttons
 		return apply_filters('em_gateway_booking_form_buttons', $button, $gateway_buttons);
 	}
+
+	/**
+	 * Modifies exported multiple booking items
+	 * @param array $export_item
+	 * @param EM_Booking $EM_Booking
+	 * @return array
+	 */
+	public static function data_privacy_export($export_items, $export_item, $EM_Booking ){
+		if( get_option('dbem_multiple_bookings') ){
+			$EM_MB_Booking = EM_Multiple_Bookings::get_main_booking($EM_Booking);
+			if( $EM_Booking->booking_id != $EM_MB_Booking->booking_id ) return $export_items; //we don't need to export bookings with an MB parent
+        }
+        //get the transaction
+		global $EM_Gateways_Transactions; /* @var EM_Gateways_Transactions $EM_Gateways_Transactions */
+		$transactions = $EM_Gateways_Transactions->get_transactions( $EM_Booking );
+        if( $EM_Gateways_Transactions->total_transactions > 0 ){
+		    foreach( $transactions as $transaction ){
+			    $transactions_item = array(
+				    'group_id' => 'events-manager-booking-transactions',
+				    'group_label' => __('Booking Transactions', 'events-manager'),
+				    'item_id' => 'booking-transaction-'.$transaction->transaction_id, //replace ID with txn ID
+				    'data' => array() // replace this with assoc array of name/value key arrays
+			    );
+			    if( get_class($EM_Booking) == 'EM_Multiple_Booking' ){
+			        $events = array();
+				    foreach( $EM_MB_Booking->get_bookings() as $EM_Booking ){ /* @var EM_Booking $EM_Booking */
+				        //handle potentially deleted events in a MB booking
+					    $events[] = !empty($EM_Booking->get_event()->post_id) ? $EM_Booking->get_event()->output('#_EVENTLINK - #_EVENTDATES @ #_EVENTTIMES') : __('Deleted Event', 'em-pro');
+				    }
+				    $transactions_item['data'][] = array('name' => __('Events','em-pro'), 'value' => implode('<br>', $events) );
+                }else{
+				    $EM_Event = $EM_Booking->get_event(); //handle potentially deleted events in a MB booking
+				    $event_string = !empty($EM_Event->post_id) ? $EM_Event->output('#_EVENTLINK - #_EVENTDATES @ #_EVENTTIMES') : __('Deleted Event', 'em-pro');
+				    $transactions_item['data'][] = array('name' => __('Event','em-pro'), 'value' => $event_string );
+                }
+			    $transactions_item['data'][] = array('name' => __('Status','em-pro'), 'value' => $transaction->transaction_status );
+			    $transactions_item['data'][] = array('name' => __('Gateway','em-pro'), 'value' => $transaction->transaction_gateway );
+			    $transactions_item['data'][] = array('name' => __('Date','em-pro'), 'value' => $transaction->transaction_total_amount .' '.$transaction->transaction_currency);
+			    $transactions_item['data'][] = array('name' => __('Transaction ID','em-pro'), 'value' => $transaction->transaction_gateway_id );
+			    $transactions_item['data'][] = array('name' => __('Notes','em-pro'), 'value' => $transaction->transaction_note );
+            }
+            $export_items[] = $transactions_item;
+        }
+		return $export_items;
+	}
+
 }
 EM_Gateways::init();
 //Menus

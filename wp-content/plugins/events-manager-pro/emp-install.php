@@ -15,7 +15,8 @@ function emp_install() {
 	 		update_option('emp_ms_global_install',1); //in case for some reason the user changes global settings in the future
 	 	}
 		emp_add_options();
-		
+		//trigger update action
+		do_action('events_manager_pro_updated');
 		//Update Version	
 	  	update_option('em_pro_version', EMP_VERSION);
 	  	//flush tables

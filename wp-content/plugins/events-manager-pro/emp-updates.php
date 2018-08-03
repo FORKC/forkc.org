@@ -82,7 +82,7 @@ class EM_Updates {
 		?>
 			<a name="pro-api"></a>
 			<div  class="postbox " id="em-opt-pro-key" >
-			<div class="handlediv" title="<?php esc_attr_e_emp('Click to toggle', 'events-manager'); ?>"><br /></div><h3 class='hndle'><span><?php _e ( 'Pro Membership Key', 'em-pro' ); ?> </span></h3>
+			<div class="handlediv" title="<?php esc_attr_e_emp('Click to toggle', 'events-manager'); ?>"><br /></div><h3><span><?php _e ( 'Pro Membership Key', 'em-pro' ); ?> </span></h3>
 			<div class="inside">
 				<table class='form-table' <?php echo ( $api ) ? 'style="background-color:#ffece8;"':'' ?>>
 					<?php
@@ -124,10 +124,12 @@ class EM_Updates {
 	    //try alt
 		if( is_wp_error( $request ) or wp_remote_retrieve_response_code( $request ) != 200 ) {
 	        // Request failed - try again
+	        EM_Pro::log(array('error' => 'Failed Update API retrieval '.EM_PRO_ALT_API, 'response'=> $request));
 	    	$request = wp_remote_post( EM_PRO_ALT_API_2, array( 'body' => $args ) );
 	    }
 	    // Make sure the request was successful
 	    if( is_wp_error( $request ) or wp_remote_retrieve_response_code( $request ) != 200 ) {
+	    	EM_Pro::log(array('error' => 'Failed Update API 2 retrieval '.EM_PRO_ALT_API_2, 'response'=> $request));
 	        // Request failed
 	        return $request;
 	    }

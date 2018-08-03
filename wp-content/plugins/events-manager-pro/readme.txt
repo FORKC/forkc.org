@@ -2,8 +2,8 @@
 Contributors: netweblogic
 Tags: events, event, event registration, event calendar, events calendar, event management, paypal, registration, ticket, tickets, ticketing, tickets, theme, widget, locations, maps, booking, attendance, attendee, buddypress, calendar, gigs, payment, payments, sports,
 Requires at least: 3.5
-Tested up to: 4.8.1
-Stable tag: 2.6.1
+Tested up to: 4.9.6
+Stable tag: 2.6.4
 
 == Description ==
 
@@ -22,6 +22,27 @@ http://wp-events-plugin.com/support/
 Please visit http://wp-events-plugin.com/documentation/installation/
 
 == Changelog ==
+= 2.6.4 =
+* added support for Google Maps Static API display options and caching for relatively sized static map images
+
+= 2.6.3.2 =
+* fixed issues with privacy consent tools preventing admins from making manual bookings
+* fixed anonymous bookings overwriting logged in user info when manually booking
+
+= 2.6.3.1 =
+* fixed data privacy consent checkboxes showing on both individual event and checkout pages for multiple bookings
+
+= 2.6.3 =
+* added Data Privacy and GDPR features
+
+= 2.6.2.1 =
+* further fix for authorize.net service breakages on production accounts due to unannounced changes in their service
+
+= 2.6.2 =
+* updated SSL certificate file in the authorize.net SDK library
+* fixed minor PHP warnings if EM isn't activated along with Pro
+* added error logging support for failed Pro update lookups
+
 = 2.6.1 = 
 * fixed manual bookings not adding correct new user information when name/email/profile fields are set to not be displayed or editable
 * fixed reminder emails not getting translated into booked language

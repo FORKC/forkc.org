@@ -1,3 +1,11 @@
+/* Google Maps */
+.em-location-map-container img.em-location-static-map { width:100%; height:100%; max-width:100% !important; }
+.em-location-map-container.em-map-static-load { position:relative; }
+.em-location-map-container.em-map-static-load:hover { cursor:pointer; }
+.em-location-map-container .em-map-overlay { display:block; position: absolute; top: 0; bottom: 0; left: 0; right: 0; height: 100%; width: 100%; opacity: 0; transition: .5s ease; background-color: #333; cursor:pointer; }
+.em-location-map-container:hover .em-map-overlay { opacity: 0.75; }
+.em-location-map-container .em-map-overlay div { color: white; font-size: 18px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); -ms-transform: translate(-50%, -50%); text-align: center; }
+/* Booking Form */
 .em-booking-form span.form-tip { text-decoration:none; border-bottom:1px dotted #aaa; padding-bottom:2px; }
 .input-group .em-date-range input { width:100px; }
 .input-group .em-time-range input { width:80px; }

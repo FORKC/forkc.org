@@ -27,7 +27,6 @@ class EM_Gateway_Offline extends EM_Gateway {
 		add_action('em_admin_event_booking_options_buttons', array(&$this, 'event_booking_options_buttons'),10);
 		add_action('em_admin_event_booking_options', array(&$this, 'event_booking_options'),10);
 		add_action('em_bookings_single_metabox_footer', array(&$this, 'add_payment_form'),1,1); //add payment to booking
-		//Manual Booking - not necessary for Multi-Booking 
 		add_action('em_bookings_manual_booking', array(&$this, 'add_booking_form'),1,1);
 		add_filter('em_booking_get_post', array(&$this,'em_booking_get_post'),1,2);
 		add_filter('em_booking_validate', array(&$this,'em_booking_validate'),9,2); //before EM_Bookings_Form hooks in
@@ -224,24 +223,52 @@ class EM_Gateway_Offline extends EM_Gateway {
         $header_button_classes = is_admin() ? 'page-title-action':'button add-new-h2';
 		add_action('pre_option_dbem_bookings_double','__return_true'); //so we don't get a you're already booked here message
 		do_action('em_before_manual_booking_form');
+		//Data privacy consent - not added in admin by default, so we add it here
+		if( get_option('dbem_data_privacy_consent_bookings') > 0 ){
+			add_filter('pre_option_dbem_data_privacy_consent_remember', '__return_zero');
+			add_action('em_booking_form_footer', 'em_data_privacy_consent_checkbox', 9, 0); //supply 0 args since arg is $EM_Event and callback will think it's an event submission form
+		}
 		?>
 		<div class='wrap'>
-            <?php if( is_admin() ): ?><h1 class="wp-heading-inline"><?php else: ?><h2><?php endif; ?>
-			<?php echo sprintf(__('Add Booking For &quot;%s&quot;','em-pro'), $EM_Event->name); ?>
-			<?php if( is_admin() ): ?></h1><?php endif; ?>
-			<a href="<?php echo esc_url($EM_Event->get_bookings_url()); ?>" class="<?php echo $header_button_classes; ?>"><?php echo esc_html(sprintf(__('Go back to &quot;%s&quot; bookings','em-pro'), $EM_Event->name)) ?></a>
-            <?php if( !is_admin() ): ?></h2><?php else: ?><hr class="wp-header-end" /><?php endif; ?>
+            <?php if( is_admin() ): ?>
+				<h1 class="wp-heading-inline"><?php echo sprintf(__('Add Booking For &quot;%s&quot;','em-pro'), $EM_Event->name); ?></h1>
+				<a href="<?php echo esc_url($EM_Event->get_bookings_url()); ?>" class="<?php echo $header_button_classes; ?>"><?php echo esc_html(sprintf(__('Go back to &quot;%s&quot; bookings','em-pro'), $EM_Event->name)) ?></a>
+                <hr class="wp-header-end" />
+			<?php else: ?>
+				<h2>
+					<?php echo sprintf(__('Add Booking For &quot;%s&quot;','em-pro'), $EM_Event->name); ?>
+					<a href="<?php echo esc_url($EM_Event->get_bookings_url()); ?>" class="<?php echo $header_button_classes; ?>"><?php echo esc_html(sprintf(__('Go back to &quot;%s&quot; bookings','em-pro'), $EM_Event->name)) ?></a>
+                </h2>
+            <?php endif; ?>
 			<?php echo $EM_Event->output('#_BOOKINGFORM'); ?>
 			<script type="text/javascript">
 				jQuery(document).ready(function($){
 					$('.em-tickets').addClass('widefat');
+					var user_fields = $('.em-booking-form p.input-user-field');
 					$('select#person_id').change(function(e){
-						var person_id  = $('select#person_id option:selected').val();
-						if( person_id > 0 ){
-							$('.em-booking-form p.input-user-field').hide();
-						}else{
-							$('.em-booking-form p.input-user-field').show();							
-						}
+						var person_id = $('select#person_id option:selected').val();
+						person_id > 0 ? user_fields.hide() : user_fields.show();
+						<?php if( get_option('dbem_data_privacy_consent_bookings') > 0 ): remove_filter('pre_option_dbem_data_privacy_consent_remember', '__return_zero'); ?>
+							var consent_enabled = <?php echo esc_js( get_option('dbem_data_privacy_consent_bookings') ); ?>;
+							var consent_remember = <?php echo esc_js( get_option('dbem_data_privacy_consent_remember') ); ?>;
+							var consent_field = $('.em-booking-form p.input-field-data_privacy_consent');
+							var consent_checkbox = consent_field.find('input[type="checkbox"]').prop('checked', false);
+							if( person_id > 0 ){
+								$('.em-booking-form p.input-user-field').hide();
+								if( consent_enabled === 1 ){
+									var consented = Number($(this).find(':selected').data('consented')) === 1;
+									if( consent_remember > 0 ){
+										consent_checkbox.prop('checked', consented);
+										if( consent_remember === 1 ) consented ? consent_field.hide() : consent_field.show();
+									}
+								}else if( consent_enabled === 2 ){
+									consent_field.hide();
+								}
+							}else{
+								$('.em-booking-form p.input-user-field').show();
+								consent_field.show();
+							}
+						<?php endif; ?>
 					});
 				});
 			</script>
@@ -336,6 +363,10 @@ class EM_Gateway_Offline extends EM_Gateway {
 					$EM_Booking->person = $person;
 					$EM_Booking->person_id = $person->ID;
 				}
+			}elseif( get_option('dbem_bookings_registration_disable') ){
+				//for no-user bookings mode we circumvent
+				$EM_Booking->person = new EM_Person(0);
+				$EM_Booking->person_id = 0;
 			}
 		}
 		return $result;
@@ -345,12 +376,30 @@ class EM_Gateway_Offline extends EM_Gateway {
 	 * Called before EM_Forms fields are added, when a manual booking is being made
 	 */
 	function em_booking_form_custom(){
-		global $EM_Event;
+		global $wpdb;
 		?>
 		<p>
 			<?php
 				$person_id = (!empty($_REQUEST['person_id'])) ? $_REQUEST['person_id'] : false;
-				wp_dropdown_users ( array ('name' => 'person_id', 'show_option_none' => __ ( "Select a user, or enter a new one below.", 'em-pro' ), 'selected' => $person_id  ) );
+				//get consent info for each user, for use later on
+				$user_consents_raw = $wpdb->get_results("SELECT user_id, meta_value FROM " . $wpdb->usermeta . " WHERE meta_key='em_data_privacy_consent' GROUP BY user_id");
+				$user_consents = array();
+				foreach( $user_consents_raw as $user_consent ) $user_consents[$user_consent->user_id] = $user_consent->meta_value;
+				//output list of users
+				$users = get_users( array( 'orderby' => 'display_name', 'order' => 'ASC', 'fields' => array('ID','display_name','user_login') ) );
+				if( !empty( $users ) ){
+					echo '<select name="person_id" id="person_id">';
+					$_selected = selected( 0, $person_id, false );
+					echo "\t<option value='0'$_selected>" . esc_html__( "Select a user, or enter a new one below.", 'em-pro' ) . "</option>\n";
+					foreach ( (array) $users as $user ) {
+						$display = sprintf( _x( '%1$s (%2$s)', 'user dropdown' ), $user->display_name, $user->user_login );
+						$_selected = selected( $user->ID, $person_id, false );
+						$consented = !empty($user_consents[$user->ID]) ? 1:0;
+						echo "\t<option value='$user->ID' data-consented='$consented'$_selected>" . esc_html( $display ) . "</option>\n";
+					}
+					echo '</select>';
+				}
+				//wp_dropdown_users ( array ('name' => 'person_id', 'show_option_none' => __ ( "Select a user, or enter a new one below.", 'em-pro' ), 'selected' => $person_id  ) );
 			?>
 		</p>
 		<?php

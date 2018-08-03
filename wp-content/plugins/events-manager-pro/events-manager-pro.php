@@ -5,12 +5,12 @@ Plugin URI: http://eventsmanagerpro.com
 Description: Supercharge the Events Manager free plugin with extra features to make your events even more successful!
 Author: NetWebLogic
 Author URI: http://wp-events-plugin.com/
-Version: 2.6.1
+Version: 2.6.4
 
-Copyright (C) 2018 NetWebLogic SL
+Copyright (C) 2018 Pixelite SL
 */
 
-define('EMP_VERSION', 2.6);
+define('EMP_VERSION', 2.64);
 define('EM_MIN_VERSION', 5.6636);
 define('EM_MIN_VERSION_CRITICAL', 2.377);
 define('EMP_SLUG', plugin_basename( __FILE__ ));
@@ -27,6 +27,7 @@ class EM_Pro {
 	 */
 	public static function init(){
 		global $wpdb;
+		if( !defined('EM_VERSION') ) return;
 		//check that an incompatible version of EM is not running
 		//Define some tables
 		if( EM_MS_GLOBAL ){
@@ -81,6 +82,7 @@ class EM_Pro {
 			include('add-ons/coupons/coupons.php');
 			include('add-ons/emails/emails.php');
 			include('add-ons/user-fields.php');
+			include('add-ons/google-maps/google-maps.php');
 	        if( get_option('dbem_multiple_bookings') ){
 			    include('add-ons/multiple-bookings/multiple-bookings.php');
 	        }

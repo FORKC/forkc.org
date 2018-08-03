@@ -33,6 +33,9 @@ class EM_User_Fields {
 		//Booking Table and CSV Export
 		add_filter('em_bookings_table_rows_col', array('EM_User_Fields','em_bookings_table_rows_col'),10,5);
 		add_filter('em_bookings_table_cols_template', array('EM_User_Fields','em_bookings_table_cols_template'),10,2);
+		//Data Privacy - exporting user info saved by user fields or in case of guest user within bookings
+		add_filter('em_data_privacy_export_user', 'EM_User_Fields::data_privacy_export_user', 10, 2);
+		add_filter('em_booking_get_person', 'EM_User_Fields::em_booking_get_person', 10, 2);
 	}
 	
 	public static function get_form(){
@@ -445,5 +448,60 @@ class EM_User_Fields {
 	private static function show_reg_fields(){
 		return !is_user_logged_in() && get_option('dbem_bookings_anonymous'); 
 	}
+
+	public static function data_privacy_exporters( $exporters ){
+		$exporters['events-manager-user'] = array(
+			'exporter_friendly_name' =>  __( 'Events Manager', 'events-manager' ) . ' - ' .__( 'Further Information', 'events-manager' ),
+			'callback' => 'EM_Data_Privacy::export_locations',
+		);
+	    return $exporters;
+    }
+
+    public static function data_privacy_export_user( $export_item, $user ){
+	    $EM_Form = self::get_form();
+	    $export_item['data'] = array();
+        foreach( $EM_Form->form_fields as $field_id => $field ){
+            if( $field['type'] != 'html' ){
+                $value = self::get_user_meta($user->ID, $field_id, true);
+                if( !empty($value) ){
+                    $export_item['data'][] = array( 'name' => $field['label'], 'value' => $EM_Form->get_formatted_value($field, $value) );
+                }
+            }
+        }
+	    return $export_item;
+    }
+
+    //Data Privacy Functions
+
+    public static function data_privacy_export_booking( $export_item, EM_Booking $EM_Booking ){
+	    if( $EM_Booking->person_id == 0 ){
+            $EM_Form = self::get_form();
+            foreach( $EM_Form->form_fields as $field_id => $field ){
+                if( $field['type'] != 'html' ){
+                    if( !empty($EM_Booking->booking_meta['registration'][$field_id]) ){
+                        $value = $EM_Booking->booking_meta['registration'][$field_id];
+                        $export_item['data'][$field_id] = array( 'name' => $field['label'], 'value' => $EM_Form->get_formatted_value($field, $value) );
+                    }
+                }
+            }
+        }
+        return $export_item;
+    }
+
+    public static function em_booking_get_person( $EM_Person, $EM_Booking ){
+	    $EM_Form = self::get_form();
+	    foreach( $EM_Form->form_fields as $field_id => $field ){
+		    if( $field['type'] != 'html' ){
+			    if( $EM_Person->person_id == 0 && !empty($EM_Booking->booking_meta['registration'][$field_id]) ){
+				    $value = $EM_Booking->booking_meta['registration'][$field_id];
+				    $EM_Person->custom_user_fields[$field_id] = array('name' => $field['label'], 'value' => $EM_Form->get_formatted_value($field, $value));
+			    }else{
+				    $value = self::get_user_meta($EM_Person->ID, $field_id, true);
+				    $EM_Person->custom_user_fields[$field_id] = array('name' => $field['label'], 'value' => $EM_Form->get_formatted_value($field, $value));
+                }
+		    }
+	    }
+	    return $EM_Person;
+    }
 }
 EM_User_Fields::init();

@@ -43,6 +43,8 @@ class EM_Booking_Form {
 		//custom form chooser in event bookings meta box:
 		add_action('em_events_admin_bookings_footer',array('EM_Booking_Form', 'event_bookings_meta_box'),20,1);
 		add_action('em_event_save_meta_pre',array('EM_Booking_Form', 'em_event_save_meta_pre'),10,1);
+		//Data Privacy
+        add_filter('em_data_privacy_export_bookings_item', 'EM_Booking_Form::data_privacy_export', 10, 2);
 	}
 	
 	/**
@@ -70,7 +72,7 @@ class EM_Booking_Form {
 	/**
 	 * @param EM_Booking $EM_Booking
 	 */
-	public static function get_form($EM_Event = false, $custom_form_id = false){
+	public static function get_form( $EM_Event = false, $custom_form_id = false ){
 	    //special lookup for multiple bookings
 	    if( is_object($custom_form_id) && get_class($custom_form_id) == 'EM_Multiple_Booking' ){ $custom_form_id = get_option('dbem_multiple_bookings_form'); }
 	    //make sure we don't need to get another form rather than the one already stored in this object
@@ -611,6 +613,24 @@ class EM_Booking_Form {
 		</div>
 		<?php
 	}
+
+	public static function data_privacy_export( $export_item, EM_Booking $EM_Booking ){
+		$EM_Form = EM_Booking_Form::get_form( $EM_Booking->event_id, $EM_Booking );
+		foreach( $EM_Form->form_fields as $fieldid => $field ){
+			if( !array_key_exists($fieldid, $EM_Form->user_fields) && !in_array($fieldid, array('user_email','user_name')) && $field['type'] != 'html' && $field['type'] != 'captcha' ){
+				//get value of field
+				$field_value = (isset($EM_Booking->booking_meta['booking'][$fieldid])) ? $EM_Booking->booking_meta['booking'][$fieldid]:'';
+				//account for the free version and the booking_comment field so that old booking info still shows
+				if( empty($field_value) && $fieldid == 'booking_comment' && !empty($EM_Booking->booking_comment)){
+					$field_value = $EM_Booking->booking_comment;
+				}
+				if( $field_value !== '' ){
+    				$export_item['data'][] = array( 'name' => $field['label'], 'value' => $EM_Form->get_formatted_value($field, $field_value) );
+                }
+			}
+		}
+        return $export_item;
+    }
 }
 EM_Booking_Form::init();
 include('attendee-forms.php');

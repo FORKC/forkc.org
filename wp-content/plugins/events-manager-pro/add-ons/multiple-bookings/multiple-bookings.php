@@ -68,6 +68,16 @@ class EM_Multiple_Bookings{
     	if( !empty($_REQUEST['action']) && $_REQUEST['action'] == 'manual_booking' ){
     		define('EM_CART_JS_LOADED',true);
     	}
+	    //data privacy
+	    add_filter('em_data_privacy_export_bookings_item', 'EM_Multiple_Bookings::data_privacy_export', 10, 2);
+	    remove_action('em_booking_form_footer', 'em_data_privacy_bookings_consent_checkbox', 9, 1);
+	    remove_filter('em_booking_get_post', 'em_data_privacy_consent_booking_get_post', 10, 2);
+	    remove_filter('em_booking_validate', 'em_data_privacy_consent_booking_validate', 10, 2);
+	    remove_filter('em_booking_save', 'em_data_privacy_consent_booking_save', 10, 2);
+	    add_action('em_checkout_form_footer', 'em_data_privacy_consent_checkbox', 9);
+	    add_filter('em_multiple_booking_get_post', 'em_data_privacy_consent_booking_get_post', 10, 2);
+	    add_filter('em_multiple_booking_validate', 'em_data_privacy_consent_booking_validate', 10, 2);
+	    add_filter('em_multiple_booking_save_bookings', 'em_data_privacy_consent_booking_save', 10, 2);
     }
     
     public static function em_ml_init(){ include('multiple-bookings-ml.php'); }
@@ -251,7 +261,7 @@ class EM_Multiple_Bookings{
 		add_filter('em_booking_validate', 'EM_Multiple_Bookings::prevent_user_validation', 1); //prevent user fields validation
 		$bookings_validation = $EM_Multiple_Booking->validate_bookings();
 		//fire the equivalent of the em_booking_add action, but multiple variation 
-		do_action('em_multiple_booking_add', $EM_Multiple_Booking->get_event(), $EM_Multiple_Booking, $post_validation && $bookings_validation); //get_event returns blank, just for backwards-compatabaility
+		do_action('em_multiple_booking_add', $EM_Multiple_Booking->get_event(), $EM_Multiple_Booking, $post_validation && $bookings_validation); //get_event returns blank, just for backwards-compatibility
 		//proceed with saving bookings if all is well
 		$result = false; $feedback = '';
         if( $bookings_validation && $post_validation ){
@@ -647,6 +657,34 @@ class EM_Multiple_Bookings{
 			add_action('admin_footer','em_cart_js_footer', 20);
 			define('EM_CART_JS_LOADED',true);
 		}
+	}
+
+	/**
+     * Modifies exported multiple booking items
+	 * @param array $export_item
+	 * @param EM_Multiple_Booking $EM_MB_Booking
+	 * @return array
+	 */
+	public static function data_privacy_export($export_item, $EM_MB_Booking ){
+        if( get_class($EM_MB_Booking) == 'EM_Multiple_Booking' ){
+            $export_item['group_id'] = 'events-manager-multiple-bookings';
+	        $export_item['group_label'] = __('Multiple Bookings', 'em-pro');
+            //remove some inaccurate data and rebuild those sections
+            $export_item['data']['event'] = array( 'name' => emp__('Events') );
+            $events = array();
+            foreach( $EM_MB_Booking->get_bookings() as $EM_Booking ){ /* @var EM_Booking $EM_Booking */
+	            //handle potentially deleted events in a MB booking
+	            $events[] = !empty($EM_Booking->get_event()->post_id) ? $EM_Booking->get_event()->output('#_EVENTLINK - #_EVENTDATES @ #_EVENTTIMES') : __('Deleted Event', 'em-pro');
+            }
+	        $export_item['data']['event']['value'] = implode('<br>', $events);
+            unset( $export_item['data']['tickets'] );
+        }else{
+	        $EM_Booking = EM_Multiple_Bookings::get_main_booking($EM_MB_Booking);
+            if( $EM_Booking->booking_id != $EM_MB_Booking->booking_id ){
+                //we have a booking with a master booking, so we remove pricing since it's the overall booking cost that matters:
+            }
+        }
+		return $export_item;
 	}
 }
 EM_Multiple_Bookings::init();

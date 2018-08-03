@@ -32,6 +32,8 @@ class EM_Custom_Emails{
 		}
 		//multilingual hook - this SHOULD fire after the EM_ML init hook as it's added after EM_ML is loaded
 		add_action('em_ml_init', 'EM_Custom_Emails::em_ml_init');
+		//data privacy
+		add_filter('em_data_privacy_export_events_item', 'EM_Custom_Emails::em_data_privacy_export_events_item', 10, 2);
 	}
 	
 	public static function em_ml_init(){ include('custom-emails-ml.php'); }
@@ -258,6 +260,42 @@ class EM_Custom_Emails{
 			}
 		}
 		return array_merge($emails, $admin_emails);
+	}
+
+	/**
+	 * @param array $export_item
+	 * @param EM_Event $EM_Event
+	 * @return array
+	 */
+	public static function em_data_privacy_export_events_item($export_item, $EM_Event ){
+		//if( empty($EM_Event->event_owner_anonymous) ){ //we may want to limit this to registered users only since anon users can't do this
+		$admin_emails = self::get_event_admin_emails($EM_Event);
+		$event_emails = self::get_event_emails($EM_Event);
+		if( !empty($admin_emails) ){
+			$admin_emails_export = array();
+			foreach( $admin_emails as $admin_email_type => $admin_email_type_emails ){
+				$admin_emails_export[] = $admin_email_type . ': '. implode(', ', $admin_email_type_emails);
+			}
+			$export_item['data'][] = array( 'name' => __('Admin Emails', 'em-pro'), 'value' => implode('<br>', $admin_emails_export) );
+			unset($admin_emails_export, $admin_emails);
+		}
+		if( !empty($event_emails) ){
+			$EM_Booking = new EM_Booking();
+			$event_emails_export = array();
+			foreach( $event_emails as $event_email_type => $event_email_type_emails ){
+				$event_emails_string = $event_email_type . '<br>------';
+				foreach( $event_email_type_emails as $status => $email_data ){
+					$event_emails_string .= '<br>'. emp__('Status') . ' : ' . $EM_Booking->status_array[$status] ;
+					foreach( $email_data as $email_data_key => $email_data_item ){
+						$event_emails_string .= '<br>'. $email_data_key . ' : ';
+						$event_emails_string .= $email_data_key == 'message' ? '<br>'.$email_data_item : $email_data_item;
+					}
+				}
+				$event_emails_export[] = $event_emails_string;
+			}
+			$export_item['data'][] = array( 'name' => __('Admin Emails', 'em-pro'), 'value' => implode('<br><br>--------------<br><br>', $event_emails_export) );
+		}
+		return $export_item;
 	}
 }
 EM_Custom_Emails::init();
