@@ -59,5 +59,7 @@ $tickera_plugins_and_addons = apply_filters('tc_delete_info_plugins_list', array
                 </div>
             </div>
         </form>
+        <?php do_action('tc_after_delete_info');?>
     </div>
 </div>
+

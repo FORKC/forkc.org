@@ -36,25 +36,29 @@ jQuery(document).ready(function ($) {
 
     }
 
+    if (jQuery(".tc_cart_widget").length > 0){
 
-function tc_update_cart_ajax(){
+        function tc_update_cart_ajax(){
 
-    jQuery(".tc_cart_ul").css('opacity', '0.5');
+            jQuery(".tc_cart_ul").css('opacity', '0.5');
 
-                var data = {
-			'action': 'tc_update_widget_cart'
-		};
+                        var data = {
+                                'action': 'tc_update_widget_cart'
+                        };
 
-		// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
-		jQuery.post(tc_ajax.ajaxUrl, data, function(response) {
-                    jQuery(".tc_cart_ul").css('opacity', '1');
-                        jQuery(".tc_cart_ul").html('');
-                        jQuery(".tc_cart_ul").html(response);
-		});
-}
+                        // since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
+                        jQuery.post(tc_ajax.ajaxUrl, data, function(response) {
+                            jQuery(".tc_cart_ul").css('opacity', '1');
+                                jQuery(".tc_cart_ul").html('');
+                                jQuery(".tc_cart_ul").html(response);
+                        });
+                        
+                            }
 
-// Listen DOM changes
-$('.event_tickets').bind("DOMSubtreeModified", tc_update_cart_ajax);
+
+        // Listen DOM changes
+        $('.event_tickets, .cart_form').bind("DOMSubtreeModified", tc_update_cart_ajax);
+    }
 
 
     /*

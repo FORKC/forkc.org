@@ -205,21 +205,27 @@ if (!class_exists('TC_Ticket_Templates')) {
                                     default:
                                         $font_style = '';
                                 }
-
                                 $rows .= '<td ' . (isset($metas[$element_class_name . '_cell_alignment']) ? 'align="' . $metas[$element_class_name . '_cell_alignment'] . '"' : 'align="left"') . ' style="' . ${"col_" . $rows_count} . (isset($metas[$element_class_name . '_cell_alignment']) ? 'text-align:' . $metas[$element_class_name . '_cell_alignment'] . ';' : '') . (isset($metas[$element_class_name . '_font_size']) ? 'font-size:' . $metas[$element_class_name . '_font_size'] . ';' : '') . (isset($metas[$element_class_name . '_font_color']) ? 'color:' . $metas[$element_class_name . '_font_color'] . ';' : '') . (isset($font_style) ? $font_style : '') . '">';
-
+                                if($metas[$element_class_name . '_top_padding'] == '') {
+                                    $metas[$element_class_name . '_top_padding'] = "1";
+                                }
                                 for ($s = 1; $s <= ($metas[$element_class_name . '_top_padding']); $s++) {
                                     $rows .= '<br />';
                                 }
 
                                 $element = new $element_class_name($post_id);
                                 $rows .= $element->ticket_content($ticket_instance_id, $ticket_type_id);
-
+                                
+                                if($metas[$element_class_name . '_bottom_padding'] == '') {
+                                    $metas[$element_class_name . '_bottom_padding'] = "1";
+                                }
+                                
                                 for ($s = 1; $s <= ($metas[$element_class_name . '_bottom_padding']); $s++) {
                                     $rows .= '<br />';
                                 }
 
                                 $rows .= '</td>';
+                               
                             }
                         }
                     }

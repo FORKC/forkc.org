@@ -147,6 +147,21 @@ You can find [setup instructions here �](http://tickera.com/documentation-cate
 Plugin Name: Tickera
 Author: Tickera.com
 
+= 3.2.9.2 =
+- Added Gutenberg blocks for Tickera core shortcodes, Bridge for WooCommerce and Seating Charts add-ons.
+- Updated language file
+- Added fix where multisite carts don't mix
+- Added hooks for developers
+
+= 3.2.9.1 =
+- Fixed issue with the dates in PDF export with WooCommerce
+- Added a DOM check for cart widget
+- Added additional check for EAN13 barcode
+- Fixed issue with barcode and QR code not centering when value is 0
+
+= 3.2.9.0 =
+- Fixed issue with the dates in the check-in apps
+
 = 3.2.8.9 =
 - Fixed issue app not showing correct purchase time
 - Fixed issue with discount code expire dates
@@ -155,6 +170,27 @@ Author: Tickera.com
 - Added new hooks for developers
 - Changed function for retrieving associated event with a ticket instance
 
+= 3.2.8.8 =
+-Fixed issue with colors in ticket template elements
+
+= 3.2.8.7 =
+- Added age restriction check for GDPR compliance
+- Added TICKET_TYPE placeholder to attendee email
+- Fixed deprecated functions
+- Fixed issue with special characters in the ticket type ticket template element
+
+= 3.2.8.6 =
+- Code Maintenance
+
+= 3.2.8.5 =
+- Added Delete Info tab in Settings
+
+
+= 3.2.8.4 =
+- Added attendee e-mail address to the check-in app
+- Added new hooks and filters for developers
+- Added fix for checkbox fields (custom forms add-on) for latest update of WooCommerce
+
 = 3.2.8.3 =
 - Added new hooks for developers
 - Fixed issues with custom forms capabilities on some multisite installations
@@ -162,6 +198,24 @@ Author: Tickera.com
 - Fixed date time zone in PDF export
 - Updated cart widget to update dynamically
 - Fixed notices in the function tc_get_event_tickets_count_sold when there are no any ticket types associated to an event
+
+= 3.2.8.2 =
+- Added functions for developers
+- Added another check for admin notice
+
+= 3.2.8.1 =
+- Fix for saving event_id when using database caching plugins
+
+= 3.2.8.0 =
+- Added hooks for developers
+
+= 3.2.7.9 =
+- Added "Hide event after expiration" option on the event's single page in the admin
+- Added check for debug state
+- Fixed content encoding issues with check-in API responses caused by external plugins on some servers
+- Added fix for memory limit on some servers caused by a big ticket template file (when a ticket background is huge etc.)
+- Fixes typos on ticket template page in the admin area
+- Fixed issue with checkout when a ticket is added to a cart after a discount code is applied
 
 = 3.2.7.8 = 
 - Added hooks for developers

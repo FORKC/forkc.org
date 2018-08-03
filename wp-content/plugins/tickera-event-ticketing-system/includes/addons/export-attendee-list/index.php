@@ -143,7 +143,13 @@ if ( !class_exists( 'TC_Export_Mix' ) ) {
 								$rows .= '<td>' . $instance->details->first_name . ' ' . $instance->details->last_name . '</td>';
 							}
 							if ( isset( $_POST[ 'col_payment_date' ] ) ) {
+                                                            if (apply_filters('tc_bridge_for_woocommerce_is_active', false) == true && is_plugin_active('woocommerce/woocommerce.php') && get_post_type( $order->details->ID ) == 'shop_order' ) {
+                                                                $wc_post = get_post(  $instance->details->ID, 'OBJECT' );                        
+                                                                $format = get_option('date_format') . ' - ' . get_option('time_format');;
+                                                                $rows .= date($format, strtotime( $wc_post->post_date ));
+                                                            } else {
 								$rows .= '<td>' . $payment_date . '</td>';
+                                                            }
 							}
 							if ( isset( $_POST[ 'col_ticket_id' ] ) ) {
 								$rows .= '<td>' . $instance->details->ticket_code . '</td>';

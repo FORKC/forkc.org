@@ -5,8 +5,8 @@
   Description: Simple event ticketing system
   Author: Tickera.com
   Author URI: https://tickera.com/
-  Version: 3.2.8.9
-  TextDomain: tc
+  Version: 3.2.9.2
+  Text Domain: tc
   Domain Path: /languages/
 
   Copyright 2018 Tickera (https://tickera.com/)
@@ -19,7 +19,7 @@ if (!class_exists('TC')) {
 
     class TC {
 
-        var $version = '3.2.8.9';
+        var $version = '3.2.9.2';
         var $title = 'Tickera';
         var $name = 'tc';
         var $dir_name = 'tickera-event-ticketing-system';
@@ -1870,6 +1870,8 @@ if (!class_exists('TC')) {
 
                                 $tc_is_seatings_active = apply_filters('is_seatings_chart_addon_active', is_plugin_active('seating-charts/seating-charts.php'));
 
+                                //do_action('tc_add_cart_errors', $ticket);
+                                
                                 if ($ticket->details->min_tickets_per_order != 0 && $ticket->details->min_tickets_per_order !== '') {
                                     if ($ticket_quantity[$ticket_type_count] < $ticket->details->min_tickets_per_order) {
                                         if (!$tc_is_seatings_active) {
@@ -1909,7 +1911,11 @@ if (!class_exists('TC')) {
                             }
                             $ticket_type_count++;
                         }
+                        
+                        $tc_cart_errors = apply_filters('tc_add_cart_errors',$tc_cart_errors, $ticket);
 
+                        $cart_error_number = apply_filters('tc_cart_error_number', $cart_error_number);
+                        
                         $tc_cart_errors .= '</ul>';
                         add_filter('tc_cart_errors', array(&$this, 'tc_cart_errors'), 10, 1);
 
@@ -2133,7 +2139,9 @@ if (!class_exists('TC')) {
             }
         }
 
+
         function load_cart_scripts() {
+            
             if (apply_filters('tc_use_cart_scripts', true) == true) {
 
                 $tc_general_settings = get_option('tc_general_setting', false);
@@ -2149,6 +2157,8 @@ if (!class_exists('TC')) {
                     $tc_collection_data_text = 'In order to continue you need to agree to provide your details.';
                 }
 
+                
+                
                 wp_enqueue_script('tc-cart', $this->plugin_url . 'js/cart.js', array('jquery'), $this->version);
                 wp_localize_script('tc-cart', 'tc_ajax', array(
                     'ajaxUrl' => apply_filters('tc_ajaxurl', admin_url('admin-ajax.php', (is_ssl() ? 'https' : 'http'))),

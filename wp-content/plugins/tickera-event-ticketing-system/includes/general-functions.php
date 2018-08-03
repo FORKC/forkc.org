@@ -44,7 +44,6 @@ function tc_final_cart_check($cart) {
     $tc_tickets_soldout = array();
 
     $tc_error_numbers = 0;
-
     
     foreach ($cart as $tc_ticket_id => $tc_quantity) {
         global $wpdb;
@@ -56,6 +55,8 @@ function tc_final_cart_check($cart) {
         }
         
     }
+    
+    do_action('tc_add_more_final_checks', $cart);
     
     if($tc_error_numbers > 0){
         $_SESSION['tc_cart_ticket_error_ids'] = $tc_tickets_soldout;

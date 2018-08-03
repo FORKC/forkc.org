@@ -536,13 +536,71 @@ if (!class_exists('TC_Checkin_API')) {
             }
         }
 
+        /**
+         * @param type $digits
+         * @return boolean         
+         * 
+         * check if the number is from ean13 barcode
+        */
+        function tc_ean13_check_digit($digits){
+            
+            $digits_new = $this->tc_ean13_convert($digits);
+            
+            //first change digits to a string so that we can access individual numbers
+            $digits_new =(string)$digits_new;
+            
+            // 1. Add the values of the digits in the even-numbered positions: 2, 4, 6, etc.
+            $even_sum = $digits_new{1} + $digits_new{3} + $digits_new{5} + $digits_new{7} + $digits_new{9} + $digits_new{11};
+            // 2. Multiply this result by 3.
+            $even_sum_three = $even_sum * 3;
+            // 3. Add the values of the digits in the odd-numbered positions: 1, 3, 5, etc.
+            $odd_sum = $digits_new{0} + $digits_new{2} + $digits_new{4} + $digits_new{6} + $digits_new{8} + $digits_new{10};
+            // 4. Sum the results of steps 2 and 3.
+            $total_sum = $even_sum_three + $odd_sum;
+            // 5. The check character is the smallest number which, when added to the result in step 4,  produces a multiple of 10.
+            $next_ten = (ceil($total_sum/10))*10;
+            $check_digit = $next_ten - $total_sum;
+            $tc_new_digit = $digits_new . $check_digit;
+            
+            if($tc_new_digit == $digits) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        
+        
+        /*
+         *convert ean13 to normal barcode 
+        */
+        function tc_ean13_convert($digits){
+            $digits_count = strlen($digits);
+            $check_first = substr($digits, 0, 1);
+            if($check_first !== 0 && $digits_count == 13) {
+                $check_first = '';
+            } 
+            $digits_new = substr($digits, 0, -1);
+            $digits_new = $check_first.$digits_new;
+            return $digits_new;
+        }
+        
         function ticket_checkin($echo = true) {
 
             if ($this->get_api_key_id()) {
 
                 $api_key_id = $this->get_api_key_id();
-
-                $ticket_id = ticket_code_to_id($this->ticket_code);
+                $tc_code_lenght = strlen($this->ticket_code);
+                $ticket_code = $this->ticket_code;
+                
+                //ean 13 contains 12 numberic characters
+                if($tc_code_lenght == 12 || $tc_code_lenght == 13 && is_numeric($this->ticket_code)){                                    
+                    $tc_check_ean13 = $this->tc_ean13_check_digit($this->ticket_code);
+                    if($tc_check_ean13 == true) {
+                        $ticket_code = $this->tc_ean13_convert($this->ticket_code);
+                    }                    
+                }
+                
+                $ticket_id = ticket_code_to_id($ticket_code);
 
                 if ($ticket_id) {
 
@@ -786,7 +844,8 @@ if (!class_exists('TC_Checkin_API')) {
                     $ticket_type = new TC_Ticket($ticket_type_id);
 
                     $order = new TC_Order($ticket_post_parent);
-
+                    
+                    
                     /* OLD */
                     $check_ins = get_post_meta($result_id, 'tc_checkins', true);
                     $checkin_date = '';
@@ -798,8 +857,16 @@ if (!class_exists('TC_Checkin_API')) {
                     }
 
                     $r['date_checked'] = $checkin_date;
-
-                    $r['payment_date'] = tc_format_date($order->details->tc_order_date); //date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $order->details->post_modified ), false )
+                    
+                    if (apply_filters('tc_bridge_for_woocommerce_is_active', false) == true && is_plugin_active('woocommerce/woocommerce.php') && get_post_type( $order->details->ID ) == 'shop_order' ) {
+                        $wc_post = get_post( $result_id, 'OBJECT' );                        
+                        $format = get_option('date_format') . ' - ' . get_option('time_format');;
+                        $r['payment_date'] = date($format, strtotime( $wc_post->post_date ));
+                    } else {
+                        $r['payment_date'] = tc_format_date($order->details->tc_order_date); //date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $order->details->post_modified ), false )                        
+                    }
+                    
+                    
                     $r['transaction_id'] = $ticket_code;
                     $r['checksum'] = $ticket_code;
 

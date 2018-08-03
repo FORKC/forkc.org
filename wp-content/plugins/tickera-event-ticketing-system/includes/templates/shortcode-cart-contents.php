@@ -63,28 +63,30 @@ if (isset($tc_general_settings['force_login']) && $tc_general_settings['force_lo
                         </thead>
                         <tbody>
                             <?php
-                            $cart_subtotal = 0;
+                            $cart_subtotal = 0; 
                             foreach ($cart_contents as $ticket_type => $ordered_count) {
                                 $ticket = new TC_Ticket($ticket_type);
-                                $cart_subtotal = $cart_subtotal + (tc_get_ticket_price($ticket->details->ID) * $ordered_count);
+                                if(!empty($ticket->details->post_title) && (get_post_type($ticket_type) == 'tc_tickets' || get_post_type($ticket_type) == 'product')){
 
-                                if (!isset($_SESSION)) {
-                                    session_start();
-                                }
-                                $_SESSION['cart_subtotal_pre'] = $cart_subtotal;
-                                $editable_qty = apply_filters('tc_editable_quantity', true, $ticket_type, $ordered_count);
-                                ?>
-                                <tr>
-                                    <?php do_action('tc_cart_col_value_before_ticket_type', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
-                                    <td class="ticket-type"><?php echo $ticket->details->post_title; ?> <?php do_action('tc_cart_col_after_ticket_type', $ticket); ?><input type="hidden" name="ticket_cart_id[]" value="<?php echo (int) $ticket_type; ?>"></td>
-                                    <?php do_action('tc_cart_col_value_before_ticket_price', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
-                                    <td class="ticket-price"><span class="ticket_price"><?php echo apply_filters('tc_cart_currency_and_format', apply_filters('tc_cart_price_per_ticket', tc_get_ticket_price($ticket->details->ID), $ticket_type)); ?></span></td>
-                                    <?php do_action('tc_cart_col_value_before_quantity', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
-                                    <td class="ticket-quantity ticket_quantity"><?php echo $editable_qty ? '' : $ordered_count; ?><?php if ($editable_qty) { ?><input class="tickera_button minus" type="button" value="-"><?php } ?><input type="<?php echo $editable_qty ? 'text' : 'hidden'; ?>" name="ticket_quantity[]" value="<?php echo (int) $ordered_count; ?>" class="quantity">  <?php if ($editable_qty) { ?><input class="tickera_button plus" type="button" value="+" /><?php } ?></td>
-                                    <?php do_action('tc_cart_col_value_before_total_price', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
-                                    <td class="ticket-total"><span class="ticket_total"><?php echo apply_filters('tc_cart_currency_and_format', apply_filters('tc_cart_price_per_ticket_and_quantity', (tc_get_ticket_price($ticket->details->ID) * $ordered_count), $ticket_type, $ordered_count)); ?></span></td>
-                                    <?php do_action('tc_cart_col_value_after_total_price', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
-                                </tr>
+                                    $cart_subtotal = $cart_subtotal + (tc_get_ticket_price($ticket->details->ID) * $ordered_count);
+                                    if (!isset($_SESSION)) {
+                                        session_start();
+                                    }
+                                    $_SESSION['cart_subtotal_pre'] = $cart_subtotal;
+                                    $editable_qty = apply_filters('tc_editable_quantity', true, $ticket_type, $ordered_count);
+                                    ?>
+                                    <tr>
+                                        <?php do_action('tc_cart_col_value_before_ticket_type', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
+                                        <td class="ticket-type"><?php echo $ticket->details->post_title; ?> <?php do_action('tc_cart_col_after_ticket_type', $ticket); ?><input type="hidden" name="ticket_cart_id[]" value="<?php echo (int) $ticket_type; ?>"></td>
+                                        <?php do_action('tc_cart_col_value_before_ticket_price', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
+                                        <td class="ticket-price"><span class="ticket_price"><?php echo apply_filters('tc_cart_currency_and_format', apply_filters('tc_cart_price_per_ticket', tc_get_ticket_price($ticket->details->ID), $ticket_type)); ?></span></td>
+                                        <?php do_action('tc_cart_col_value_before_quantity', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
+                                        <td class="ticket-quantity ticket_quantity"><?php echo $editable_qty ? '' : $ordered_count; ?><?php if ($editable_qty) { ?><input class="tickera_button minus" type="button" value="-"><?php } ?><input type="<?php echo $editable_qty ? 'text' : 'hidden'; ?>" name="ticket_quantity[]" value="<?php echo (int) $ordered_count; ?>" class="quantity">  <?php if ($editable_qty) { ?><input class="tickera_button plus" type="button" value="+" /><?php } ?></td>
+                                        <?php do_action('tc_cart_col_value_before_total_price', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
+                                        <td class="ticket-total"><span class="ticket_total"><?php echo apply_filters('tc_cart_currency_and_format', apply_filters('tc_cart_price_per_ticket_and_quantity', (tc_get_ticket_price($ticket->details->ID) * $ordered_count), $ticket_type, $ordered_count)); ?></span></td>
+                                        <?php do_action('tc_cart_col_value_after_total_price', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
+                                    </tr>
+                                <?php } ?>
                             <?php } ?>
                             <tr class="last-table-row">
                                 <td class="ticket-total-all" colspan="<?php echo apply_filters('tc_cart_table_colspan', '5'); ?>">
@@ -264,10 +266,12 @@ if (isset($tc_general_settings['force_login']) && $tc_general_settings['force_lo
                          <?php
                          $ticket_type_order = 1;
                          foreach ($cart_contents as $ticket_type => $ordered_count) {
+                             $ticket = new TC_Ticket($ticket_type);
+
+                             if(!empty($ticket->details->post_title) && (get_post_type($ticket_type) == 'tc_tickets' || get_post_type($ticket_type) == 'product')){
                              $owner_form = new TC_Cart_Form($ticket_type);
                              $owner_form_fields = $owner_form->get_owner_info_fields($ticket_type);
 
-                             $ticket = new TC_Ticket($ticket_type);
                              ?>
                         <h2><?php
                             do_action('tc_before_checkout_owner_info_ticket_title', $ticket_type, $cart_contents);
@@ -433,7 +437,7 @@ if (isset($tc_general_settings['force_login']) && $tc_general_settings['force_lo
                                 }
                                 ?>		
                             </div><!-- owner-info-wrap -->																																																															                                                                                
-                        <?php } $i++; ?>
+                             <?php } } $i++; ?>
                         <div class="tc-clearfix"></div>     
 
 
