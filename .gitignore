@@ -22,3 +22,6 @@ wp-content/plugins/hello.php
 .idea
 .vscode
 .vs
+
+# Ignore IIS files
+web.config
