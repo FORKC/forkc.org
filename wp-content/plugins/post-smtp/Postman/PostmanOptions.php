@@ -87,6 +87,7 @@ if ( ! class_exists( 'PostmanOptions' ) ) {
 		const SENDGRID_API_KEY = 'sendgrid_api_key';
 		const MAILGUN_API_KEY = 'mailgun_api_key';
 		const MAILGUN_DOMAIN_NAME = 'mailgun_domain_name';
+		const MAILGUN_REGION = 'mailgun_region';
 		const PREVENT_MESSAGE_SENDER_NAME_OVERRIDE = 'prevent_sender_name_override';
 		const PREVENT_MESSAGE_SENDER_EMAIL_OVERRIDE = 'prevent_sender_email_override';
 		const CONNECTION_TIMEOUT = 'connection_timeout';
@@ -178,6 +179,10 @@ if ( ! class_exists( 'PostmanOptions' ) ) {
 			} else { 				return self::DEFAULT_MAIL_LOG_ENABLED; }
 		}
 		public function getRunMode() {
+			if ( defined( 'POST_SMTP_RUN_MODE' ) ) {
+				return POST_SMTP_RUN_MODE;
+			}
+			
 			if ( isset( $this->options [ self::RUN_MODE ] ) ) {
 				return $this->options [ self::RUN_MODE ];
 			} else { 				return self::DEFAULT_RUN_MODE; }
@@ -260,24 +265,11 @@ if ( ! class_exists( 'PostmanOptions' ) ) {
 				return $this->options [ PostmanOptions::AUTHENTICATION_TYPE ]; }
 		}
 		public function getEncryptionType() {
-		    $port = $this->getPort();
-		    switch ($port):
-                case 25:
-                    return 'none';
-                    break;
-                case 465:
-                    return 'ssl';
-                    break;
-                case 587:
-                    return 'tls';
-                    break;
-                case 2525:
-                    return 'tls';
-                    break;
-                default:
-                    return isset( $this->options [ PostmanOptions::SECURITY_TYPE ] ) ? $this->options [ PostmanOptions::SECURITY_TYPE ] : 'none';
-            endswitch;
+			if ( isset( $this->options [ PostmanOptions::SECURITY_TYPE ] ) ) {
+				return $this->options [ PostmanOptions::SECURITY_TYPE ];
+			}
 		}
+
 		public function getUsername() {
             if ( defined( 'POST_SMTP_AUTH_USERNAME' ) ) {
                 return POST_SMTP_AUTH_USERNAME;
@@ -288,30 +280,47 @@ if ( ! class_exists( 'PostmanOptions' ) ) {
 			}
 		}
 		public function getPassword() {
-
-		    if ( defined( 'POST_SMTP_AUTH_PASSWORD' ) ) {
-		        return POST_SMTP_AUTH_PASSWORD;
-            }
+			if ( defined( 'POST_SMTP_AUTH_PASSWORD' ) ) {
+				return POST_SMTP_AUTH_PASSWORD;
+			}
 
 			if ( isset( $this->options [ PostmanOptions::BASIC_AUTH_PASSWORD ] ) ) {
 				return base64_decode( $this->options [ PostmanOptions::BASIC_AUTH_PASSWORD ] );
 			}
 		}
 		public function getMandrillApiKey() {
+			if ( defined( 'POST_SMTP_API_KEY' ) ) {
+				return POST_SMTP_API_KEY;
+			}
+			
 			if ( isset( $this->options [ PostmanOptions::MANDRILL_API_KEY ] ) ) {
 				return base64_decode( $this->options [ PostmanOptions::MANDRILL_API_KEY ] ); }
 		}
 		public function getSendGridApiKey() {
+			if ( defined( 'POST_SMTP_API_KEY' ) ) {
+				return POST_SMTP_API_KEY;
+			}
+
 			if ( isset( $this->options [ PostmanOptions::SENDGRID_API_KEY ] ) ) {
 				return base64_decode( $this->options [ PostmanOptions::SENDGRID_API_KEY ] ); }
 		}
 		public function getMailgunApiKey() {
+			if ( defined( 'POST_SMTP_API_KEY' ) ) {
+				return POST_SMTP_API_KEY;
+			}
+
 			if ( isset( $this->options [ PostmanOptions::MAILGUN_API_KEY ] ) ) {
 				return base64_decode( $this->options [ PostmanOptions::MAILGUN_API_KEY ] ); }
 		}
 		public function getMailgunDomainName() {
 			if ( isset( $this->options [ PostmanOptions::MAILGUN_DOMAIN_NAME ] ) ) {
 				return $this->options [ PostmanOptions::MAILGUN_DOMAIN_NAME ];
+			}
+		}
+
+		public function getMailgunRegion() {
+			if ( isset( $this->options [ PostmanOptions::MAILGUN_REGION ] ) ) {
+				return $this->options [ PostmanOptions::MAILGUN_REGION ];
 			}
 		}
 

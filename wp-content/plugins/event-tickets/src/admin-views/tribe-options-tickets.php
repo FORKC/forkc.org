@@ -65,6 +65,23 @@ $tickets_fields = array(
 );
 
 /**
+ * Add an option to define slug for attendee info page
+ * @since 4.9
+ */
+$tickets_fields = array_merge( $tickets_fields, array(
+		'ticket-attendee-info-slug' => array(
+			'type'                => 'text',
+			'label'               => esc_html__( 'Attendee Registration URL slug', 'event-tickets' ),
+			'tooltip'             => esc_html__( 'The slug used for building the URL for the Attendee Registration Info page.', 'event-tickets' ),
+			'size'                => 'medium',
+			'default'             => tribe( 'tickets.attendee_registration' )->get_slug(),
+			'validation_callback' => 'is_string',
+			'validation_type'     => 'slug',
+		),
+	)
+);
+
+/**
  * If  The Events Calendar is active let's add an option to control the position
  * of the ticket forms in the events view.
  */
@@ -277,7 +294,7 @@ $paypal_fields            = array(
 		'tooltip'         => esc_html(
 			                     sprintf(
 				                     __( 'After a successful PayPal order users will be redirected to this page; use the %s shortcode to display the order confirmation to the user in the page content.', 'event-tickets' ),
-				                     '[$tpp_success_shortcode]'
+				                     "[$tpp_success_shortcode]"
 			                     )
 		                     ),
 		'size'            => 'medium',

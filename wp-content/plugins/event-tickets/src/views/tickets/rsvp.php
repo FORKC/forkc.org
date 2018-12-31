@@ -6,7 +6,7 @@
  *
  *     [your-theme]/tribe-events/tickets/rsvp.php
  *
- * @version 4.7.1
+ * @version 4.9
  *
  * @var bool $must_login
  */
@@ -47,7 +47,7 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 
 		<div
 			class="tribe-rsvp-message tribe-rsvp-message-error tribe-rsvp-message-confirmation-error" style="display:none;">
-			<?php esc_html_e( 'Please fill in the RSVP confirmation name and email fields.', 'event-tickets' ); ?>
+			<?php esc_html_e( 'Please fill in the RSVP quantity, confirmation name, and email fields.', 'event-tickets' ); ?>
 		</div>
 	</div>
 
@@ -100,6 +100,7 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 				<td class="tickets_name">
 					<?php echo esc_html( $ticket->name ); ?>
 				</td>
+
 				<td class="tickets_description" colspan="2">
 					<?php echo esc_html( ( $ticket->show_description() ? $ticket->description : '' ) ); ?>
 				</td>
@@ -210,6 +211,7 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 							<?php esc_html_e( 'Login to RSVP', 'event-tickets' );?>
 						</a>
 					<?php else: ?>
+						<input type="hidden" name="tribe_tickets_rsvp_submission" value="1" />
 						<button
 							type="submit"
 							name="tickets_process"
@@ -234,14 +236,14 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 
 <?php
 $content = ob_get_clean();
-if ( $is_there_any_product ) {
-	echo $content;
+echo $content;
 
-	// If we have rendered tickets there is generally no need to display a 'tickets unavailable' message
+if ( $is_there_any_product ) {
+	// If we have available tickets there is generally no need to display a 'tickets unavailable' message
 	// for this post
 	$this->do_not_show_tickets_unavailable_message();
 } else {
-	// Indicate that we did not render any tickets, so a 'tickets unavailable' message may be
+	// Indicate that there are not any tickets, so a 'tickets unavailable' message may be
 	// appropriate (depending on whether other ticket providers are active and have a similar
 	// result)
 	$this->maybe_show_tickets_unavailable_message( $tickets );

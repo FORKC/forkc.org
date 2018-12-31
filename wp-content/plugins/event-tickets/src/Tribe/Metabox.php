@@ -54,7 +54,10 @@ class Tribe__Tickets__Metabox {
 			array( $this, 'render' ),
 			$post_type,
 			'normal',
-			'high'
+			'high',
+			array(
+				'__back_compat_meta_box' => true,
+			)
 		);
 
 		// If we get here means that we will need Thickbox
@@ -339,6 +342,7 @@ class Tribe__Tickets__Metabox {
 	 * @since  4.6.2
 	 */
 	public function ajax_attendee_checkin() {
+		$event_id    = Tribe__Utils__Array::get( $_POST, 'event_ID', false );
 		$attendee_id = Tribe__Utils__Array::get( $_POST, 'attendee_id', false );
 
 		if ( empty( $attendee_id ) ) {
@@ -364,7 +368,7 @@ class Tribe__Tickets__Metabox {
 		// Pass the control to the child object
 		$did_checkin = $provider->checkin( $attendee_id );
 
-		$provider->clear_attendees_cache( $did_checkin );
+		$provider->clear_attendees_cache( $event_id );
 
 		wp_send_json_success( $did_checkin );
 	}
@@ -375,6 +379,7 @@ class Tribe__Tickets__Metabox {
 	 * @since  4.6.2
 	 */
 	public function ajax_attendee_uncheckin() {
+		$event_id    = Tribe__Utils__Array::get( $_POST, 'event_ID', false );
 		$attendee_id = Tribe__Utils__Array::get( $_POST, 'attendee_id', false );
 
 		if ( empty( $attendee_id ) ) {
@@ -400,7 +405,7 @@ class Tribe__Tickets__Metabox {
 		// Pass the control to the child object
 		$did_uncheckin = $provider->uncheckin( $attendee_id );
 
-		$provider->clear_attendees_cache( $did_uncheckin );
+		$provider->clear_attendees_cache( $event_id );
 
 		wp_send_json_success( $did_uncheckin );
 	}
@@ -461,6 +466,7 @@ class Tribe__Tickets__Metabox {
 	 * @return boolean
 	 */
 	public function has_permission( $post, $data, $nonce_action ) {
+
 		if ( ! $post instanceof WP_Post ) {
 			if ( ! is_numeric( $post ) ) {
 				return false;
@@ -469,7 +475,11 @@ class Tribe__Tickets__Metabox {
 			$post = get_post( $post );
 		}
 
-		return ! empty( $data['nonce'] ) && wp_verify_nonce( $data['nonce'], $nonce_action ) && current_user_can( get_post_type_object( $post->post_type )->cap->edit_posts );
+		if ( empty( $data['nonce'] ) || ! wp_verify_nonce( $data['nonce'], $nonce_action ) ) {
+			return false;
+		}
+
+		return current_user_can( 'edit_event_tickets' ) || current_user_can( get_post_type_object( $post->post_type )->cap->edit_posts );
 	}
 
 	/**

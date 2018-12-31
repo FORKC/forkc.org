@@ -1,0 +1,705 @@
+# Translation of Event Tickets Plus in Romanian
+# This file is distributed under the same license as the Event Tickets Plus package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2017-01-05 22:18:35+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2);\n"
+"X-Generator: GlotPress/1.0-alpha-1100\n"
+"Project-Id-Version: Event Tickets Plus\n"
+
+#: src/admin-views/woocommerce-orders.php:125
+msgid "Pending Payment:"
+msgstr ""
+
+#: src/admin-views/woocommerce-orders.php:130
+msgid "Canceled:"
+msgstr ""
+
+#: src/Tribe/Meta/Render.php:21
+msgctxt "attendee table meta"
+msgid "Details"
+msgstr ""
+
+#: src/Tribe/Meta/Render.php:51
+msgid "View details %s"
+msgstr ""
+
+#: src/Tribe/Meta/Render.php:52
+msgid "Hide details %s"
+msgstr ""
+
+#: src/admin-views/edd-metabox-advanced.php:52,
+#: src/admin-views/shopp-metabox-advanced.php:25,
+#: src/admin-views/woocommerce-metabox-advanced.php:65,
+#: src/admin-views/wpec-metabox-advanced.php:26
+msgid "Selling tickets for a recurring event series is not recommended. The tickets you configure will show on all instances of an event series which can be confusing to attendees. Please configure your events carefully."
+msgstr ""
+
+#: src/admin-views/woocommerce-orders.php:9
+msgid "Event Details"
+msgstr "Detalii Eveniment"
+
+#: src/admin-views/woocommerce-orders.php:40
+msgid "Sales by Ticket"
+msgstr ""
+
+#: src/admin-views/woocommerce-orders.php:52,
+#: src/admin-views/woocommerce-orders.php:120
+msgid "Processing:"
+msgstr ""
+
+#: src/admin-views/woocommerce-orders.php:110
+msgid "Total Sales: %s %s"
+msgstr ""
+
+#: src/views/tickets-plus/orders-tickets.php:47
+msgid "esc_html1 Ticket"
+msgid_plural "esc_html%d Tickets"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: src/Tribe/Commerce/Attendance_Totals.php:62
+msgctxt "attendee summary"
+msgid "Total Tickets Sold:"
+msgstr ""
+
+#: src/Tribe/Commerce/Attendance_Totals.php:63
+msgctxt "attendee summary"
+msgid "Complete:"
+msgstr ""
+
+#: src/Tribe/Commerce/EDD/Main.php:155
+msgctxt "ticket provider"
+msgid "Easy Digital Downloads"
+msgstr ""
+
+#: src/Tribe/Commerce/Shopp/Main.php:176
+msgctxt "ticket provider"
+msgid "Shopp"
+msgstr ""
+
+#: src/Tribe/Commerce/WPEC/Main.php:128
+msgctxt "ticket provider"
+msgid "WPEC"
+msgstr ""
+
+#: src/Tribe/Commerce/WooCommerce/Main.php:209
+msgctxt "ticket provider"
+msgid "WooCommerce"
+msgstr ""
+
+#: src/Tribe/Meta/Render.php:125
+msgctxt "orphaned attendee meta data"
+msgid "Other attendee data:"
+msgstr ""
+
+#: src/views/tickets-plus/orders-edit-meta.php:16
+msgid "Ticket deleted: attendee info cannot be updated."
+msgstr ""
+
+#: event-tickets-plus.php:135
+msgid "To begin using Event Tickets Plus, please install and activate the latest version of %1$s%2$s%3$s and ensure its own requirements have been met."
+msgstr ""
+
+#: src/Tribe/CSV_Importer/Column_Names.php:46
+msgid "Event Name or ID or Slug"
+msgstr ""
+
+#: src/Tribe/CSV_Importer/Column_Names.php:47
+msgid "Ticket Name"
+msgstr "Nume Bilet"
+
+#: src/Tribe/CSV_Importer/Column_Names.php:48
+msgid "Ticket Description"
+msgstr ""
+
+#: src/Tribe/CSV_Importer/Column_Names.php:49
+msgid "Ticket Start Sale Date"
+msgstr ""
+
+#: src/Tribe/CSV_Importer/Column_Names.php:50
+msgid "Ticket Start Sale Time"
+msgstr ""
+
+#: src/Tribe/CSV_Importer/Column_Names.php:51
+msgid "Ticket End Sale Date"
+msgstr ""
+
+#: src/Tribe/CSV_Importer/Column_Names.php:52
+msgid "Ticket End Sale Time"
+msgstr ""
+
+#: src/Tribe/CSV_Importer/Column_Names.php:53
+msgid "Ticket Price"
+msgstr ""
+
+#: src/Tribe/CSV_Importer/Column_Names.php:55
+msgid "Ticket SKU"
+msgstr ""
+
+#: src/Tribe/CSV_Importer/Tickets_Importer.php:233
+msgid "Recurring event tickets are not supported, event %d."
+msgstr ""
+
+#: src/Tribe/Main.php:333
+msgid "Require users to log in before they purchase tickets"
+msgstr ""
+
+#: src/views/tickets-plus/orders-edit-meta.php:26
+msgid "Toggle attendee info"
+msgstr ""
+
+#: src/views/tickets-plus/orders-tickets.php:29
+msgid "My Tickets for This %s"
+msgstr ""
+
+#: src/views/tickets-plus/orders-tickets.php:45
+msgid "Order #%1$s: %2$s reserved by %3$s (%4$s) on %5$s"
+msgstr ""
+
+#: src/views/tickets-plus/orders-tickets.php:70
+msgid "Attendee %d"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:15
+msgid "Ticket Fieldsets"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:67
+msgid "Ticket Fieldset"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:68
+msgid "Add New Ticket Fieldset"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:69
+msgid "Edit Ticket Fieldset"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:70
+msgid "New Ticket Fieldset"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:71
+msgid "View Ticket Fieldset"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:72
+msgid "Search Ticket Fieldsets"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:73
+msgid "No ticket fieldsets found"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:74
+msgid "No ticket fieldsets found in Trash"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:75
+msgid "All Ticket Fieldsets"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:76
+msgid "Ticket Fieldset Archives"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:77
+msgid "Insert into ticket fieldset"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:78
+msgid "Uploaded to this ticket fieldset"
+msgstr ""
+
+#: src/Tribe/Meta/Fieldset.php:97
+msgid "Custom Ticket Fields"
+msgstr ""
+
+#: src/Tribe/Meta/Render.php:162, src/admin-views/meta.php:30
+msgid "Attendee Information"
+msgstr ""
+
+#: src/Tribe/QR.php:81
+msgid "The ticket with ID %s has already been checked in."
+msgstr ""
+
+#: src/Tribe/QR.php:122
+msgid "Scan this QR code at the event to check in."
+msgstr ""
+
+#: src/admin-views/attendees-list.php:7
+msgid "Hide attendees list on event page"
+msgstr ""
+
+#: src/admin-views/meta.php:6
+msgid "Attendee Information:"
+msgstr ""
+
+#: src/admin-views/meta.php:12
+msgid "Request information for each attendee during registration"
+msgstr ""
+
+#: src/admin-views/meta.php:15
+msgid "The name and contact info of the person acquiring tickets is collected by default"
+msgstr ""
+
+#: src/admin-views/meta.php:39
+msgid "Add New Field:"
+msgstr ""
+
+#: src/admin-views/meta.php:57
+msgid "Active Fields:"
+msgstr ""
+
+#: src/admin-views/meta.php:60
+msgid "No active fields."
+msgstr ""
+
+#: src/admin-views/meta.php:60
+msgid "Add new fields or"
+msgstr ""
+
+#: src/admin-views/meta.php:64
+msgid "Start with a saved fieldset..."
+msgstr ""
+
+#: src/admin-views/meta.php:89
+msgid "Save this fieldset for use on other tickets?"
+msgstr ""
+
+#: src/admin-views/meta.php:93
+msgid "Name this fieldset:"
+msgstr ""
+
+#: src/admin-views/edd-metabox-advanced.php:13,
+#: src/admin-views/woocommerce-metabox-advanced.php:13
+msgid "Global stock mode:"
+msgstr ""
+
+#: src/admin-views/edd-metabox-advanced.php:20,
+#: src/admin-views/woocommerce-metabox-advanced.php:20
+msgid "Cap sales:"
+msgstr ""
+
+#: src/admin-views/edd-metabox-advanced.php:24,
+#: src/admin-views/woocommerce-metabox-advanced.php:24
+msgid "(This is the maximum allowed number of sales for this ticket.)"
+msgstr ""
+
+#: src/views/attendees-list.php:14
+msgid "Who's Attending"
+msgstr ""
+
+#: src/views/attendees-list.php:15
+msgid "One person is attending %2$s"
+msgid_plural "%d people are attending %s"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: src/views/meta.php:21
+msgid "Please fill in all required fields"
+msgstr ""
+
+#: src/views/meta.php:26
+msgid "Attendee"
+msgstr ""
+
+#: src/views/eddtickets/tickets.php:69, src/views/wootickets/tickets.php:103
+msgid "%1$s available"
+msgstr ""
+
+#: event-tickets-plus.php:130
+msgid "Event Tickets"
+msgstr ""
+
+#: src/Tribe/APM.php:74, src/Tribe/CSV_Importer/Column_Names.php:54
+msgid "Ticket Stock"
+msgstr ""
+
+#: src/Tribe/APM.php:90
+msgid "Sales"
+msgstr ""
+
+#: src/Tribe/APM.php:91
+msgid "Stock"
+msgstr ""
+
+#: src/Tribe/APM/Sales_Filter.php:26
+msgid "Are"
+msgstr ""
+
+#: src/Tribe/APM/Sales_Filter.php:27
+msgid "Are Not"
+msgstr ""
+
+#: src/Tribe/APM/Sales_Filter.php:28
+msgid "Are at least"
+msgstr ""
+
+#: src/Tribe/APM/Sales_Filter.php:29
+msgid "Are at most"
+msgstr ""
+
+#: src/Tribe/APM/Stock_Filter.php:21
+msgid "Is"
+msgstr "Este"
+
+#: src/Tribe/APM/Stock_Filter.php:22
+msgid "Is Not"
+msgstr "Nu este"
+
+#: src/Tribe/APM/Stock_Filter.php:23
+msgid "Is at least"
+msgstr ""
+
+#: src/Tribe/APM/Stock_Filter.php:24
+msgid "Is at most"
+msgstr ""
+
+#: src/Tribe/Attendees_List.php:267, src/Tribe/Attendees_List.php:267
+msgid "Load all attendees"
+msgstr ""
+
+#: src/Tribe/Commerce/WooCommerce/Email.php:18
+msgid "Your tickets from {site_title}"
+msgstr ""
+
+#: src/Tribe/Commerce/EDD/Global_Stock.php:163,
+#: src/Tribe/Commerce/WooCommerce/Global_Stock.php:160
+msgid "Sorry, there is insufficient stock to fulfill your order with respect to the tickets you selected in relation to this event: %s"
+msgid_plural "Sorry, there is insufficient stock to fulfill your order with respect to the tickets you selected in relation to these events: %s"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: src/Tribe/Commerce/EDD/Global_Stock.php:195,
+#: src/Tribe/Commerce/WooCommerce/Global_Stock.php:192
+msgid "Sorry, there is insufficient stock to fulfill your order with respect to %s"
+msgstr ""
+
+#: src/Tribe/Meta.php:503
+msgid "This ticket has custom Attendee Information fields"
+msgstr ""
+
+#: src/Tribe/Meta/Field/Abstract_Field.php:24, src/admin-views/meta.php:48
+msgid "Checkbox"
+msgstr "Casetă de Validare"
+
+#: src/Tribe/Meta/Field/Abstract_Field.php:25, src/admin-views/meta.php:45
+msgid "Radio"
+msgstr "Radio"
+
+#: src/Tribe/Meta/Field/Abstract_Field.php:26, src/admin-views/meta.php:51
+msgid "Dropdown"
+msgstr "Dropdown"
+
+#: src/Tribe/Meta/Field/Abstract_Field.php:27, src/admin-views/meta.php:42
+msgid "Text"
+msgstr "Text"
+
+#: src/admin-views/price-fields.php:12
+msgid "Sale Price:"
+msgstr ""
+
+#: src/admin-views/price-fields.php:16
+msgid "(Current sale price - this can be managed via the product editor)"
+msgstr ""
+
+#: src/admin-views/woocommerce-metabox-advanced.php:41
+msgid "Purchase limit:"
+msgstr ""
+
+#: src/admin-views/woocommerce-metabox-advanced.php:44
+msgid "The maximum number of tickets per order. (0 means there's no limit)"
+msgstr ""
+
+#: src/Tribe/APM.php:68
+msgid "Ticket Sales"
+msgstr "Vânzări Bilete"
+
+#: src/admin-views/woocommerce-orders.php:43
+msgid "Tickets sold:"
+msgstr "Bilete vândute:"
+
+#: src/admin-views/woocommerce-orders.php:48,
+#: src/admin-views/woocommerce-orders.php:115
+msgid "Completed:"
+msgstr ""
+
+#: src/admin-views/woocommerce-orders.php:71
+msgid "(%d awaiting review)"
+msgid_plural "(%d awaiting review)"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: src/admin-views/woocommerce-orders.php:75
+msgid "Sold %d %s"
+msgstr ""
+
+#: src/admin-views/woocommerce-orders.php:77
+msgid "Sold %d of %d %s"
+msgstr ""
+
+#: src/admin-views/woocommerce-orders.php:91
+msgid "SKU: (%s)"
+msgstr ""
+
+#: src/admin-views/woocommerce-orders.php:140
+msgid "Total Ticket Sales:"
+msgstr ""
+
+#: src/admin-views/woocommerce-orders.php:144
+msgid "Total Site Fees:"
+msgstr ""
+
+#: src/Tribe/Commerce/Loader.php:286
+msgid "To begin using Tickets Plus with %3$s, you need to <a href=\"%1$s\" title=\"Deactivate the legacy addon for %2$s\">deactivate the old legacy plugin</a>."
+msgstr ""
+
+#: src/Tribe/Commerce/WooCommerce/Tabbed_View/Orders_Report_Tab.php:16
+msgid "Orders"
+msgstr ""
+
+#: src/Tribe/QR.php:119
+msgid "Check in for this event"
+msgstr ""
+
+#: src/admin-views/edd-metabox-advanced.php:59,
+#: src/admin-views/shopp-metabox-advanced.php:31,
+#: src/admin-views/woocommerce-metabox-advanced.php:71,
+#: src/admin-views/wpec-metabox-advanced.php:32
+msgid "Selling tickets for recurring events"
+msgstr ""
+
+#: src/admin-views/price-fields.php:3
+msgid "Price:"
+msgstr "Preţ:"
+
+#: src/admin-views/price-fields.php:7
+msgid "(0 or empty for free tickets)"
+msgstr "(0 sau gol pentru bilete gratuite)"
+
+#: src/Tribe/Commerce/EDD/Email.php:13
+msgid "Your tickets from {sitename}"
+msgstr "Biletele dvs. de pe  {sitename}"
+
+#: src/Tribe/Commerce/EDD/Email.php:33
+msgid "Tribe Ticket Emails"
+msgstr "Tribe Ticket Emails"
+
+#: src/Tribe/Commerce/EDD/Email.php:34
+msgid "Configure the ticket receipt emails"
+msgstr "Configurați emailurile de receptare a biletului"
+
+#: src/Tribe/Commerce/EDD/Email.php:39
+msgid "Tickets Email Subject"
+msgstr "Subiect Email Bilete"
+
+#: src/Tribe/Commerce/EDD/Email.php:40
+msgid "Enter the subject line for the tickets receipt email"
+msgstr "Introduceți subiectul pentru emailul de recepție a biletelor"
+
+#: src/Tribe/Commerce/Loader.php:105, src/Tribe/Commerce/Loader.php:120
+msgid "Easy Digital Downloads"
+msgstr "Easy Digital Downloads"
+
+#: src/Tribe/Commerce/EDD/Main.php:472,
+#: src/Tribe/Commerce/WooCommerce/Main.php:773
+msgid "You'll receive your tickets in another email."
+msgstr "Veți primi biletele în alt email."
+
+#: src/Tribe/Commerce/WPEC/Main.php:766
+msgid "(deleted)"
+msgstr "(şters)"
+
+#: src/Tribe/Commerce/EDD/Main.php:1100,
+#: src/Tribe/Commerce/WooCommerce/Main.php:1727
+msgid "Event sales report"
+msgstr "Raport vânzări evenimente"
+
+#: src/Tribe/Commerce/EDD/Main.php:1158,
+#: src/Tribe/Commerce/Shopp/Main.php:1132,
+#: src/Tribe/Commerce/WPEC/Main.php:1037,
+#: src/Tribe/Commerce/WooCommerce/Main.php:1775
+msgid "This is a ticket for the event:"
+msgstr "Acesta este un bilet pentru evenimentul:"
+
+#: src/Tribe/Commerce/EDD/Main.php:1241
+msgid "%s ticket is sold out"
+msgstr "biletul %s este sold out"
+
+#: src/Tribe/Commerce/EDD/Main.php:1244
+msgid "Sorry! Only %d tickets remaining for %s"
+msgstr ""
+
+#: src/Tribe/Commerce/EDD/Main.php:1285
+msgid "Print Ticket"
+msgstr "Tipărire Bilet"
+
+#: src/Tribe/Commerce/Loader.php:57, src/Tribe/Commerce/Loader.php:73
+msgid "WooCommerce"
+msgstr "WooCommerce"
+
+#: src/Tribe/Commerce/Loader.php:152, src/Tribe/Commerce/Loader.php:167
+msgid "WP eCommerce"
+msgstr "WP eCommerce"
+
+#: src/Tribe/Commerce/Loader.php:199, src/Tribe/Commerce/Loader.php:223
+msgid "Shopp"
+msgstr "Shopp"
+
+#: src/Tribe/Commerce/Loader.php:297
+msgid "To begin using Tickets Plus, please install and activate the latest version of <a href=\"%s\" class=\"thickbox\" title=\"%s\">%s</a>."
+msgstr ""
+
+#: src/Tribe/Commerce/Shopp/Main.php:1007
+msgid "Unknown item"
+msgstr "Item necunoscut"
+
+#: src/Tribe/Commerce/Shopp/Main.php:1122
+msgid "Event"
+msgstr "Eveniment"
+
+#: src/Tribe/Commerce/Shopp/Main.php:1205,
+#: src/Tribe/Commerce/WPEC/Main.php:1098
+msgid "Resend Tickets"
+msgstr "Retrimite biletele"
+
+#: src/Tribe/Commerce/Shopp/Main.php:1243
+msgid "Email containing tickets (sent by ShoppTickets)"
+msgstr "Email conținând biletele (trimis de ShoppTickets)"
+
+#: src/Tribe/Commerce/Shopp/Main.php:1285
+msgid "Your tickets from %s"
+msgstr "Biletele dumneavoastră de la %s"
+
+#: src/Tribe/Commerce/WPEC/Email.php:29
+msgid "Your tickets"
+msgstr "Biletele dumneavoastră"
+
+#: src/Tribe/Commerce/WPEC/Main.php:627
+msgid "We're sorry but there was insufficient inventory to completely fulfill your order! We have added as many tickets as we could, but we recommend reviewing your order (below) in case you need to make some further adjustments."
+msgstr ""
+
+#: src/Tribe/Commerce/WPEC/Main.php:830,
+#: src/Tribe/Commerce/WooCommerce/Main.php:1548
+msgid "In trash (was %s)"
+msgstr "În gunoi (a fost %s)"
+
+#: src/Tribe/Commerce/WPEC/Main.php:836,
+#: src/Tribe/Commerce/WooCommerce/Main.php:1554
+msgid "Deleted"
+msgstr "Şters"
+
+#: src/Tribe/Commerce/WPEC/Main.php:883,
+#: src/Tribe/Commerce/WooCommerce/Main.php:1603
+msgid "Unknown"
+msgstr ""
+
+#: src/Tribe/Commerce/WPEC/Main.php:1103
+msgid "&nbsp; [Sent]"
+msgstr "&nbsp; [Trimis]"
+
+#: src/Tribe/CSV_Importer/Column_Names.php:68,
+#: src/Tribe/CSV_Importer/Rows.php:52, src/Tribe/CSV_Importer/Rows.php:71,
+#: src/Tribe/Commerce/WooCommerce/Email.php:15,
+#: src/views/eddtickets/tickets.php:22, src/views/shopptickets/tickets.php:87,
+#: src/views/wootickets/tickets.php:33, src/views/wpectickets/tickets.php:100
+msgid "Tickets"
+msgstr "Bilete"
+
+#: src/Tribe/Commerce/WooCommerce/Email.php:16
+msgid "Email the user will receive after a completed order with the tickets they purchased."
+msgstr ""
+
+#: src/Tribe/Commerce/WooCommerce/Main.php:1752
+msgid "Report"
+msgstr ""
+
+#: src/Tribe/QR.php:85
+msgid "The ticket with ID %s was checked in."
+msgstr ""
+
+#: src/admin-views/edd-metabox-advanced.php:30,
+#: src/admin-views/shopp-metabox-advanced.php:3,
+#: src/admin-views/woocommerce-metabox-advanced.php:30,
+#: src/admin-views/wpec-metabox-advanced.php:3
+msgid "Stock:"
+msgstr "Stoc:"
+
+#: src/admin-views/edd-metabox-advanced.php:34,
+#: src/admin-views/woocommerce-metabox-advanced.php:34,
+#: src/admin-views/wpec-metabox-advanced.php:7
+msgid "(Total available # of this ticket type. Once they're gone, ticket type is sold out.)"
+msgstr ""
+
+#: src/admin-views/edd-metabox-advanced.php:39,
+#: src/admin-views/shopp-metabox-advanced.php:12,
+#: src/admin-views/woocommerce-metabox-advanced.php:53,
+#: src/admin-views/wpec-metabox-advanced.php:12
+msgid "SKU:"
+msgstr "SKU:"
+
+#: src/admin-views/edd-metabox-advanced.php:43,
+#: src/admin-views/woocommerce-metabox-advanced.php:56,
+#: src/admin-views/wpec-metabox-advanced.php:16
+msgid "(A unique identifying code for each ticket type you're selling)"
+msgstr "(Un cod unic de identificare pentru fiecare tip de bilet pe care îl vindeți)"
+
+#: src/admin-views/edd-metabox-advanced.php:50
+msgid "Currently, eddTickets will only show up on the frontend once per full event. For PRO users this means the same ticket will appear across all events in the series. Please configure your events accordingly."
+msgstr "În acest moment, eddTickets va apărea doar în interfața utilizatorului o dată per eveniment. Pentru utilizatorii PRO, acest lucru înseamnă că același bilet va apărea în toate evenimentele din serie. Configurați-vă evenimentele corespunzător."
+
+#: src/admin-views/shopp-metabox-advanced.php:7
+msgid "Total available # of this ticket type: leave blank if you do not require stock control"
+msgstr "# total disponibile din acest bilet: lăsați necompletat dacă nu este necesară controlarea stocului"
+
+#: src/admin-views/shopp-metabox-advanced.php:16
+msgid "A unique identifying code for each ticket type you're selling"
+msgstr "Un cod unic de identificare pentru fiecare tip de bilet pe care îl vindeți"
+
+#: src/admin-views/shopp-metabox-advanced.php:23
+msgid "Currently, ShoppTickets will only show up on the frontend once per full event. For PRO users this means the same ticket will appear across all events in the series. Please configure your events accordingly."
+msgstr "Pentru moment, ShoppTickets va apărea doar o dată per eveniment în interfața utilizatorului. Pentru utilizatorii PRO, acest lucru înseamnă că același bilet va apărea în toate evenimentele din serie. Configurați evenimentele corespunzător."
+
+#: src/admin-views/woocommerce-metabox-advanced.php:63
+msgid "Currently, WooTickets will only show up on the frontend once per full event. For PRO users this means the same ticket will appear across all events in the series. Please configure your events accordingly."
+msgstr "Momentan, WooTickets se va afişa doar o sigură dată, în interfaţă/frontend , per eveniment complet. Pentru utilizatorii PRO, aceasta înseamnă că acelaşi bilet va apare de-a lungul tuturor evenimentelor din serie. Vă rugăm să vă configuraţi evenimentele conform acestui fapt."
+
+#: src/admin-views/wpec-metabox-advanced.php:24
+msgid "Currently, WPECTickets will only show up on the frontend once per full event. For PRO users this means the same ticket will appear across all events in the series. Please configure your events accordingly."
+msgstr "În prezent, WPECTickets va apărea în interfața utilizatorului doar o dată per eveniment. Pentru utilizatorii PRO, acest lucru înseamnă că același bilet va apărea în toate evenimentele dein serie. Configurați evenimentele corespunzător."
+
+#: src/views/shopptickets/tickets.php:51, src/views/wpectickets/tickets.php:56
+msgid "%1$s out of %2$s available"
+msgstr ""
+
+#: src/views/eddtickets/tickets.php:78, src/views/shopptickets/tickets.php:57,
+#: src/views/wootickets/tickets.php:113
+msgid "Out of stock!"
+msgstr "Stoc epuizat!"
+
+#: src/views/eddtickets/tickets.php:117, src/views/shopptickets/tickets.php:95,
+#: src/views/wootickets/tickets.php:144, src/views/wpectickets/tickets.php:113
+msgid "Add to cart"
+msgstr "Adaugă în coș"
+
+#: src/views/wpectickets/tickets.php:40
+msgid "Quantity"
+msgstr "Cantitate"
+
+#: src/views/wpectickets/tickets.php:62
+msgid "Sold Out"
+msgstr ""
+
+#: src/Tribe/Main.php:293
+msgid "Event Tickets Plus"
+msgstr ""

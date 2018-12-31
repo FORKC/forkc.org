@@ -6,8 +6,10 @@ class Tribe__Tickets__Assets {
 	 * @since 4.6
 	 */
 	public function enqueue_scripts() {
+		$tickets_main = Tribe__Tickets__Main::instance();
+
 		tribe_assets(
-			Tribe__Tickets__Main::instance(),
+			$tickets_main,
 			array(
 				array( 'event-tickets-tickets-css', 'tickets.css', array( 'dashicons' ) ),
 				array( 'event-tickets-tickets-rsvp-css', 'rsvp.css', array() ),
@@ -16,6 +18,27 @@ class Tribe__Tickets__Assets {
 			),
 			'enqueue_scripts'
 		);
+
+		// Tickets registration page styles
+		tribe_asset(
+			$tickets_main,
+			'event-tickets-registration-page-styles',
+			'tickets-registration-page.css',
+			array(),
+			null,
+			array()
+		);
+
+		// Tickets registration page scripts
+		tribe_asset(
+			$tickets_main,
+			'event-tickets-registration-page-scripts',
+			'tickets-registration-page.js',
+			array(),
+			null,
+			array()
+		);
+
 	}
 
 	/**

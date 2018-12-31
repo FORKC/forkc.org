@@ -423,7 +423,7 @@ class Tribe__Tickets__Attendees {
 	public function filter_admin_title( $admin_title, $unused_title ) {
 		if ( ! empty( $_GET['event_id'] ) ) {
 			$event       = get_post( $_GET['event_id'] );
-			$admin_title = sprintf( '%s - Attendee list', $event->post_title );
+			$admin_title = sprintf( __( '%s - Attendee list', 'event-tickets' ), $event->post_title );
 		}
 
 		return $admin_title;
@@ -686,7 +686,6 @@ class Tribe__Tickets__Attendees {
 		}
 
 		$this->attendees_table = new Tribe__Tickets__Attendees_Table();
-
 		$items = $this->generate_filtered_list( $_GET['event_id'] );
 
 		$event = get_post( $_GET['event_id'] );

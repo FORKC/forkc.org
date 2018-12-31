@@ -663,7 +663,10 @@ class Tribe__Tickets__Tickets_Handler {
 				 * Due to a bug in version 4.5.6 of our code RSVP doesnt lower the Stock
 				 * so when setting up the capacity we need to avoid counting solds
 				 */
-				if ( 'Tribe__Tickets__RSVP' === get_class( $connections->provider ) ) {
+				if (
+					is_object( $connections->provider )
+					&& 'Tribe__Tickets__RSVP' === get_class( $connections->provider )
+				) {
 					$capacity = $totals['stock'];
 				} else {
 					$capacity = array_sum( $totals );
@@ -1075,6 +1078,36 @@ class Tribe__Tickets__Tickets_Handler {
 		}
 
 		return $ticket_list;
+	}
+
+	/**
+	 * Gets the Maximum Purchase number for a given ticket
+	 *
+	 * @since  4.8.1
+	 *
+	 * @param  int|string  $ticket_id  Ticket to fetch purchase max from
+	 *
+	 * @return int
+	 */
+	public function get_ticket_max_purchase( $ticket_id ) {
+		$event_id = tribe_events_get_ticket_event( $ticket_id );
+		$provider = tribe_tickets_get_ticket_provider( $ticket_id );
+		$ticket = $provider->get_ticket( $event_id, $ticket_id );
+
+		$available = $ticket->available();
+
+		/**
+		 * Allows filtering of the max input for purchase of this one ticket
+		 *
+		 * @since 4.8.1
+		 *
+		 * @param int                           $available Max Purchase number
+		 * @param Tribe__Tickets__Ticket_Object $ticket    Ticket Object
+		 * @param int                           $event_id  Event ID
+		 * @param int                           $ticket_id Ticket Raw ID
+		 *
+		 */
+		return apply_filters( 'tribe_tickets_get_ticket_max_purchase', $available, $ticket, $event_id, $ticket_id );
 	}
 
 	/**

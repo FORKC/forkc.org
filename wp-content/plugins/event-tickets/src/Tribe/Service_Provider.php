@@ -21,7 +21,6 @@ class Tribe__Tickets__Service_Provider extends tad_DI52_ServiceProvider {
 		$this->container->singleton( 'tickets.attendees', 'Tribe__Tickets__Attendees', array( 'hook' ) );
 		$this->container->singleton( 'tickets.version', 'Tribe__Tickets__Version', array( 'hook' ) );
 		$this->container->singleton( 'tickets.metabox', 'Tribe__Tickets__Metabox', array( 'hook' ) );
-		$this->container->singleton( 'tickets.editor', 'Tribe__Tickets__Editor', array( 'hook' ) );
 
 		// Caching
 		$this->container->singleton( 'tickets.cache-central', 'Tribe__Tickets__Cache__Central', array( 'hook' ) );
@@ -42,6 +41,10 @@ class Tribe__Tickets__Service_Provider extends tad_DI52_ServiceProvider {
 		$this->container->singleton( 'tickets.editor', 'Tribe__Tickets__Editor', array( 'hook' ) );
 
 		$this->container->singleton( 'tickets.admin.notices', 'Tribe__Tickets__Admin__Notices', array( 'hook' ) );
+
+		// Repositories, not bound as singleton to allow for decoration and injection.
+		tribe_register( 'tickets.ticket-repository', 'Tribe__Tickets__Ticket_Repository' );
+		tribe_register( 'tickets.attendee-repository', 'Tribe__Tickets__Attendee_Repository' );
 
 		$this->load();
 	}

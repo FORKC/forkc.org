@@ -7,6 +7,7 @@ class AcceptStripePaymentsShortcode {
     var $ProductCSSInserted	 = false;
     var $ButtonCSSInserted	 = false;
     var $CompatMode		 = false;
+    var $variations		 = array();
 
     /**
      * Instance of this class.
@@ -15,6 +16,8 @@ class AcceptStripePaymentsShortcode {
      */
     protected static $instance		 = null;
     protected static $payment_buttons	 = array();
+    protected $tplTOS			 = '';
+    protected $tplCF			 = '';
 
     function __construct() {
 	$this->AcceptStripePayments = AcceptStripePayments::get_instance();
@@ -61,6 +64,7 @@ class AcceptStripePaymentsShortcode {
     function get_loc_data() {
 	//localization data, some settings and Stripe API key
 	$key		 = $this->AcceptStripePayments->APIPubKey;
+	$key_test	 = $this->AcceptStripePayments->APIPubKeyTest;
 	$minAmounts	 = $this->AcceptStripePayments->minAmounts;
 	$zeroCents	 = $this->AcceptStripePayments->zeroCents;
 
@@ -76,8 +80,8 @@ class AcceptStripePaymentsShortcode {
 	    'strEnterQuantity'	 => apply_filters( 'asp_customize_text_msg', __( 'Please enter quantity.', 'stripe-payments' ), 'enter_quantity' ),
 	    'strQuantityIsZero'	 => apply_filters( 'asp_customize_text_msg', __( 'Quantity can\'t be zero.', 'stripe-payments' ), 'quantity_is_zero' ),
 	    'strQuantityIsFloat'	 => apply_filters( 'asp_customize_text_msg', __( 'Quantity should be integer value.', 'stripe-payments' ), 'quantity_is_float' ),
-	    'strTax'		 => __( 'Tax', 'stripe-payments' ),
-	    'strShipping'		 => __( 'Shipping', 'stripe-payments' ),
+	    'strTax'		 => apply_filters( 'asp_customize_text_msg', __( 'Tax', 'stripe-payments' ), 'tax_str' ),
+	    'strShipping'		 => apply_filters( 'asp_customize_text_msg', __( 'Shipping', 'stripe-payments' ), 'shipping_str' ),
 	    'strTotal'		 => __( 'Total:', 'stripe-payments' ),
 	    'strPleaseFillIn'	 => apply_filters( 'asp_customize_text_msg', __( 'Please fill in this field.', 'stripe-payments' ), 'fill_in_field' ),
 	    'strPleaseCheckCheckbox' => __( 'Please check this checkbox.', 'stripe-payments' ),
@@ -85,6 +89,7 @@ class AcceptStripePaymentsShortcode {
 	    'strRemoveCoupon'	 => apply_filters( 'asp_customize_text_msg', __( 'Remove coupon', 'stripe-payments' ), 'remove_coupon' ),
 	    'strRemove'		 => apply_filters( 'asp_customize_text_msg', __( 'Remove', 'stripe-payments' ), 'remove' ),
 	    'key'			 => $key,
+	    'key_test'		 => $key_test,
 	    'ajax_url'		 => admin_url( 'admin-ajax.php' ),
 	    'minAmounts'		 => $minAmounts,
 	    'zeroCents'		 => $zeroCents,
@@ -100,6 +105,86 @@ class AcceptStripePaymentsShortcode {
 	wp_localize_script( 'stripe-handler', 'stripehandler', $this->get_loc_data() );
 	// addons can register their scripts if needed
 	do_action( 'asp-button-output-register-script' );
+    }
+
+    function after_button_add_tos_filter( $output, $data, $class ) {
+	$output		 = apply_filters( 'asp_button_output_before_tos', $output, $data );
+	$output		 .= $this->tplTOS;
+	$this->tplTOS	 = '';
+	return $output;
+    }
+
+    function after_button_add_сf_filter( $output, $data, $class ) {
+	$output		 .= $this->tplCF;
+	$this->tplCF	 = '';
+	return $output;
+    }
+
+    function tpl_get_tos( $output, $data ) {
+	if ( $data[ 'tos' ] == 1 && empty( $this->tplTOS ) ) {
+	    $tos_text	 = $this->AcceptStripePayments->get_setting( 'tos_text' );
+	    $tplTOS		 = '';
+	    $tplTOS		 .= '<div class="asp_product_tos_input_container">';
+	    $tplTOS		 .= '<label class="asp_product_tos_label"><input id="asp-tos-' . $data[ 'uniq_id' ] . '" class="asp_product_tos_input" type="checkbox" required>' . html_entity_decode( $tos_text ) . '</label>';
+	    $tplTOS		 .= "<span style='display: block;' id='tos_error_explanation_{$data[ 'uniq_id' ]}'></span>";
+	    $tplTOS		 .= '</div>';
+	    $this->tplTOS	 = $tplTOS;
+	}
+	$tosPos = $this->AcceptStripePayments->get_setting( 'tos_position' );
+	if ( $tosPos !== 'below' ) {
+	    $output		 = apply_filters( 'asp_button_output_before_tos', $output, $data );
+	    $output		 .= $this->tplTOS;
+	    $this->tplTOS	 = '';
+	} else {
+	    add_filter( 'asp_button_output_after_button', array( $this, 'after_button_add_tos_filter' ), 1000, 3 );
+	}
+	return $output;
+    }
+
+    function tpl_get_cf( $output, $data ) {
+	if ( $data[ 'custom_field' ] == 1 && empty( $this->tplCF ) ) {
+	    $replaceCF = apply_filters( 'asp_button_output_replace_custom_field', '', $data );
+	    if ( ! empty( $replaceCF ) ) {
+		//we got custom field replaced
+		$this->tplCF	 = $replaceCF;
+		$output		 .= $this->tplCF;
+		$this->tplCF	 = '';
+		return $output;
+	    }
+	    $field_type	 = $this->AcceptStripePayments->get_setting( 'custom_field_type' );
+	    $field_name	 = $this->AcceptStripePayments->get_setting( 'custom_field_name' );
+	    $field_name	 = empty( $field_name ) ? __( 'Custom Field', 'stripe-payments' ) : $field_name;
+	    $field_descr	 = $this->AcceptStripePayments->get_setting( 'custom_field_descr' );
+	    $descr_loc	 = $this->AcceptStripePayments->get_setting( 'custom_field_descr_location' );
+	    $mandatory	 = $this->AcceptStripePayments->get_setting( 'custom_field_mandatory' );
+	    $tplCF		 = '';
+	    $tplCF		 .= "<div class='asp_product_custom_field_input_container'>";
+	    $tplCF		 .= '<input type="hidden" name="stripeCustomFieldName" value="' . esc_attr( $field_name ) . '">';
+	    switch ( $field_type ) {
+		case 'text':
+		    if ( $descr_loc !== 'below' ) {
+			$tplCF .= '<label class="asp_product_custom_field_label">' . $field_name . ' ' . '</label><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="text"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField" placeholder="' . $field_descr . '"' . ($mandatory ? ' required' : '' ) . '>';
+		    } else {
+			$tplCF	 .= '<label class="asp_product_custom_field_label">' . $field_name . ' ' . '</label><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="text"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField"' . ($mandatory ? ' required' : '' ) . '>';
+			$tplCF	 .= '<div class="asp_product_custom_field_descr">' . $field_descr . '</div>';
+		    }
+		    break;
+		case 'checkbox':
+		    $tplCF .= '<label class="asp_product_custom_field_label"><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="checkbox"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField"' . ($mandatory ? ' required' : '' ) . '>' . $field_descr . '</label>';
+		    break;
+	    }
+	    $tplCF		 .= "<span id='custom_field_error_explanation_{$data[ 'uniq_id' ]}' class='asp_product_custom_field_error'></span>" .
+	    "</div>";
+	    $this->tplCF	 = $tplCF;
+	}
+	$cfPos = $this->AcceptStripePayments->get_setting( 'custom_field_position' );
+	if ( $cfPos !== 'below' ) {
+	    $output		 .= $this->tplCF;
+	    $this->tplCF	 = '';
+	} else {
+	    add_filter( 'asp_button_output_after_button', array( $this, 'after_button_add_сf_filter' ), 990, 3 );
+	}
+	return $output;
     }
 
     function shortcode_asp_product( $atts ) {
@@ -152,6 +237,7 @@ class AcceptStripePaymentsShortcode {
 	$button_color	 = 'blue'; //this could be made configurable
 
 	$price		 = get_post_meta( $id, 'asp_product_price', true );
+	$price		 = empty( $price ) ? 0 : $price;
 	$shipping	 = get_post_meta( $id, 'asp_product_shipping', true );
 
 	//let's apply filter so addons can change price, currency and shipping if needed
@@ -167,12 +253,17 @@ class AcceptStripePaymentsShortcode {
 
 	$class = isset( $atts[ 'class' ] ) ? $atts[ 'class' ] : $class;
 
-	$custom_field = get_post_meta( $id, 'asp_product_custom_field', true );
+	$custom_field	 = get_post_meta( $id, 'asp_product_custom_field', true );
+	$cf_enabled	 = $this->AcceptStripePayments->get_setting( 'custom_field_enabled' );
 
 	if ( ( $custom_field === "" ) || $custom_field === "2" ) {
-	    $custom_field = $this->AcceptStripePayments->get_setting( 'custom_field_enabled' );
+	    $custom_field = $cf_enabled;
 	} else {
 	    $custom_field = intval( $custom_field );
+	}
+
+	if ( ! $cf_enabled ) {
+	    $custom_field = $cf_enabled;
 	}
 
 	$coupons_enabled = get_post_meta( $id, 'asp_product_coupons_setting', true );
@@ -196,20 +287,22 @@ class AcceptStripePaymentsShortcode {
 	$quantity = get_post_meta( $id, 'asp_product_quantity', true );
 
 	$under_price_line	 = '';
-	$tot_price		 = $quantity ? $price * $quantity : $price;
+	$tot_price		 = ! empty( $quantity ) ? $price * $quantity : $price;
 
 	if ( $tax !== 0 ) {
+	    $taxStr = apply_filters( 'asp_customize_text_msg', __( 'Tax', 'stripe-payments' ), 'tax_str' );
 	    if ( ! empty( $price ) ) {
 		$tax_amount		 = AcceptStripePayments::get_tax_amount( $tot_price, $tax, AcceptStripePayments::is_zero_cents( $currency ) );
 		$tot_price		 += $tax_amount;
-		$under_price_line	 = '<span class="asp_price_tax_section">' . AcceptStripePayments::formatted_price( $tax_amount, $currency ) . __( ' (tax)', 'stripe-payments' ) . '</span>';
+		$under_price_line	 = '<span class="asp_price_tax_section">' . AcceptStripePayments::formatted_price( $tax_amount, $currency ) . ' (' . strtolower( $taxStr ) . ')' . '</span>';
 	    } else {
-		$under_price_line = '<span class="asp_price_tax_section">' . $tax . '% tax' . '</span>';
+		$under_price_line = '<span class="asp_price_tax_section">' . $tax . '% ' . lcfirst( $taxStr ) . '</span>';
 	    }
 	}
 	if ( $shipping !== 0 ) {
+	    $shipStr	 = apply_filters( 'asp_customize_text_msg', __( 'Shipping', 'stripe-payments' ), 'shipping_str' );
 	    $tot_price	 += $shipping;
-	    $shipping_line	 = AcceptStripePayments::formatted_price( $shipping, $currency ) . __( ' (shipping)', 'stripe-payments' );
+	    $shipping_line	 = AcceptStripePayments::formatted_price( $shipping, $currency ) . ' (' . strtolower( $shipStr ) . ')';
 	    if ( ! empty( $under_price_line ) ) {
 		$under_price_line .= '<span class="asp_price_shipping_section">' . ' + ' . $shipping_line . '</span>';
 	    } else {
@@ -222,7 +315,7 @@ class AcceptStripePaymentsShortcode {
 	}
 
 	if ( get_post_meta( $id, 'asp_product_no_popup_thumbnail', true ) != 1 ) {
-	    $item_logo = get_post_meta( $id, 'asp_product_thumbnail', true );
+	    $item_logo = AcceptStripePayments::get_small_product_thumb( $id );
 	} else {
 	    $item_logo = '';
 	}
@@ -231,6 +324,16 @@ class AcceptStripePaymentsShortcode {
 
 	$this->CompatMode = ($compat_mode) ? true : false;
 
+	$billing_address	 = get_post_meta( $id, 'asp_product_collect_billing_addr', true );
+	$shipping_address	 = get_post_meta( $id, 'asp_product_collect_shipping_addr', true );
+
+	if ( ! $billing_address ) {
+	    $shipping_address = false;
+	}
+
+	$currency_variable	 = get_post_meta( $id, 'asp_product_currency_variable', true );
+	$currency_variable	 = ! empty( $currency_variable ) ? true : false;
+
 	//Let's only output buy button if we're in the loop. Since the_content hook could be called several times (for example, by a plugin like Yoast SEO for its purposes), we should only output the button only when it's actually needed.
 	if ( ! isset( $atts[ 'in_the_loop' ] ) || $atts[ 'in_the_loop' ] === "1" ) {
 	    $sc_params	 = array(
@@ -238,6 +341,7 @@ class AcceptStripePaymentsShortcode {
 		'name'			 => $post->post_title,
 		'price'			 => $price,
 		'currency'		 => $currency,
+		'currency_variable'	 => $currency_variable,
 		'shipping'		 => $shipping,
 		'tax'			 => $tax,
 		'class'			 => $class,
@@ -248,8 +352,8 @@ class AcceptStripePaymentsShortcode {
 		'url'			 => $url,
 		'thankyou_page_url'	 => $thankyou_page,
 		'item_logo'		 => $item_logo,
-		'billing_address'	 => get_post_meta( $id, 'asp_product_collect_billing_addr', true ),
-		'shipping_address'	 => get_post_meta( $id, 'asp_product_collect_shipping_addr', true ),
+		'billing_address'	 => $billing_address,
+		'shipping_address'	 => $shipping_address,
 		'custom_field'		 => $custom_field,
 		'coupons_enabled'	 => $coupons_enabled,
 		'compat_mode'		 => $compat_mode,
@@ -282,14 +386,16 @@ class AcceptStripePaymentsShortcode {
 	    $this->productCSSInserted = true;
 	}
 
-	$price_line = AcceptStripePayments::formatted_price( $price, $currency );
+	$price_line = empty( $price ) ? '' : AcceptStripePayments::formatted_price( $price, $currency );
 
+	$qntStr = '';
 	if ( $quantity && $quantity != 1 ) {
-	    $price_line = AcceptStripePayments::formatted_price( $price, $currency ) . ' x ' . $quantity;
+	    $qntStr = 'x ' . $quantity;
 	}
 
 	$product_tags = array(
 	    'thumb_img'		 => $thumb_img,
+	    'quantity'		 => $qntStr,
 	    'name'			 => $post->post_title,
 	    'description'		 => do_shortcode( wpautop( $post->post_content ) ),
 	    'price'			 => $price_line,
@@ -325,6 +431,7 @@ class AcceptStripePaymentsShortcode {
 	    'shipping_address'	 => '',
 	    'customer_email'	 => '',
 	    'currency'		 => $this->AcceptStripePayments->get_setting( 'currency_code' ),
+	    'currency_variable'	 => false,
 	    'button_text'		 => $this->AcceptStripePayments->get_setting( 'button_text' ),
 	    'compat_mode'		 => 0,
 	), $atts ) );
@@ -458,7 +565,34 @@ class AcceptStripePaymentsShortcode {
 
 	$verifyZip = $this->AcceptStripePayments->get_setting( 'enable_zip_validation' );
 
+	//Currency Display settings
+	$display_settings	 = array();
+	$display_settings[ 'c' ] = $this->AcceptStripePayments->get_setting( 'price_decimal_num', 2 );
+	$display_settings[ 'd' ] = $this->AcceptStripePayments->get_setting( 'price_decimal_sep' );
+	$display_settings[ 't' ] = $this->AcceptStripePayments->get_setting( 'price_thousand_sep' );
+
+	$currencies = AcceptStripePayments::get_currencies();
+	if ( isset( $currencies[ $currency ] ) ) {
+	    $curr_sym = $currencies[ $currency ][ 1 ];
+	} else {
+	    //no currency code found, let's just use currency code instead of symbol
+	    $curr_sym = $currencies;
+	}
+
+	$curr_pos = $this->AcceptStripePayments->get_setting( 'price_currency_pos' );
+
+	$display_settings[ 's' ]	 = $curr_sym;
+	$display_settings[ 'pos' ]	 = $curr_pos;
+
+	$displayStr	 = array();
+	$taxStr		 = apply_filters( 'asp_customize_text_msg', __( 'Tax', 'stripe-payments' ), 'tax_str' );
+	$shipStr	 = apply_filters( 'asp_customize_text_msg', __( 'Shipping', 'stripe-payments' ), 'shipping_str' );
+
+	$displayStr[ 'tax' ]	 = '%s (' . strtolower( $taxStr ) . ')';
+	$displayStr[ 'ship' ]	 = '%s (' . strtolower( $shipStr ) . ')';
+
 	$data = array(
+	    'is_live'		 => $this->AcceptStripePayments->is_live,
 	    'product_id'		 => $product_id,
 	    'button_key'		 => $button_key,
 	    'item_price'		 => isset( $item_price ) ? $item_price : 0,
@@ -471,6 +605,7 @@ class AcceptStripePaymentsShortcode {
 	    'tax'			 => $tax,
 	    'image'			 => $item_logo,
 	    'currency'		 => $currency,
+	    'currency_variable'	 => $currency_variable,
 	    'locale'		 => (empty( $checkout_lang ) ? 'auto' : $checkout_lang),
 	    'name'			 => htmlspecialchars_decode( $name ),
 	    'url'			 => $url,
@@ -488,6 +623,8 @@ class AcceptStripePaymentsShortcode {
 	    'button_text'		 => esc_attr( $button_text ),
 	    'out_of_stock'		 => $out_of_stock,
 	    'verifyZip'		 => ( ! $verifyZip) ? 0 : 1,
+	    'currencyFormat'	 => $display_settings,
+	    'displayStr'		 => $displayStr,
 	);
 
 	$data = apply_filters( 'asp-button-output-data-ready', $data, $atts );
@@ -505,6 +642,13 @@ class AcceptStripePaymentsShortcode {
 	$output .= "<form id = 'stripe_form_{$uniq_id}' class='asp-stripe-form' action = '' METHOD = 'POST'> ";
 
 	$output .= $this->get_button_code_new_method( $data );
+
+	$data[ 'variations' ] = array();
+
+	if ( ! empty( $this->variations ) ) {
+	    $data[ 'variations' ]	 = $this->variations;
+	    $data[ 'variations' ]	 = apply_filters( 'asp_button_output_variations_ready', $data[ 'variations' ], $data );
+	}
 
 	$output	 .= '<input type="hidden" name="asp_action" value="process_ipn" />';
 	$output	 .= "<input type = 'hidden' value = '{$data[ 'name' ]}' name = 'item_name' />";
@@ -525,12 +669,23 @@ class AcceptStripePaymentsShortcode {
 	if ( ! $out_of_stock ) {
 	    $output = apply_filters( 'asp_button_output_before_button', $output, $data, $class );
 	}
-	$output .= $button;
+	$output	 .= '<div id="asp-all-buttons-container-' . $uniq_id . '" class="asp_all_buttons_container">';
+	$output	 .= $button;
 	//after button filter
 	if ( ! $out_of_stock ) {
-	    $output = apply_filters( 'asp-button-output-after-button', $output, $data, $class );
+	    $output	 = apply_filters( 'asp-button-output-after-button', $output, $data, $class );
+	    $output	 = apply_filters( 'asp_button_output_after_button', $output, $data, $class );
 	}
-	$output .= $this->get_scripts( $data );
+	$output	 .= '</div>';
+	$output	 .= '<div id="asp-btn-spinner-container-' . $uniq_id . '" class="asp-btn-spinner-container" style="display: none !important">'
+	. '<div class="asp-btn-spinner">'
+	. '<div></div>'
+	. '<div></div>'
+	. '<div></div>'
+	. '<div></div>'
+	. '</div>'
+	. '</div>';
+	$output	 .= $this->get_scripts( $data );
 
 	return $output;
     }
@@ -540,7 +695,7 @@ class AcceptStripePaymentsShortcode {
 	if ( ! $this->ButtonCSSInserted || $this->CompatMode ) {
 //	    $this->ButtonCSSInserted = true;
 	    // we need to style custom inputs
-	    $style	 = file_get_contents( WP_ASP_PLUGIN_PATH . 'public/assets/css/public.min.css' );
+	    $style	 = file_get_contents( WP_ASP_PLUGIN_PATH . 'public/assets/css/public.css' );
 	    $output	 .= '<style type="text/css">' . $style . '</style>';
 	    //addons can output their styles if needed
 	    $output	 = apply_filters( 'asp-button-output-additional-styles', $output );
@@ -558,7 +713,6 @@ class AcceptStripePaymentsShortcode {
 	if ( $this->CompatMode ) {
 	    ob_start();
 	    ?>
-
 	    <script type='text/javascript'>
 	        var stripehandler = <?php echo json_encode( $this->get_loc_data() ); ?>;
 	    </script>
@@ -590,10 +744,27 @@ class AcceptStripePaymentsShortcode {
 	    if ( $data[ 'amount' ] == 0 ) { //price not specified, let's add an input box for user to specify the amount
 		$str_enter_amount	 = apply_filters( 'asp_customize_text_msg', __( 'Enter amount', 'stripe-payments' ), 'enter_amount' );
 		$output			 .= "<div class='asp_product_item_amount_input_container'>"
-		. "<input type='text' size='10' class='asp_product_item_amount_input' id='stripeAmount_{$data[ 'uniq_id' ]}' value='' name='stripeAmount' placeholder='" . $str_enter_amount . "' required/>"
-		. "<span class='asp_product_item_amount_currency_label' style='margin-left: 5px; display: inline-block'> {$data[ 'currency' ]}</span>"
-		. "<span style='display: block;' id='error_explanation_{$data[ 'uniq_id' ]}'></span>"
+		. "<input type='text' size='10' class='asp_product_item_amount_input' id='stripeAmount_{$data[ 'uniq_id' ]}' value='' name='stripeAmount' placeholder='" . $str_enter_amount . "' required/>";
+		if ( ! $data[ 'currency_variable' ] ) {
+		    $output .= "<span class='asp_product_item_amount_currency_label' style='margin-left: 5px; display: inline-block'> {$data[ 'currency' ]}</span>";
+		}
+		$output .= "<span style='display: block;' id='error_explanation_{$data[ 'uniq_id' ]}'></span>"
 		. "</div>";
+	    }
+	    if ( $data[ 'currency_variable' ] ) {
+		//let's add a box where user can select currency
+		$output	 .= '<div class="asp_product_currency_input_container">';
+		$output	 .= '<select id="stripeCurrency_' . $data[ 'uniq_id' ] . '" class="asp_product_currency_input" name="stripeCurrency">';
+		$currArr = AcceptStripePayments::get_currencies();
+		$tpl	 = '<option data-asp-curr-sym="%s" value="%s"%s>%s</option>';
+		foreach ( $currArr as $code => $curr ) {
+		    if ( $code !== '' ) {
+			$checked = $data[ 'currency' ] === $code ? ' selected' : '';
+			$output	 .= sprintf( $tpl, $curr[ 1 ], $code, $checked, $curr[ 0 ] );
+		    }
+		}
+		$output	 .= '</select>';
+		$output	 .= '</div>';
 	    }
 	    if ( $data[ 'custom_quantity' ] === "1" ) { //we should output input for customer to input custom quantity
 		if ( empty( $data[ 'quantity' ] ) ) {
@@ -606,49 +777,59 @@ class AcceptStripePaymentsShortcode {
 		. "<span style='display: block;' id='error_explanation_quantity_{$data[ 'uniq_id' ]}'></span>"
 		. "</div>";
 	    }
-	    apply_filters( 'asp_button_output_before_custom_field', $output, $data );
-	    if ( $data[ 'custom_field' ] == 1 ) {
-		$field_type	 = $this->AcceptStripePayments->get_setting( 'custom_field_type' );
-		$field_name	 = $this->AcceptStripePayments->get_setting( 'custom_field_name' );
-		$field_descr	 = $this->AcceptStripePayments->get_setting( 'custom_field_descr' );
-		$descr_loc	 = $this->AcceptStripePayments->get_setting( 'custom_field_descr_location' );
-		$mandatory	 = $this->AcceptStripePayments->get_setting( 'custom_field_mandatory' );
-		$output		 .= "<div class='asp_product_custom_field_input_container'>";
-		$output		 .= '<input type="hidden" name="stripeCustomFieldName" value="' . esc_attr( $field_name ) . '">';
-		switch ( $field_type ) {
-		    case 'text':
-			if ( $descr_loc !== 'below' ) {
-			    $output .= '<label class="asp_product_custom_field_label">' . $field_name . ' ' . '</label><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="text"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField" placeholder="' . $field_descr . '"' . ($mandatory ? ' required' : '' ) . '>';
-			} else {
-			    $output	 .= '<label class="asp_product_custom_field_label">' . $field_name . ' ' . '</label><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="text"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField"' . ($mandatory ? ' required' : '' ) . '>';
-			    $output	 .= '<div class="asp_product_custom_field_descr">' . $field_descr . '</div>';
+
+	    $output = apply_filters( 'asp_button_output_before_custom_field', $output, $data );
+
+	    //Output Custom Field if needed
+	    $output = $this->tpl_get_cf( $output, $data );
+
+	    //Variations
+	    $this->variations = array();
+	    if ( isset( $data[ 'product_id' ] ) ) {
+		$variations_groups = get_post_meta( $data[ 'product_id' ], 'asp_variations_groups', true );
+		if ( ! empty( $variations_groups ) ) {
+		    //we got variations for this product
+		    $variations_str			 = '';
+		    $this->variations[ 'groups' ]	 = $variations_groups;
+		    foreach ( $variations_groups as $grp_id => $group ) {
+			$variations_names = get_post_meta( $data[ 'product_id' ], 'asp_variations_names', true );
+			if ( ! empty( $variations_names ) ) {
+			    $variations_prices		 = get_post_meta( $data[ 'product_id' ], 'asp_variations_prices', true );
+			    $variations_urls		 = get_post_meta( $data[ 'product_id' ], 'asp_variations_urls', true );
+			    $this->variations[ 'names' ]	 = $variations_names;
+			    $this->variations[ 'prices' ]	 = $variations_prices;
+			    $this->variations[ 'urls' ]	 = $variations_urls;
+			    $variations_str			 .= '<div class="asp-product-variations-cont">';
+			    $variations_str			 .= '<label class="asp-product-variations-label">' . $group . '</label>';
+			    $variations_str			 .= sprintf( '<select class="asp-product-variations-select" data-asp-variations-group-id="%1$d" name="stripeVariations[%1$d][]">', $grp_id );
+			    foreach ( $variations_names[ $grp_id ] as $var_id => $name ) {
+				$tpl		 = '<option value="%d">%s %s</option>';
+				$price_mod	 = $variations_prices[ $grp_id ][ $var_id ];
+				if ( ! empty( $price_mod ) ) {
+				    $fmt_price	 = AcceptStripePayments::formatted_price( abs( $price_mod ), $data[ 'currency' ] );
+				    $price_mod	 = $price_mod < 0 ? ' - ' . $fmt_price : ' + ' . $fmt_price;
+				    $price_mod	 = '(' . $price_mod . ')';
+				} else {
+				    $price_mod = '';
+				}
+				$variations_str .= sprintf( $tpl, $var_id, $name, $price_mod );
+			    }
+			    $variations_str .= '</select></div>';
 			}
-			break;
-		    case 'checkbox':
-			$output .= '<label class="asp_product_custom_field_label"><input id="asp-custom-field-' . $data[ 'uniq_id' ] . '" class="asp_product_custom_field_input" type="checkbox"' . ($mandatory ? ' data-asp-custom-mandatory' : '') . ' name="stripeCustomField"' . ($mandatory ? ' required' : '' ) . '>' . $field_descr . '</label>';
-			break;
+		    }
+		    $output .= $variations_str;
 		}
-		$output .= "<span style='display: block;' id='custom_field_error_explanation_{$data[ 'uniq_id' ]}'></span>" .
-		"</div>";
 	    }
-	    apply_filters( 'asp_button_output_before_tos', $output, $data );
-	    //Terms and Conditions
-	    if ( $data[ 'tos' ] == 1 ) {
-		$tos_text	 = $this->AcceptStripePayments->get_setting( 'tos_text' );
-		$output		 .= '<div class="asp_product_tos_input_container">';
-		$output		 .= '<label class="asp_product_tos_label"><input id="asp-tos-' . $data[ 'uniq_id' ] . '" class="asp_product_tos_input" type="checkbox" required>' . html_entity_decode( $tos_text ) . '</label>';
-		$output		 .= "<span style='display: block;' id='tos_error_explanation_{$data[ 'uniq_id' ]}'></span>";
-		$output		 .= '</div>';
-	    }
+
+	    //add TOS box if needed
+	    $output = $this->tpl_get_tos( $output, $data );
+
 	    //Coupons
 	    if ( isset( $data[ 'coupons_enabled' ] ) && $data[ 'coupons_enabled' ] == "1" && ! $data[ 'variable' ] ) {
 		if ( isset( $data[ 'product_id' ] ) ) {
-		    //check if this is subscription product. If it is, we will only display coupon field if subs addon version is >=1.2.5
-//		    if ( get_post_meta( $data[ 'product_id' ], 'asp_sub_plan_id', true ) !== false &&
-//		    (class_exists( 'ASPSUB_main' ) && version_compare( '1.2.5', ASPSUB_main::ADDON_VER ) >= 0 ) ) {
-		    //disable coupons for subscriptions for now
-                    $asp_sub_plan_id = get_post_meta( $data[ 'product_id' ], 'asp_sub_plan_id', true );
-		    if ( empty( $asp_sub_plan_id ) ) {
+		    //check if this is subscription product. If it is, we will only display coupon field if subs addon version is >=1.3.3t1
+		    $plan_id = get_post_meta( $data[ 'product_id' ], 'asp_sub_plan_id', true );
+		    if ( ! $plan_id || ($plan_id && class_exists( 'ASPSUB_main' ) && version_compare( ASPSUB_main::ADDON_VER, '1.3.3t1' ) >= 0) ) {
 			$str_coupon_label	 = __( 'Coupon Code', 'stripe-payments' );
 			$output			 .= '<div class="asp_product_coupon_input_container"><label class="asp_product_coupon_field_label">' . $str_coupon_label . ' ' . '</label><input id="asp-coupon-field-' . $data[ 'uniq_id' ] . '" class="asp_product_coupon_field_input" type="text" name="stripeCoupon">'
 			. '<input type="button" id="asp-redeem-coupon-btn-' . $data[ 'uniq_id' ] . '" type="button" class="asp_btn_normalize asp_coupon_apply_btn" value="' . __( 'Apply', 'stripe-payments' ) . '">'
@@ -696,23 +877,41 @@ class AcceptStripePaymentsShortcode {
 	    $output	 = '';
 	    $output	 .= '<p class="asp-thank-you-page-msg1">' . __( "Thank you for your payment.", "stripe-payments" ) . '</p>';
 	    $output	 .= '<p class="asp-thank-you-page-msg2">' . __( "Here's what you purchased: ", "stripe-payments" ) . '</p>';
-	    $output	 .= '<div class="asp-thank-you-page-product-name">' . __( "Product Name: ", "stripe-payments" ) . $aspData[ 'item_name' ] . '</div>';
-	    $output	 .= '<div class="asp-thank-you-page-qty">' . __( "Quantity: ", "stripe-payments" ) . $aspData[ 'item_quantity' ] . '</div>';
-	    $output	 .= '<div class="asp-thank-you-page-qty">' . __( "Item Price: ", "stripe-payments" ) . AcceptStripePayments::formatted_price( $aspData[ 'item_price' ], $aspData[ 'currency_code' ] ) . '</div>';
+	    $output	 .= '<div class="asp-thank-you-page-product-name">' . __( "Product Name: ", "stripe-payments" ) . '{item_name}' . '</div>';
+	    $output	 .= '<div class="asp-thank-you-page-qty">' . __( "Quantity: ", "stripe-payments" ) . '{item_quantity}' . '</div>';
+	    $output	 .= '<div class="asp-thank-you-page-qty">' . __( "Item Price: ", "stripe-payments" ) . '{item_price_curr}' . '</div>';
 	    //check if there are any additional items available like tax and shipping cost
 	    $output	 .= AcceptStripePayments::gen_additional_items( $aspData, '<br />' );
 	    $output	 .= '<hr />';
-	    $output	 .= '<div class="asp-thank-you-page-qty">' . __( "Total Amount: ", "stripe-payments" ) . AcceptStripePayments::formatted_price( $aspData[ 'paid_amount' ], $aspData[ 'currency_code' ] ) . '</div>';
+	    $output	 .= '<div class="asp-thank-you-page-qty">' . __( "Total Amount: ", "stripe-payments" ) . '{paid_amount_curr}' . '</div>';
 	    $output	 .= '<br />';
-	    $output	 .= '<div class="asp-thank-you-page-txn-id">' . __( "Transaction ID: ", "stripe-payments" ) . $aspData[ 'txn_id' ] . '</div>';
+	    $output	 .= '<div class="asp-thank-you-page-txn-id">' . __( "Transaction ID: ", "stripe-payments" ) . '{transaction_id}' . '</div>';
 
+	    $download_str = '';
 	    if ( ! empty( $aspData[ 'item_url' ] ) ) {
-		$output	 .= "<div class='asp-thank-you-page-download-link'>";
-		$output	 .= __( "Please ", "stripe-payments" ) . "<a href='" . $aspData[ 'item_url' ] . "'>" . __( "click here", "stripe-payments" ) . "</a>" . __( " to download.", "stripe-payments" );
-		$output	 .= "</div>";
+		$download_str	 .= "<br /><div class='asp-thank-you-page-download-link'>";
+		$download_str	 .= _x( "Please ", "Is a part of 'Please click here to download'", "stripe-payments" ) . "<a href='{item_url}'>" . _x( "click here", "Is a part of 'Please click here to download'", "stripe-payments" ) . "</a>" . _x( " to download.", "Is a part of 'Please click here to download'", "stripe-payments" );
+		$download_str	 .= "</div>";
 	    }
 
+	    //variations download links if needed
+	    if ( ! empty( $aspData[ 'var_applied' ] ) ) {
+		$download_str	 .= "<br /><div class='asp-thank-you-page-download-link'>";
+		$download_str	 .= '<span>' . __( 'Download links:', 'stripe-payments' ) . '</span><br/>';
+		$download_txt	 = __( 'Click here to download', 'stripe-payments' );
+		$link_tpl	 = '<a href="%s">%s</a><br/>';
+		foreach ( $aspData[ 'var_applied' ] as $var ) {
+		    if ( ! empty( $var[ 'url' ] ) ) {
+			$download_str .= sprintf( $link_tpl, $var[ 'url' ], $download_txt );
+		    }
+		}
+		$download_str .= "</div>";
+	    }
+	    $output .= $download_str;
+
 	    $output = apply_filters( 'asp_stripe_payments_checkout_page_result', $output, $aspData ); //Filter that allows you to modify the output data on the checkout result page
+
+	    $output = $this->apply_content_tags( $output, $aspData );
 
 	    $wrap	 = "<div class='asp-thank-you-page-wrap'>";
 	    $wrap	 .= "<div class='asp-thank-you-page-msg-wrap' style='background: #dff0d8; border: 1px solid #C9DEC1; margin: 10px 0px; padding: 15px;'>";
@@ -873,13 +1072,58 @@ class AcceptStripePaymentsShortcode {
 	$tags	 = array();
 	$vals	 = array();
 
-	if ( isset( $data[ 'custom_field_value' ] ) ) {
-	    $data[ 'custom_field' ] = $data[ 'custom_field_name' ] . ': ' . $data[ 'custom_field_value' ];
-	} else {
+	if ( isset( $data[ 'custom_fields' ] ) && ! empty( $data[ 'custom_fields' ] ) ) {
 	    $data[ 'custom_field' ] = '';
+	    foreach ( $data[ 'custom_fields' ] as $field ) {
+		$data[ 'custom_field' ] .= $field[ 'name' ] . ': ' . $field[ 'value' ] . "\r\n";
+	    }
+	    $data[ 'custom_field' ]		 = rtrim( $data[ 'custom_field' ], "\r\n" );
+	    $data[ 'custom_field' ]		 = nl2br( $data[ 'custom_field' ] );
+	    $data[ 'custom_field_name' ]	 = $data[ 'custom_fields' ][ 0 ][ 'name' ];
+	    $data[ 'custom_field_value' ]	 = $data[ 'custom_fields' ][ 0 ][ 'value' ];
+	} else {
+	    $data[ 'custom_field' ]		 = null;
+	    $data[ 'custom_field_name' ]	 = null;
+	    $data[ 'custom_field_value' ]	 = null;
 	}
 
-	$data[ 'paid_amount_curr' ] = AcceptStripePayments::formatted_price( $data[ 'paid_amount' ], $data[ 'currency_code' ] );
+	if ( isset( $data[ 'paid_amount' ] ) ) {
+	    $data[ 'paid_amount_curr' ] = AcceptStripePayments::formatted_price( $data[ 'paid_amount' ], $data[ 'currency_code' ] );
+	} else {
+	    $data[ 'paid_amount' ]		 = 0;
+	    $data[ 'paid_amount_curr' ]	 = 0;
+	}
+	$data[ 'purchase_amt' ]		 = $data[ 'paid_amount' ];
+	$data[ 'purchase_amt_curr' ]	 = $data[ 'paid_amount_curr' ];
+
+	$curr		 = isset( $data[ 'currency_code' ] ) ? $data[ 'currency_code' ] : '';
+	$currencies	 = AcceptStripePayments::get_currencies();
+	if ( isset( $currencies[ $curr ] ) ) {
+	    $curr_sym = $currencies[ $curr ][ 1 ];
+	} else {
+	    $curr_sym = '';
+	}
+	$data[ 'currency' ] = $curr_sym;
+
+	if ( isset( $data[ 'item_price' ] ) ) {
+	    $data[ 'item_price_curr' ] = AcceptStripePayments::formatted_price( $data[ 'item_price' ], $data[ 'currency_code' ] );
+	} else {
+	    $data[ 'item_price' ] = 0;
+	}
+
+	if ( isset( $data[ 'tax_perc' ] ) && ! empty( $data[ 'tax_perc' ] ) ) {
+	    $data[ 'tax_perc_fmt' ] = $data[ 'tax_perc' ] . '%';
+	}
+	if ( isset( $data[ 'tax' ] ) && ! empty( $data[ 'tax' ] ) ) {
+	    $data[ 'tax_amt' ] = AcceptStripePayments::formatted_price( $data[ 'tax' ], $data[ 'currency_code' ] );
+	}
+	if ( isset( $data[ 'shipping' ] ) && ! empty( $data[ 'shipping' ] ) ) {
+	    $data[ 'shipping_amt' ] = AcceptStripePayments::formatted_price( $data[ 'shipping' ], $data[ 'currency_code' ] );
+	}
+
+	// we should unset as it's not a string and it would produce following fatal error if not unset:
+	// Object of class __PHP_Incomplete_Class could not be converted to string
+	unset( $data[ 'charge' ] );
 
 	foreach ( $data as $key => $value ) {
 	    if ( $key == 'stripeEmail' ) {
@@ -887,6 +1131,12 @@ class AcceptStripePaymentsShortcode {
 	    }
 	    if ( $key == 'txn_id' ) {
 		$key = 'transaction_id';
+	    }
+	    if ( $key == 'tax' ) { //we don't set 'tax' key so it won't replace our new 'tax' key which we set below
+		continue;
+	    }
+	    if ( $key == 'tax_perc_fmt' ) {
+		$key = 'tax';
 	    }
 	    $tags[]	 = '{' . $key . '}';
 	    $vals[]	 = is_array( $value ) ? '' : $value;

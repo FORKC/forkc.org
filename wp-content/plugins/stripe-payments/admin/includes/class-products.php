@@ -63,15 +63,35 @@ class ASPProducts {
 	add_action( 'manage_' . ASPMain::$products_slug . '_posts_custom_column', array( $this, 'manage_custom_columns' ), 10, 2 );
 	//set custom columns sortable
 	add_filter( 'manage_edit-' . ASPMain::$products_slug . '_sortable_columns', array( $this, 'manage_sortable_columns' ) );
-	//enqueue css file to style list table and edit product pages
-	add_action( 'admin_head', array( $this, 'enqueue_products_style' ) );
+	//set custom messages on post save\update etc.
+	add_filter( 'post_updated_messages', array( $this, 'post_updated_messages' ) );
+    }
+
+    function post_updated_messages( $messages ) {
+	$post		 = get_post();
+	$post_type	 = get_post_type( $post );
+	$slug		 = ASPMain::$products_slug;
+	if ( $post_type === ASPMain::$products_slug ) {
+	    $permalink		 = get_permalink( $post->ID );
+	    $view_link		 = sprintf( ' <a href="%s">%s</a>', esc_url( $permalink ), __( 'View product', 'stripe-payments' ) );
+	    $preview_permalink	 = add_query_arg( 'preview', 'true', $permalink );
+	    $preview_link		 = sprintf( ' <a target="_blank" href="%s">%s</a>', esc_url( $preview_permalink ), __( 'Preview product', 'stripe-payments' ) );
+	    $messages[ $slug ]	 = $messages[ 'post' ];
+	    $messages[ $slug ][ 1 ]	 = __( "Product updated.", 'stripe-payments' ) . $view_link;
+	    $messages[ $slug ][ 4 ]	 = __( "Product updated.", 'stripe-payments' );
+	    $messages[ $slug ][ 6 ]	 = __( "Product published.", 'stripe-payments' ) . $view_link;
+	    $messages[ $slug ][ 7 ]	 = __( "Product saved.", 'stripe-payments' );
+	    $messages[ $slug ][ 8 ]	 = __( "Product submitted.", 'stripe-payments' ) . $preview_link;
+	    $messages[ $slug ][ 10 ] = __( "Product draft updated.", 'stripe-payments' ) . $preview_link;
+	}
+	return $messages;
     }
 
     function manage_columns( $columns ) {
 	unset( $columns );
 	$columns = array(
-	    "thumbnail"	 => __( "Thumbnail", 'stripe-payments' ),
 	    "title"		 => __( 'Product Name', 'stripe-payments' ),
+	    "thumbnail"	 => __( "Thumbnail", 'stripe-payments' ),
 	    "id"		 => __( "ID", 'stripe-payments' ),
 	    "price"		 => __( "Price", 'stripe-payments' ),
 	    "stock"		 => __( 'Stock', 'stripe-payments' ),
@@ -95,7 +115,7 @@ class ASPProducts {
 		}
 		break;
 	    case 'thumbnail':
-		$thumb_url = get_post_meta( $post_id, 'asp_product_thumbnail', true );
+		$thumb_url = AcceptStripePayments::get_small_product_thumb( $post_id );
 		if ( ! $thumb_url ) {
 		    $thumb_url = WP_ASP_PLUGIN_URL . '/assets/product-thumb-placeholder.png';
 		}
@@ -141,14 +161,6 @@ class ASPProducts {
 	$columns[ 'price' ]	 = 'price';
 	$columns[ 'stock' ]	 = 'stock';
 	return $columns;
-    }
-
-    function enqueue_products_style() {
-	global $post_type;
-	if ( ASPMain::$products_slug == $post_type ) {
-	    wp_enqueue_style( 'asp-admin-products-styles', WP_ASP_PLUGIN_URL . '/admin/assets/css/admin-products.css', array(), AcceptStripePayments::VERSION );
-	    wp_enqueue_script( 'asp-admin-script', WP_ASP_PLUGIN_URL . '/admin/assets/js/admin.js', array( 'jquery' ), AcceptStripePayments::VERSION );
-	}
     }
 
 }

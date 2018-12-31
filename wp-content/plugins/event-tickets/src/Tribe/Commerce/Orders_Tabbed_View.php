@@ -31,7 +31,7 @@ class Tribe__Tickets__Commerce__Orders_Tabbed_View {
 		}
 
 		$tabbed_view = new Tribe__Tabbed_View();
-		$tabbed_view->set_label( apply_filters( 'the_title', $post->post_title ) );
+		$tabbed_view->set_label( apply_filters( 'the_title', $post->post_title, $post->ID ) );
 		$query_string = empty( $_SERVER['QUERY_STRING'] ) ? '' : '?' . $_SERVER['QUERY_STRING'];
 		$request_uri  = 'edit.php' . $query_string;
 		$tabbed_view->set_url( remove_query_arg( 'tab', $request_uri ) );
@@ -39,7 +39,8 @@ class Tribe__Tickets__Commerce__Orders_Tabbed_View {
 		$tab_map = $this->get_tab_map();
 
 		// try to set the active tab from the requested page
-		parse_str( $request_uri, $query_args );
+		$active_string = empty( $_SERVER['QUERY_STRING'] ) ? '' : $_SERVER['QUERY_STRING'];
+		wp_parse_str( $active_string, $query_args );
 		if ( ! empty( $query_args['page'] ) && isset( $tab_map[ $query_args['page'] ] ) ) {
 			$active = $tab_map[ $query_args['page'] ];
 			$tabbed_view->set_active( $active );

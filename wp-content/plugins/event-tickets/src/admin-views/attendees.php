@@ -75,15 +75,15 @@ $show_title = apply_filters( 'tribe_tickets_attendees_show_title', true, tribe( 
 
 				</div>
 				<div class="welcome-panel-column welcome-panel-middle">
-					<h3><?php echo esc_html_x( 'Attendees By Ticket', 'attendee screen summary', 'event-tickets' ); ?></h3>
+					<h3><?php echo esc_html_x( 'Overview', 'attendee screen summary', 'event-tickets' ); ?></h3>
 					<?php do_action( 'tribe_events_tickets_attendees_ticket_sales_top', $event_id ); ?>
 
 					<ul>
 					<?php foreach ( $tickets as $ticket ) { ?>
 						<li>
-							<strong><?php echo esc_html( $ticket->name ) ?>: </strong>
-							<?php echo tribe_tickets_get_ticket_stock_message( $ticket ); ?>
-						</li>
+							<strong><?php echo esc_html( $ticket->name ) ?>:&nbsp;</strong><?php
+							echo esc_html( tribe_tickets_get_ticket_stock_message( $ticket ) );
+						?></li>
 					<?php } ?>
 					</ul>
 					<?php do_action( 'tribe_events_tickets_attendees_ticket_sales_bottom', $event_id );  ?>
