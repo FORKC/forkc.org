@@ -91,9 +91,9 @@ class WPSEO_Breadcrumbs {
 	 * Create the breadcrumb.
 	 */
 	protected function __construct() {
-		$this->post           = ( isset( $GLOBALS['post'] ) ? $GLOBALS['post'] : null );
-		$this->show_on_front  = get_option( 'show_on_front' );
-		$this->page_for_posts = get_option( 'page_for_posts' );
+		$this->post                  = ( isset( $GLOBALS['post'] ) ? $GLOBALS['post'] : null );
+		$this->show_on_front         = get_option( 'show_on_front' );
+		$this->page_for_posts        = get_option( 'page_for_posts' );
 		$this->woocommerce_shop_page = new WPSEO_WooCommerce_Shop_Page();
 
 		$this->filter_element();
@@ -189,7 +189,6 @@ class WPSEO_Breadcrumbs {
 		return $url;
 	}
 
-
 	/**
 	 * Filter: 'wpseo_breadcrumb_single_link_wrapper' - Allows developer to change or wrap each breadcrumb element.
 	 *
@@ -221,7 +220,6 @@ class WPSEO_Breadcrumbs {
 			$this->wrapper = $wrapper;
 		}
 	}
-
 
 	/**
 	 * Get a term's parents.
@@ -369,13 +367,14 @@ class WPSEO_Breadcrumbs {
 			}
 		}
 		elseif ( is_post_type_archive() ) {
-			$post_type = $wp_query->get( 'post_type' );
-
-			if ( WPSEO_Utils::is_woocommerce_active() && is_shop() ) {
-				$id = wc_get_page_id( 'shop' );
-				$this->add_single_post_crumb( $id );
+			if ( $this->woocommerce_shop_page->is_shop_page() &&
+				$this->woocommerce_shop_page->get_shop_page_id() !== -1
+			) {
+				$this->add_single_post_crumb( $this->woocommerce_shop_page->get_shop_page_id() );
 			}
 			else {
+				$post_type = $wp_query->get( 'post_type' );
+
 				if ( $post_type && is_string( $post_type ) ) {
 					$this->add_ptarchive_crumb( $post_type );
 				}
@@ -419,6 +418,8 @@ class WPSEO_Breadcrumbs {
 				true
 			);
 		}
+
+		$this->maybe_add_page_crumb();
 
 		/**
 		 * Filter: 'wpseo_breadcrumb_links' - Allow the developer to filter the Yoast SEO breadcrumb links, add to them, change order, etc.
@@ -599,6 +600,32 @@ class WPSEO_Breadcrumbs {
 	}
 
 	/**
+	 * Adds a page crumb to the visible breadcrumbs.
+	 *
+	 * @return void
+	 */
+	private function maybe_add_page_crumb() {
+		if ( ! is_paged() ) {
+			return;
+		}
+
+		$current_page = get_query_var( 'paged', 1 );
+		if ( $current_page <= 1 ) {
+			return;
+		}
+
+		$this->crumbs[] = array(
+			'text'           => sprintf(
+				/* translators: %s expands to the current page number */
+				__( 'Page %s', 'wordpress-seo' ),
+				$current_page
+			),
+			'url'            => '',
+			'hide_in_schema' => true,
+		);
+	}
+
+	/**
 	 * Add parent taxonomy crumb based on user defined preference.
 	 *
 	 * @param object $term Term data object.
@@ -680,7 +707,6 @@ class WPSEO_Breadcrumbs {
 			true
 		);
 	}
-
 
 	/**
 	 * Take the crumbs array and convert each crumb to a single breadcrumb string.
@@ -954,7 +980,6 @@ class WPSEO_Breadcrumbs {
 			$this->output = $output;
 		}
 	}
-
 
 	/**
 	 * Filter: 'wpseo_breadcrumb_output_id' - Allow changing the HTML ID on the Yoast SEO breadcrumbs wrapper element.

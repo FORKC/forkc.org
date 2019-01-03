@@ -215,7 +215,8 @@
 		}
 
 		if ( variation.dimensions ) {
-			$dimensions.wc_set_content( variation.dimensions_html );
+			// Decode HTML entities.
+			$dimensions.wc_set_content( $.parseHTML( variation.dimensions_html )[0].data );
 		} else {
 			$dimensions.wc_reset_content();
 		}
@@ -223,9 +224,9 @@
 		form.$form.wc_variations_image_update( variation );
 
 		if ( ! variation.variation_is_visible ) {
-			template = wp.template( 'unavailable-variation-template' );
+			template = wp_template( 'unavailable-variation-template' );
 		} else {
-			template     = wp.template( 'variation-template' );
+			template     = wp_template( 'variation-template' );
 			variation_id = variation.variation_id;
 		}
 
@@ -594,6 +595,7 @@
 			$product_img.wc_set_variation_attr( 'srcset', variation.image.srcset );
 			$product_img.wc_set_variation_attr( 'sizes', variation.image.sizes );
 			$product_img.wc_set_variation_attr( 'title', variation.image.title );
+			$product_img.wc_set_variation_attr( 'data-caption', variation.image.caption );
 			$product_img.wc_set_variation_attr( 'alt', variation.image.alt );
 			$product_img.wc_set_variation_attr( 'data-src', variation.image.full_src );
 			$product_img.wc_set_variation_attr( 'data-large_image', variation.image.full_src );
@@ -632,6 +634,7 @@
 		$product_img.wc_reset_variation_attr( 'srcset' );
 		$product_img.wc_reset_variation_attr( 'sizes' );
 		$product_img.wc_reset_variation_attr( 'title' );
+		$product_img.wc_reset_variation_attr( 'data-caption' );
 		$product_img.wc_reset_variation_attr( 'alt' );
 		$product_img.wc_reset_variation_attr( 'data-src' );
 		$product_img.wc_reset_variation_attr( 'data-large_image' );
@@ -680,6 +683,46 @@
 			}
 			return match;
 		}
+	};
+
+	/**
+	 * Avoids using wp.template where possible in order to be CSP compliant.
+	 * wp.template uses internally eval().
+	 * @param {string} templateId
+	 * @return {Function}
+	 */
+	var wp_template = function( templateId ) {
+		var html = document.getElementById( 'tmpl-' + templateId ).textContent;
+		var hard = false;
+		// any <# #> interpolate (evaluate).
+		hard = hard || /<#\s?data\./.test( html );
+		// any data that is NOT data.variation.
+		hard = hard || /{{{?\s?data\.(?!variation\.).+}}}?/.test( html );
+		// any data access deeper than 1 level e.g.
+		// data.variation.object.item
+		// data.variation.object['item']
+		// data.variation.array[0]
+		hard = hard || /{{{?\s?data\.variation\.[\w-]*[^\s}]/.test ( html );
+		if ( hard ) {
+			return wp.template( templateId );
+		}
+		return function template ( data ) {
+			var variation = data.variation || {};
+			return html.replace( /({{{?)\s?data\.variation\.([\w-]*)\s?(}}}?)/g, function( _, open, key, close ) {
+				// Error in the format, ignore.
+				if ( open.length !== close.length ) {
+					return '';
+				}
+				var replacement = variation[ key ] || '';
+				// {{{ }}} => interpolate (unescaped).
+				// {{  }}  => interpolate (escaped).
+				// https://codex.wordpress.org/Javascript_Reference/wp.template
+				if ( open.length === 2 ) {
+					return window.escape( replacement );
+				}
+				return replacement;
+			});
+		};
 	};
 
 })( jQuery, window, document );

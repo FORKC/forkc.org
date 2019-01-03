@@ -4,17 +4,17 @@ class Tribe__Tickets__Main {
 	/**
 	 * Current version of this plugin
 	 */
-	const VERSION = '4.7.6';
+	const VERSION = '4.9.3';
 
 	/**
 	 * Min required The Events Calendar version
 	 */
-	const MIN_TEC_VERSION = '4.6.20';
+	const MIN_TEC_VERSION = '4.7.3-dev';
 
 	/**
 	 * Min required version of Tribe Common
 	 */
-	const MIN_COMMON_VERSION = '4.7.17';
+	const MIN_COMMON_VERSION = '4.8.3-dev';
 
 	/**
 	 * Name of the provider
@@ -90,6 +90,15 @@ class Tribe__Tickets__Main {
 
 		return self::$instance;
 	}
+
+	/**
+	 * Where in the themes we will look for templates
+	 *
+	 * @since 4.9
+	 *
+	 * @var string
+	 */
+	public $template_namespace = 'tickets';
 
 	/**
 	 * Class constructor
@@ -168,6 +177,33 @@ class Tribe__Tickets__Main {
 			return;
 		}
 
+		/**
+		 * Safety check to resolve fatal (https://central.tri.be/issues/115510)
+		 *
+		 * @TODO: remove the following call and the subsequent if statement when we have
+		 * dependency checking logic in place
+		 *
+		 * @since 4.8.2.1
+		 */
+		$this->maybe_include_et_plus_file( 'Tribe__Tickets_Plus__Main' );
+
+		if (
+			class_exists( 'Tribe__Tickets_Plus__Main' )
+			&& version_compare( preg_replace( '/^(\d\.[\d]+)(?:\.\d+)*(-.*)?/', '$1$2', Tribe__Tickets_Plus__Main::VERSION ), preg_replace( '/^(\d\.[\d]+)(?:\.\d+)*(-.*)?/', '$1$2', self::VERSION ), '<' )
+		) {
+			$this->maybe_include_et_plus_file( 'Tribe__Tickets_Plus__PUE' );
+			new Tribe__Tickets_Plus__PUE;
+
+			add_action( 'admin_notices', array( $this, 'et_plus_compatibility_notice' ) );
+
+			/**
+			 * Fires if Event Tickets cannot load due to compatibility or other problems.
+			 */
+			do_action( 'tribe_tickets_plugin_failed_to_load' );
+
+			return;
+		}
+
 		// Intialize the Service Provider for Tickets
 		tribe_register_provider( 'Tribe__Tickets__Service_Provider' );
 
@@ -206,8 +242,16 @@ class Tribe__Tickets__Main {
 		tribe_singleton( 'tickets.commerce.paypal', new Tribe__Tickets__Commerce__PayPal__Main );
 		tribe_singleton( 'tickets.redirections', 'Tribe__Tickets__Redirections' );
 
+		// Attendee Registration Page
+		tribe_register_provider( 'Tribe__Tickets__Attendee_Registration__Service_Provider' );
+
 		// REST API v1
 		tribe_register_provider( 'Tribe__Tickets__REST__V1__Service_Provider' );
+		// REST Editor APIs
+		tribe_register_provider( 'Tribe__Tickets__Editor__REST__V1__Service_Provider' );
+
+		// Blocks editor
+		tribe_register_provider( 'Tribe__Tickets__Editor__Provider' );
 
 		// Privacy
 		tribe_singleton( 'tickets.privacy', 'Tribe__Tickets__Privacy', array( 'hook' ) );
@@ -224,6 +268,50 @@ class Tribe__Tickets__Main {
 		}
 
 		return tribe_register_plugin( EVENT_TICKETS_MAIN_PLUGIN_FILE, __CLASS__, self::VERSION );
+	}
+
+	/**
+	 * Include ET+ Main class file as a patch-work solution
+	 *
+	 * This is a patch-work solution to help avoid fatals while we wait for the dependency
+	 * checking feature to complete.
+	 *
+	 * @todo eliminate this method when dependency checking is complete
+	 *
+	 * @see https://central.tri.be/issues/115510
+	 *
+	 * @param string $class_name Which class we will try to load
+	 *
+	 * @since 4.8.2.1
+	 */
+	private function maybe_include_et_plus_file( $class_name ) {
+		if ( class_exists( $class_name ) ) {
+			return;
+		}
+
+		$active_plugins    = get_option( 'active_plugins' );
+		$plugin_short_path = null;
+		foreach ( $active_plugins as $plugin ) {
+			if ( false !== strstr( $plugin, 'event-tickets-plus.php' ) ) {
+				$plugin_short_path = $plugin;
+				break;
+			}
+		}
+		if ( ! $plugin_short_path ) {
+			return;
+		}
+
+		$file_path = str_replace( 'Tribe__Tickets_Plus__', '', $class_name );
+		$file_path = str_replace( '__', '/', $file_path );
+
+		$plugin_dir = preg_replace( '!(.*)[\\/]event-tickets-plus.php!', '$1', $plugin_short_path );
+		$path_to_class = wp_normalize_path( WP_PLUGIN_DIR . "/{$plugin_dir}/src/Tribe/$file_path.php" );
+
+		if ( ! file_exists( $path_to_class ) ) {
+			return;
+		}
+
+		include_once $path_to_class;
 	}
 
 	/**
@@ -252,6 +340,30 @@ class Tribe__Tickets__Main {
 		);
 		$output = '<div class="error">';
 		$output .= '<p>' . sprintf( __( 'When The Events Calendar and Event Tickets are both activated, The Events Calendar must be running version %1$s or greater. Please %2$supdate now.%3$s', 'event-tickets' ), self::MIN_TEC_VERSION, '<a href="' . esc_url( $upgrade_path ) . '">', '</a>' ) . '</p>';
+		$output .= '</div>';
+
+		echo $output;
+	}
+
+	/**
+	 * Hooked to admin_notices, this error is thrown when Event Tickets is run alongside a version of
+	 * Event Tickets Plus that is too old
+	 */
+	public function et_plus_compatibility_notice() {
+		$active_plugins = get_option( 'active_plugins' );
+
+		$plugin_short_path = null;
+
+		foreach ( $active_plugins as $plugin ) {
+			if ( false !== strstr( $plugin, 'event-tickets-plus.php' ) ) {
+				$plugin_short_path = $plugin;
+				break;
+			}
+		}
+
+		$upgrade_path = 'https://theeventscalendar.com/knowledgebase/manual-updates/';
+		$output = '<div class="error">';
+		$output .= '<p>' . sprintf( __( 'When Event Tickets and Event Tickets Plus are both activated, Event Tickets Plus must be running version %1$s or greater. Please %2$smanually update now%3$s.', 'event-tickets' ), preg_replace( '/^(\d\.[\d]+).*/', '$1', self::VERSION ), '<a href="' . esc_url( $upgrade_path ) . '" target="_blank">', '</a>' ) . '</p>';
 		$output .= '</div>';
 
 		echo $output;
@@ -546,7 +658,7 @@ class Tribe__Tickets__Main {
 				'activation_transient'  => '_tribe_tickets_activation_redirect',
 				'plugin_path'           => $this->plugin_dir . 'event-tickets.php',
 				'version_history_slug'  => 'previous_event_tickets_versions',
-				'welcome_page_title'    => __( 'Welcome to Event Tickets', 'event-tickets' ),
+				'welcome_page_title'    => esc_html__( 'Welcome to Event Tickets!', 'event-tickets' ),
 				'welcome_page_template' => $this->plugin_path . 'src/admin-views/admin-welcome-message.php',
 			) );
 		}

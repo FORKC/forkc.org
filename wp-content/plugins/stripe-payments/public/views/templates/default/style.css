@@ -1,3 +1,8 @@
+/*
+This CSS file is used to apply styles to the product display output. 
+Used by the [asp_product] shortcode. Also used by the individual custom post type (CPT) page of the product.
+CSS class names should use dashes. Example: asp-product-description
+*/
 .asp_product_item {
     display: block;
     border: 1px solid #E7E9EB;
@@ -34,7 +39,7 @@
 
 }
 
-.asp_product_item_amount_input_container, .asp_product_custom_field_input_container{
+.asp_product_item_amount_input_container, .asp_product_custom_field_input_container, .asp_product_currency_input_container{
     margin: 5px 0 10px 0;
 }
 
@@ -90,6 +95,7 @@
     height: 32px;
     border-radius: 4px;
     vertical-align: middle;
+    border: 0;
 }
 .asp_product_buy_btn:hover{
     transition: none;

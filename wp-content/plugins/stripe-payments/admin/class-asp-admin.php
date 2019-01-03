@@ -38,19 +38,67 @@ class AcceptStripePayments_Admin {
 	// Add the options page and menu item.
 	add_action( 'admin_menu', array( $this, 'add_plugin_admin_menu' ) );
 
-	// Add an action link pointing to the options page.
-	$plugin_basename = plugin_basename( plugin_dir_path( realpath( dirname( __FILE__ ) ) ) . $this->plugin_slug . '.php' );
-	add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
+	//Enqueue required scripts and styles
+	add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
 	//Add any required inline JS code in the admin dashboard side.
 	add_action( 'admin_print_scripts', array( $this, 'asp_print_admin_scripts' ) );
 
 	add_action( 'admin_init', array( $this, 'admin_init' ) );
 
+	add_action( 'admin_notices', array( $this, 'show_admin_notices' ), 1 );
+
 	//TinyMCE button related
 	add_action( 'init', array( $this, 'tinymce_shortcode_button' ) );
 	add_action( 'current_screen', array( $this, 'check_current_screen' ) );
 	add_action( 'wp_ajax_asp_tinymce_get_settings', array( $this, 'tinymce_ajax_handler' ) ); // Add ajax action handler for tinymce
+    }
+
+    function enqueue_scripts( $hook ) {
+	//this script is requested on all plugin admin pages
+	wp_register_script( 'asp-admin-general-js', WP_ASP_PLUGIN_URL . '/admin/assets/js/admin.js', array( 'jquery' ), WP_ASP_PLUGIN_VERSION, true );
+	//include admin style
+	wp_register_style( 'asp-admin-styles', WP_ASP_PLUGIN_URL . '/admin/assets/css/admin.css', array(), WP_ASP_PLUGIN_VERSION );
+
+	switch ( $hook ) {
+	    case 'asp-products_page_stripe-payments-settings':
+		//settings page
+		wp_register_script( 'asp-admin-settings-js', WP_ASP_PLUGIN_URL . '/admin/assets/js/settings.js', array( 'jquery' ), WP_ASP_PLUGIN_VERSION, true );
+		wp_enqueue_script( 'asp-admin-general-js' );
+		wp_enqueue_style( 'asp-admin-styles' );
+		break;
+	    case 'post.php':
+	    case 'edit.php':
+	    case 'post-new.php':
+		global $post_type;
+		if ( $post_type === ASPMain::$products_slug ) {
+		    wp_register_script( 'asp-admin-edit-product-js', WP_ASP_PLUGIN_URL . '/admin/assets/js/edit-product.js', array( 'jquery' ), WP_ASP_PLUGIN_VERSION, true );
+		    wp_enqueue_script( 'asp-admin-general-js' );
+		    wp_enqueue_style( 'asp-admin-styles' );
+		}
+		break;
+	}
+    }
+
+    function show_admin_notices() {
+	$msg_arr = get_transient( 'asp_admin_msg_arr' );
+	if ( ! empty( $msg_arr ) ) {
+	    delete_transient( 'asp_admin_msg_arr' );
+	    $tpl = '<div class="notice notice-%1$s%3$s"><p>%2$s</p></div>';
+	    foreach ( $msg_arr as $msg ) {
+		echo sprintf( $tpl, $msg[ 'type' ], $msg[ 'text' ], $msg[ 'dism' ] === true ? ' is-dismissible' : ''  );
+	    }
+	}
+    }
+
+    static function add_admin_notice( $type, $text, $dism = true ) {
+	$msg_arr	 = get_transient( 'asp_admin_msg_arr' );
+	$msg_arr	 = empty( $msg_arr ) ? array() : $msg_arr;
+	$msg_arr[]	 = array(
+	    'type'	 => $type,
+	    'text'	 => $text,
+	    'dism'	 => $dism );
+	set_transient( 'asp_admin_msg_arr', $msg_arr );
     }
 
     function admin_init() {
@@ -61,6 +109,35 @@ class AcceptStripePayments_Admin {
 		ASP_Debug_Logger::view_log();
 	    }
 	}
+	if ( ! wp_doing_ajax() ) {
+	    //check if PHP version meets minimum required
+	    if ( version_compare( PHP_VERSION, WP_ASP_MIN_PHP_VERSION, '<' ) ) {
+		$dismissed_clicked = isset( $_GET[ 'wp_asp_dismiss_php_notice' ] ) ? true : false;
+		if ( $dismissed_clicked ) {
+		    wp_cache_delete( 'wp_asp_php_warning_dismissed', 'options' );
+		    delete_transient( 'asp_admin_msg_arr' );
+		    update_option( 'wp_asp_php_warning_dismissed', true );
+		}
+		//check if warning was dismissed
+		$dismissed = get_option( 'wp_asp_php_warning_dismissed' );
+		if ( ! $dismissed ) {
+		    //it wasn't, so let's display it
+		    add_action( 'admin_notices', array( $this, 'add_php_version_notice' ) );
+		}
+	    }
+	}
+    }
+
+    public function add_php_version_notice() {
+	$msg	 = '';
+	$msg	 .= '<h3>' . __( 'Warning: Stripe Payments plugin', 'stripe-payments' ) . '</h3>';
+	$msg	 .= "<p>" . __( "PHP version installed on your server doesn't meet minimum required for upcoming Stripe Payments plugin versions.", 'stripe-payments' ) . "</p>";
+	$msg	 .= '<p>' . __( 'You need to communicate this information to your system administrator or hosting provider.', 'stripe-payments' ) . '</p>';
+	$msg	 .= '<p><strong>' . __( 'PHP Version Installed:', 'stripe-payments' ) . '</strong> %s</p>';
+	$msg	 .= '<p><strong>' . __( 'PHP Version Required:', 'stripe-payments' ) . '</strong> %s ' . _x( 'or higher.', 'Used in "PHP Version Required: X.X or higher"', 'stripe-payments' ) . '</p>';
+	$msg	 .= '<a href="%s">' . __( 'Dismiss this warning for now', 'stripe-payments' ) . '</a>';
+	$msg	 = sprintf( $msg, PHP_VERSION, WP_ASP_MIN_PHP_VERSION, admin_url( '?wp_asp_dismiss_php_notice=1' ) );
+	self::add_admin_notice( 'warning', $msg, false );
     }
 
     public function check_current_screen() {
@@ -87,141 +164,7 @@ class AcceptStripePayments_Admin {
 
     public function tinymce_ajax_handler() {
 	ob_start();
-	?>
-	<style>
-	    div#asp-shortcode-type-container {
-		text-align: center;
-		margin: 0 auto;
-	    }
-	    #asp-default-shortcode-container, #asp-product-shortcode-container {
-		display: none;
-	    }
-	    table.asp-shortcode-options-table sup {
-		color: red;
-	    }
-	    div#asp-type-select-buttons button.asp-sc-type-sel-btn {
-		padding: 5px 20px;
-		height: auto;
-		font-size: 14px;
-	    }
-	    div#asp-type-select-buttons div {
-		margin-top: 20px;
-		margin-bottom: 10px;
-	    }
-	    #asp-error-no-products {
-		display: none;
-		color: red;
-	    }
-	</style>
-	<div id="asp-shortcode-type-container">
-	    <h2>Please select shortcode type you want to insert</h2>
-	    <div id="asp-type-select-buttons">
-		<div>
-		    <button class="button button-primary asp-sc-type-sel-btn" data-asp-display="asp-product-shortcode-container">Product Shortcode</button>
-		</div>
-		<div>
-		    <button class="button button-primary asp-sc-type-sel-btn" data-asp-display="asp-default-shortcode-container">Custom Shortcode</button>
-		</div>
-	    </div>
-	</div>
-	<div id="asp-product-shortcode-container">
-	    <table class="form-table" style="text-align: left">
-		<tr>
-		    <th scope="row">Product</th>
-		    <td><select id ="asp_product_select" name="asp_product"></select>
-			<p class="description">Select product you want to insert.</p>
-			<span id="asp-error-no-products">No products found. You need to <a href="<?php echo admin_url() . 'post-new.php?post_type=' . ASPMain::$products_slug; ?>" tagert="_blank">create a product</a> first.</span>
-		    </td>
-		</tr>
-	    </table>
-	    <p class="submit">
-		<input type="button" id="asp-tinymce-product-submit" class="button-primary" value="Insert Shortcode" />
-	    </p>
-	</div>
-	<div id="asp-default-shortcode-container">
-	    <h2 class="nav-tab-wrapper"><a class="nav-tab" href="javascript:void()" data-switch-to-tab="1">General Options</a><a class="nav-tab" href="javascript:void()" data-switch-to-tab="2">Additional Options</a></h2>
-	    <table id="highlight-table" class="form-table asp-shortcode-options-table" style="text-align: left">
-		<tr data-tabid="1">
-		    <th scope="row">Item Name <sup>*</sup></th>
-		    <td><input type="text" name="asp_name" id="asp_name" class="asp-input-wide">
-			<p class="description">Your item name. This value should be unique so this item can be identified uniquely on the page.</p>
-		    </td>
-		</tr>
-		<tr data-tabid="1">
-		    <th scope="row">Price</th>
-		    <td><input type="text" name="asp_price" id="asp_price">
-			<p class="description">Item price. Numbers only, no need to put currency symbol. Example: 99.95<br />
-			    Leave it blank if you want your customers to enter the amount themselves (e.g. for donation button).
-			</p>
-		    </td>
-		</tr>
-		<tr data-tabid="1">
-		    <th scope="row">Currency</th>
-		    <td><select name="asp_currency" id="asp_currency"></select>
-			<p class="description">Leave "(Default)" option selected if you want to use currency specified on settings page.</p>
-		    </td>
-		</tr>
-		<tr data-tabid="1">
-		    <th scope="row">Quantity</th>
-		    <td><input type="text" name="asp_quantity" id="asp_quantity">
-			<p class="description">Specify a custom quantity for the item.<br /></p>
-		    </td>
-		</tr>
-		<tr data-tabid="1">
-		    <th scope="row">Button Text</th>
-		    <td><input type="text" name="asp_button_text" id="asp_button_text" class="asp-input-wide">
-			<p class="description">Specify text to be displayed on the button. Leave it blank to use button text specified on settings page.</p>
-		    </td>
-		</tr>
-		<tr data-tabid="2">
-		    <th scope="row">URL</th>
-		    <td><input type="text" name="asp_url" id="asp_url" class="asp-input-wide">
-			<p class="description">URL of your product (if you're selling digital products).</p>
-		    </td>
-		</tr>
-		<tr data-tabid="2">
-		    <th scope="row">Thank You Page URL</th>
-		    <td><input type="text" name="asp_thankyou_page_url" id="asp_thankyou_page_url" class="asp-input-wide">
-			<p class="description">Page URL where users will be redirected after the payment is processed for this item. Useful if you want to make a custom "Thank you" page for this item. Leave it blank if you want to use the default URL specified in plugin settings.</p>
-		    </td>
-		</tr>
-		<tr data-tabid="2">
-		    <th scope="row">Description</th>
-		    <td><input type="text" name="asp_description" id="asp_description" class="asp-input-wide">
-			<p class="description">You can optionally add a custom description for the item/product/service that will get shown in the stripe checkout/payment window of the item.</p>
-		    </td>
-		</tr>
-		<tr data-tabid="2">
-		    <th scope="row">Billing Address</th>
-		    <td><input type="checkbox" name="asp_billing_address" id="asp_billing_address">
-			<p class="description">Enable this option to collect customer's billing address during the transaction.</p>
-		    </td>
-		</tr>
-		<tr data-tabid="2">
-		    <th scope="row">Shipping Address</th>
-		    <td><input type="checkbox" name="asp_shipping_address" id="asp_shipping_address">
-			<p class="description">Enable this option to collect customer's shipping address during the transaction.</p>
-		    </td>
-		</tr>
-		<tr data-tabid="2">
-		    <th scope="row">Item Logo</th>
-		    <td><input type="text" name="asp_item_logo" id="asp_item_logo" class="asp-input-wide">
-			<p class="description">You can optionally show an item logo in the Stripe payment window. Specify the logo image URL.</p>
-		    </td>
-		</tr>
-		<tr data-tabid="2">
-		    <th scope="row">Button CSS Class</th>
-		    <td><input type="text" name="asp_css_class" id="asp_css_class" class="asp-input-wide">
-			<p class="description">CSS class to be assigned to the button. This is used for styling purposes. You can get additional information <a href="https://s-plugins.com/customize-stripe-payment-button-appearance-using-css/" target="_blank">in this tutorial</a>.</p>
-		    </td>
-		</tr>
-	    </table>
-	    <p id="asp_form_err">&nbsp;</p>
-	    <p class="submit">
-		<input type="button" id="asp-tinymce-submit" class="button-primary" value="Insert Shortcode" name="submit" style=""/>
-	    </p>
-	</div>
-	<?php
+	require_once(WP_ASP_PLUGIN_PATH . 'admin/views/shortcode-inserter.php');
 	$content	 = ob_get_clean();
 	$query		 = new WP_Query( array(
 	    'post_type'	 => ASPMain::$products_slug,
@@ -356,7 +299,6 @@ class AcceptStripePayments_Admin {
 	register_setting( 'AcceptStripePayments-settings-group', 'AcceptStripePayments-settings', array( &$this, 'settings_sanitize_field_callback' ) );
 
 	// Add/define the various section/groups (the fields will go under these sections).
-	//add_settings_section( 'AcceptStripePayments-documentation', __( 'Plugin Documentation', 'stripe-payments' ), array( &$this, 'general_documentation_callback' ), $this->plugin_slug . '-docs' );
 
 	add_settings_section( 'AcceptStripePayments-global-section', __( 'Global Settings', 'stripe-payments' ), null, $this->plugin_slug );
 	add_settings_section( 'AcceptStripePayments-credentials-section', __( 'Credentials', 'stripe-payments' ), null, $this->plugin_slug );
@@ -375,7 +317,7 @@ class AcceptStripePayments_Admin {
 	add_settings_field( 'checkout_url', __( 'Checkout Result Page URL', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug, 'AcceptStripePayments-global-section', array( 'field'	 => 'checkout_url',
 	    'desc'	 => __( 'This is the thank you page. This page is automatically created for you when you install the plugin. Do not delete this page as the plugin will send the customer to this page after the payment.', 'stripe-payments' ) . '<br /><b><i>' . __( 'Important Notice:', 'stripe-payments' ) . '</i></b> ' . __( 'if you are using caching plugins on your site (similar to W3 Total Cache, WP Rocket etc), you must exclude checkout results page from caching. Failing to do so will result in unpredictable checkout results output.', 'stripe-payments' ),
 	    'size'	 => 100 ) );
-	add_settings_field( 'products_page_id', 'Products Page URL', array( &$this, 'settings_field_callback' ), $this->plugin_slug, 'AcceptStripePayments-global-section', array( 'field'	 => 'products_page_id',
+	add_settings_field( 'products_page_id', __( 'Products Page URL', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug, 'AcceptStripePayments-global-section', array( 'field'	 => 'products_page_id',
 	    'desc'	 => __( 'All your products will be listed here in a grid display. When you create new products, they will show up in this page. This page is automatically created for you when you install the plugin. You can add this page to your navigation menu if you want the site visitors to find it easily.', 'stripe-payments' ),
 	    'size'	 => 100 ) );
 
@@ -404,6 +346,7 @@ class AcceptStripePayments_Admin {
 	//Debug section
 	add_settings_field( 'debug_log_enable', __( 'Enable Debug Logging', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug, 'AcceptStripePayments-debug-section', array( 'field'	 => 'debug_log_enable', 'desc'	 => __( 'Check this option to enable debug logging. This is useful for troubleshooting post payment failures.', 'stripe-payments' ) .
 	    '<br /><a href="' . admin_url() . '?asp_action=view_log" target="_blank">' . __( 'View Log', 'stripe-payments' ) . '</a> | <a style="color: red;" id="asp_clear_log_btn" href="#0">' . __( 'Clear Log', 'stripe-payments' ) . '</a>' ) );
+	add_settings_field( 'debug_log_link', __( 'Debug Log Shareable Link', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug, 'AcceptStripePayments-debug-section', array( 'field' => 'debug_log_link', 'desc' => __( 'Normally, the debug log is only accessible to you if you are logged-in as admin. However, in some situations it might be required for support personnel to view it without having admin credentials. This link can be helpful in that situation.', 'stripe-payments' ) ) );
 
 	// Email section
 	add_settings_field( 'stripe_receipt_email', __( 'Send Receipt Email From Stripe', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-email', 'AcceptStripePayments-email-section', array( 'field'	 => 'stripe_receipt_email',
@@ -413,6 +356,9 @@ class AcceptStripePayments_Admin {
 	add_settings_field( 'send_emails_to_buyer', __( 'Send Emails to Buyer After Purchase', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-email', 'AcceptStripePayments-email-section', array( 'field'	 => 'send_emails_to_buyer',
 	    'desc'	 => __( 'If checked the plugin will send an email to the buyer with the sale details. If digital goods are purchased then the email will contain the download links for the purchased products.', 'stripe-payments' ) )
 	);
+	add_settings_field( 'buyer_email_type', __( 'Buyer Email Content Type', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-email', 'AcceptStripePayments-email-section', array( 'field'	 => 'buyer_email_type',
+	    'desc'	 => __( 'Choose which format of email to send.', 'stripe-payments' ) )
+	);
 	add_settings_field( 'from_email_address', __( 'From Email Address', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-email', 'AcceptStripePayments-email-section', array( 'field'	 => 'from_email_address',
 	    'desc'	 => __( 'Example: Your Name &lt;sales@your-domain.com&gt; This is the email address that will be used to send the email to the buyer. This name and email address will appear in the from field of the email.', 'stripe-payments' ) )
 	);
@@ -420,33 +366,7 @@ class AcceptStripePayments_Admin {
 	    'desc'	 => __( 'This is the subject of the email that will be sent to the buyer.', 'stripe-payments' ) )
 	);
 
-	$email_tags = array(
-	    "{shipping_address}"	 => 'Shipping address of the buyer',
-	    "{billing_address}"	 => 'Billing address of the buyer',
-	    "{product_details}"	 => 'The item details of the purchased product (this will include the download link for digital items)',
-	    "{transaction_id}"	 => 'The unique transaction ID of the purchase',
-	    '{customer_name}'	 => 'Customer name. Available only if collect billing address option enabled',
-	    "{payer_email}"		 => 'Email Address of the buyer',
-	    "{purchase_amt}"	 => 'The amount paid for the current transaction. Example: 1,000.00',
-	    "{tax}"			 => 'Tax in percent. Example: 10%',
-	    "{tax_amt}"		 => 'Formatted tax amount for single item. Example: $0.25',
-	    "{shipping_amt}"	 => 'Formatted shipping amount. Example: $2.50',
-	    "{purchase_amt_curr}"	 => 'The amount paid for the current transaction with currency symbol. Example: $1,000.00',
-	    "{item_price}"		 => 'Item price. Example: 1000,00',
-	    "{item_price_curr}"	 => 'Item price with currency symbol. Example: $1,000.00',
-	    "{currency}"		 => 'Currency symbol. Example: $',
-	    "{currency_code}"	 => '3-letter currency code. Example: USD',
-	    "{purchase_date}"	 => 'The date of the purchase',
-	    "{custom_field}"	 => 'Custom field name and value (if enabled)',
-	);
-
-	$email_tags_descr = '';
-
-	foreach ( $email_tags as $tag => $descr ) {
-	    $email_tags_descr .= '<br>' . $tag . ' - ' . __( $descr, 'stripe-payments' );
-	}
-
-	$email_tags_descr = '<div><a class="wp-asp-toggle toggled-off" href="#0">' . __( 'Click here to toggle tags hint', 'stripe-payments' ) . '</a><div class="hidden">' . $email_tags_descr . '</div></div>';
+	$email_tags_descr = self::get_email_tags_descr();
 
 	add_settings_field( 'buyer_email_body', __( 'Buyer Email Body', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-email', 'AcceptStripePayments-email-section', array( 'field'	 => 'buyer_email_body',
 	    'desc'	 => __( 'This is the body of the email that will be sent to the buyer.', 'stripe-payments' ) . ' ' . __( 'Do not change the text within the braces {}. You can use the following email tags in this email body field:', 'stripe-payments' ) . $email_tags_descr )
@@ -457,6 +377,11 @@ class AcceptStripePayments_Admin {
 	add_settings_field( 'seller_notification_email', __( 'Notification Email Address', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-email', 'AcceptStripePayments-email-section', array( 'field'	 => 'seller_notification_email',
 	    'desc'	 => __( 'This is the email address where the seller will be notified of product sales. You can put multiple email addresses separated by comma (,) in the above field to send the notification to multiple email addresses.', 'stripe-payments' ) )
 	);
+
+	add_settings_field( 'seller_email_type', __( 'Seller Email Content Type', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-email', 'AcceptStripePayments-email-section', array( 'field'	 => 'seller_email_type',
+	    'desc'	 => __( 'Choose which format of email to send.', 'stripe-payments' ) )
+	);
+
 	add_settings_field( 'seller_email_subject', __( 'Seller Email Subject', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-email', 'AcceptStripePayments-email-section', array( 'field'	 => 'seller_email_subject',
 	    'desc'	 => __( 'This is the subject of the email that will be sent to the seller for record.', 'stripe-payments' ) )
 	);
@@ -481,7 +406,7 @@ class AcceptStripePayments_Admin {
 	add_settings_field( 'price_thousand_sep', __( 'Thousand Separator', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-price-display', array( 'field'	 => 'price_thousand_sep',
 	    'desc'	 => __( 'This sets the thousand separator of the displayed price.', 'stripe-payments' ) )
 	);
-	add_settings_field( 'price_decimals_num', 'Number of Decimals', array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-price-display', array( 'field'	 => 'price_decimals_num',
+	add_settings_field( 'price_decimals_num', __( 'Number of Decimals', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-price-display', array( 'field'	 => 'price_decimals_num',
 	    'desc'	 => __( 'This sets the number of decimal points shown in the displayed price.', 'stripe-payments' ) )
 	);
 
@@ -504,6 +429,9 @@ class AcceptStripePayments_Admin {
 	add_settings_field( 'custom_field_descr_location', __( 'Text Field Description Location', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-custom-field', array( 'field'	 => 'custom_field_descr_location',
 	    'desc'	 => __( 'Select field description location. Placeholder: description is displayed inside text input (default). Below Input: description is displayed below text input.', 'stripe-payments' ) )
 	);
+	add_settings_field( 'custom_field_position', __( 'Position', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-custom-field', array( 'field'	 => 'custom_field_position',
+	    'desc'	 => __( 'Select custom field position.', 'stripe-payments' ) )
+	);
 	add_settings_field( 'custom_field_type', __( 'Field Type', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-custom-field', array( 'field'	 => 'custom_field_type',
 	    'desc'	 => __( 'Select custom field type.', 'stripe-payments' ) )
 	);
@@ -518,10 +446,19 @@ class AcceptStripePayments_Admin {
 	add_settings_field( 'tos_text', __( 'Checkbox Text', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-tos', array( 'field'	 => 'tos_text',
 	    'desc'	 => __( 'Text to be displayed on checkbox. It accepts HTML code so you can put a link to your terms and conditions page.', 'stripe-payments' ) )
 	);
+	add_settings_field( 'tos_store_ip', __( 'Store Customer\'s IP Address', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-tos', array( 'field'	 => 'tos_store_ip',
+	    'desc'	 => __( 'If enabled, customer\'s IP address from which TOS were accepted will be stored in order info.', 'stripe-payments' ) )
+	);
+	add_settings_field( 'tos_position', __( 'Position', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-tos', array( 'field'	 => 'tos_position',
+	    'desc'	 => __( 'Select TOS checkbox position.', 'stripe-payments' ) )
+	);
 
 	// Additional Settings
 	add_settings_field( 'disable_buttons_before_js_loads', __( 'Disable Buttons Before Javascript Loads', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-additional-settings', array( 'field'	 => 'disable_buttons_before_js_loads',
 	    'desc'	 => __( "If enabled, payment buttons are not clickable until Javascript libraries are loaded on page view. This prevents \"Invalid Stripe Token\" errors on some configurations.", 'stripe-payments' ) )
+	);
+	add_settings_field( 'dont_create_order', __( 'Don\'t Create Order', 'stripe-payments' ), array( &$this, 'settings_field_callback' ), $this->plugin_slug . '-advanced', 'AcceptStripePayments-additional-settings', array( 'field' => 'dont_create_order',
+	    'desc'	 => __( 'If enabled, no transaction info is saved to the orders menu of the plugin. The transaction data will still be available in your Stripe dashboard. Useful if you don\'t want to store purchase and customer data in your site.', 'stripe-payments' ) )
 	);
     }
 
@@ -529,21 +466,11 @@ class AcceptStripePayments_Admin {
 	echo '<p>' . __( 'This section allows you to configure Terms and Conditions or Privacy Policy that customer must accept before making payment. This, for example, can be used to comply with EU GDPR.', 'stripe-payments' ) . '</p>';
     }
 
-    public function general_documentation_callback( $args ) {
-	?>
-	<div style="background: none repeat scroll 0 0 #FFF6D5;border: 1px solid #D1B655;color: #3F2502;margin: 10px 0;padding: 5px 5px 5px 10px;text-shadow: 1px 1px #FFFFFF;">
-	    <p>Please read the
-		<a target="_blank" href="https://s-plugins.com/stripe-payments-plugin-tutorials/">WordPress Stripe</a> plugin setup instructions to configure and use it.
-	    </p>
-	</div>
-	<?php
-    }
-
     public function general_settings_menu_footer_callback( $args ) {
 	?>
 	<div style="background: none repeat scroll 0 0 #FFF6D5;border: 1px solid #D1B655;color: #3F2502;margin: 10px 0;padding: 5px 5px 5px 10px;text-shadow: 1px 1px #FFFFFF;">
 	    <p>
-		If you need a feature rich plugin (with good support) for selling your products and services then check out our
+		<?php _ex( 'If you need a feature rich plugin (with good support) for selling your products and services then check out our', 'Followed by a link to eStore plugin', 'stripe-payments' ); ?>
 		<a target="_blank" href="https://www.tipsandtricks-hq.com/wordpress-estore-plugin-complete-solution-to-sell-digital-products-from-your-wordpress-blog-securely-1059">WP eStore Plugin</a>.
 	    </p>
 	</div>
@@ -569,22 +496,22 @@ class AcceptStripePayments_Admin {
 
     public function get_checkout_lang_options( $selected_value = '' ) {
 	$data_arr	 = array(
-	    ""	 => "Autodetect",
-	    "da"	 => "Danish",
-	    "nl"	 => "Dutch",
-	    "en"	 => "English",
-	    "fi"	 => "Finnish",
-	    "fr"	 => "French",
-	    "de"	 => "German",
-	    "it"	 => "Italian",
-	    "ja"	 => "Japanese",
-	    "no"	 => "Norwegian",
-	    "zh"	 => "Simplified Chinese",
-	    "es"	 => "Spanish",
-	    "sv"	 => "Swedish",
+	    ""	 => __( "Autodetect", 'stripe-payments' ),
+	    "da"	 => __( "Danish", 'stripe-payments' ),
+	    "nl"	 => __( "Dutch", 'stripe-payments' ),
+	    "en"	 => __( "English", 'stripe-payments' ),
+	    "fi"	 => __( "Finnish", 'stripe-payments' ),
+	    "fr"	 => __( "French", 'stripe-payments' ),
+	    "de"	 => __( "German", 'stripe-payments' ),
+	    "it"	 => __( "Italian", 'stripe-payments' ),
+	    "ja"	 => __( "Japanese", 'stripe-payments' ),
+	    "no"	 => __( "Norwegian", 'stripe-payments' ),
+	    "zh"	 => __( "Simplified Chinese", 'stripe-payments' ),
+	    "es"	 => __( "Spanish", 'stripe-payments' ),
+	    "sv"	 => __( "Swedish", 'stripe-payments' )
 	);
 	$opt_tpl	 = '<option value="%val%"%selected%>%name%</option>';
-	$opts		 = $selected_value === false ? '<option value="" selected>(Default)</option>' : '';
+	$opts		 = $selected_value === false ? '<option value="" selected>' . __( '(Default)', 'stripe-payments' ) . '</option>' : '';
 	foreach ( $data_arr as $key => $value ) {
 	    $selected	 = $selected_value == $key ? ' selected' : '';
 	    $opts		 .= str_replace( array( '%val%', '%name%', '%selected%' ), array( $key, $value, $selected ), $opt_tpl );
@@ -624,8 +551,8 @@ class AcceptStripePayments_Admin {
 		break;
 	    case 'custom_field_type':
 		echo "<select name='AcceptStripePayments-settings[{$field}]'>'";
-		echo "<option value='text'" . ($field_value === 'text' ? ' selected' : '') . ">Text</option>";
-		echo "<option value='checkbox'" . ($field_value === 'checkbox' ? ' selected' : '') . ">Checkbox</option>";
+		echo "<option value='text'" . ($field_value === 'text' ? ' selected' : '') . ">" . __( "Text", 'stripe-payments' ) . "</option>";
+		echo "<option value='checkbox'" . ($field_value === 'checkbox' ? ' selected' : '') . ">" . __( 'Checkbox', 'stripe-payments' ) . "</option>";
 		echo "</select>";
 		echo "<p class=\"description\">{$desc}</p>";
 		break;
@@ -636,8 +563,17 @@ class AcceptStripePayments_Admin {
 		echo "</select>";
 		echo "<p class=\"description\">{$desc}</p>";
 		break;
+	    case 'tos_position':
+	    case 'custom_field_position':
+		echo "<select name='AcceptStripePayments-settings[{$field}]'>'";
+		echo "<option value='above'" . ($field_value === 'above' || empty( $field_value ) ? ' selected' : '') . ">" . __( 'Above Button', 'stripe-payments' ) . "</option>";
+		echo "<option value='below'" . ($field_value === 'below' ? ' selected' : '') . ">" . __( 'Below Button', 'stripe-payments' ) . "</option>";
+		echo "</select>";
+		echo "<p class=\"description\">{$desc}</p>";
+		break;
 	    case 'price_apply_for_input':
 	    case 'tos_enabled':
+	    case 'tos_store_ip':
 	    case 'debug_log_enable':
 	    case 'send_emails_to_seller':
 	    case 'send_emails_to_buyer':
@@ -649,13 +585,31 @@ class AcceptStripePayments_Admin {
 	    case 'disable_buttons_before_js_loads':
 	    case 'dont_save_card':
 	    case 'custom_field_mandatory':
-	    case 'custom_field_enabled':
 	    case 'enable_zip_validation':
+	    case 'dont_create_order':
 		echo "<input type='checkbox' name='AcceptStripePayments-settings[{$field}]' value='1' " . ($field_value ? 'checked=checked' : '') . " /><p class=\"description\">{$desc}</p>";
+		break;
+	    case 'custom_field_enabled':
+		echo "<input type='checkbox' name='AcceptStripePayments-settings[{$field}]' value='1' " . ($field_value ? 'checked=checked' : '') . " /><p class=\"description\">{$desc}</p>";
+		//do action so ACF addon can display its message if needed
+		do_action( 'asp_acf_settings_page_display_msg' );
+		break;
+	    case 'buyer_email_type':
+	    case 'seller_email_type':
+		$checkedText		 = empty( $field_value ) || ($field_value === 'text') ? ' selected' : '';
+		$checkedHTML		 = $field_value === 'html' ? ' selected' : '';
+		echo '<select name="AcceptStripePayments-settings[' . $field . ']">';
+		echo sprintf( '<option value="text"%s>' . __( 'Plain Text', 'stripe-payments' ) . '</option>', $checkedText );
+		echo sprintf( '<option value="html"%s>' . __( 'HTML', 'stripe-payments' ) . '</option>', $checkedHTML );
+		echo '</select>';
+		echo "<p class=\"description\">{$desc}</p>";
 		break;
 	    case 'buyer_email_body':
 	    case 'seller_email_body':
-		echo "<textarea cols='70' rows='7' name='AcceptStripePayments-settings[{$field}]'>{$field_value}</textarea><p class=\"description\">{$desc}</p>";
+		add_filter( 'wp_default_editor', array( $this, 'set_default_editor' ) );
+		wp_editor( html_entity_decode( $field_value ), $field, array( 'textarea_name' => 'AcceptStripePayments-settings[' . $field . ']', 'teeny' => true ) );
+		remove_filter( 'wp_default_editor', array( $this, 'set_default_editor' ) );
+		echo "<p class=\"description\">{$desc}</p>";
 		break;
 	    case 'products_page_id':
 		//We save the products page ID internally but we show the URL of that page to the user (its user-friendly).
@@ -683,8 +637,8 @@ class AcceptStripePayments_Admin {
 	    case 'price_currency_pos':
 		?>
 		<select name="AcceptStripePayments-settings[<?php echo $field; ?>]">
-		    <option value="left"<?php echo ($field_value === "left") ? ' selected' : ''; ?>>Left</option>
-		    <option value="right"<?php echo ($field_value === "right") ? ' selected' : ''; ?>>Right</option>
+		    <option value="left"<?php echo ($field_value === "left") ? ' selected' : ''; ?>><?php _ex( 'Left', 'Currency symbol position', 'stripe-payments' ); ?></option>
+		    <option value="right"<?php echo ($field_value === "right") ? ' selected' : ''; ?>><?php _ex( 'Right', 'Currency symbol position', 'stripe-payments' ); ?></option>
 		</select>
 		<p class="description"><?php echo $desc; ?></p>
 		<?php
@@ -693,10 +647,32 @@ class AcceptStripePayments_Admin {
 		echo '<textarea name="AcceptStripePayments-settings[tos_text]" rows="4" cols="70">' . $field_value . '</textarea>';
 		echo '<p class="description">' . $desc . '</p>';
 		break;
+	    case 'debug_log_link':
+		//check if we have token generated
+		$asp_class		 = AcceptStripePayments::get_instance();
+		$token			 = $asp_class->get_setting( 'debug_log_access_token' );
+		if ( ! $token ) {
+		    //let's generate debug log access token
+		    $token					 = substr( md5( uniqid() ), 16 );
+		    $opts					 = get_option( 'AcceptStripePayments-settings' );
+		    $opts[ 'debug_log_access_token' ]	 = $token;
+		    unregister_setting( 'AcceptStripePayments-settings-group', 'AcceptStripePayments-settings' );
+		    update_option( 'AcceptStripePayments-settings', $opts );
+		}
+		echo '<input type="text" size="70" class="asp-debug-log-link asp-select-on-click" readonly value="' . admin_url() . '?asp_action=view_log&token=' . $token . '">';
+		echo '<p class="description">' . $desc . '</p>';
+		?>
+		<?php
+		break;
 	    default:
 		echo "<input type='text' name='AcceptStripePayments-settings[{$field}]' value='{$field_value}' size='{$size}' /> <p class=\"description\">{$desc}</p>";
 		break;
 	}
+    }
+
+    public function set_default_editor( $r ) {
+	$r = 'html';
+	return $r;
     }
 
     /**
@@ -707,11 +683,18 @@ class AcceptStripePayments_Admin {
     public function settings_sanitize_field_callback( $input ) {
 	$output = get_option( 'AcceptStripePayments-settings' );
 
+	// this filter name is a bit invalid, we will slowly replace it with a valid one below
 	$output = apply_filters( 'apm-admin-settings-sanitize-field', $output, $input );
+
+	$output = apply_filters( 'asp-admin-settings-sanitize-field', $output, $input );
 
 	$output [ 'price_apply_for_input' ] = empty( $input[ 'price_apply_for_input' ] ) ? 0 : 1;
 
 	$output [ 'tos_enabled' ] = empty( $input[ 'tos_enabled' ] ) ? 0 : 1;
+
+	$output [ 'tos_position' ] = sanitize_text_field( $input[ 'tos_position' ] );
+
+	$output [ 'tos_store_ip' ] = empty( $input[ 'tos_store_ip' ] ) ? 0 : 1;
 
 	$output[ 'tos_text' ] = ! empty( $input[ 'tos_text' ] ) ? $input[ 'tos_text' ] : '';
 
@@ -724,6 +707,8 @@ class AcceptStripePayments_Admin {
 	$output[ 'custom_field_descr' ] = empty( $input[ 'custom_field_descr' ] ) ? '' : $input[ 'custom_field_descr' ];
 
 	$output[ 'custom_field_descr_location' ] = empty( $input[ 'custom_field_descr_location' ] ) ? 'placeholder' : $input[ 'custom_field_descr_location' ];
+
+	$output [ 'custom_field_position' ] = sanitize_text_field( $input[ 'custom_field_position' ] );
 
 	$output[ 'custom_field_mandatory' ] = empty( $input[ 'custom_field_mandatory' ] ) ? 0 : 1;
 
@@ -748,6 +733,8 @@ class AcceptStripePayments_Admin {
 	$output[ 'send_email_on_error_to' ] = sanitize_text_field( $input[ 'send_email_on_error_to' ] );
 
 	$output[ 'disable_buttons_before_js_loads' ] = empty( $input[ 'disable_buttons_before_js_loads' ] ) ? 0 : 1;
+
+	$output[ 'dont_create_order' ] = empty( $input[ 'dont_create_order' ] ) ? 0 : 1;
 
 	$output[ 'enable_zip_validation' ] = empty( $input[ 'enable_zip_validation' ] ) ? 0 : 1;
 
@@ -800,6 +787,10 @@ class AcceptStripePayments_Admin {
 	$output[ 'api_publishable_key_test' ] = $input[ 'api_publishable_key_test' ];
 
 	$output[ 'api_secret_key_test' ] = $input[ 'api_secret_key_test' ];
+
+	$output[ 'buyer_email_type' ] = $input[ 'buyer_email_type' ];
+
+	$output[ 'seller_email_type' ] = $input[ 'seller_email_type' ];
 
 	if ( ! empty( $input[ 'from_email_address' ] ) )
 	    $output[ 'from_email_address' ] = $input[ 'from_email_address' ];
@@ -872,18 +863,37 @@ class AcceptStripePayments_Admin {
 	include_once( 'views/addons-listing.php' );
     }
 
-    /**
-     * Add settings action link to the plugins page.
-     *
-     * @since    1.0.0
-     */
-    public function add_action_links( $links ) {
-
-	return array_merge(
-	array(
-	    'settings' => '<a href="' . admin_url( 'options-general.php?page=' . $this->plugin_slug ) . '">' . __( 'Settings', 'stripe-payments' ) . '</a>'
-	), $links
+    static function get_email_tags_descr() {
+	$email_tags = array(
+	    "{item_name}"		 => __( 'Name of the purchased item', 'stripe-payments' ),
+	    "{item_quantity}"	 => __( 'Number of items purchsed', 'stripe-payments' ),
+	    "{item_price}"		 => __( 'Item price. Example: 1000,00', 'stripe-payments' ),
+	    "{item_price_curr}"	 => __( 'Item price with currency symbol. Example: $1,000.00', 'stripe-payments' ),
+	    "{purchase_amt}"	 => __( 'The amount paid for the current transaction. Example: 1,000.00', 'stripe-payments' ),
+	    "{purchase_amt_curr}"	 => __( 'The amount paid for the current transaction with currency symbol. Example: $1,000.00', 'stripe-payments' ),
+	    "{tax}"			 => __( 'Tax in percent. Example: 10%', 'stripe-payments' ),
+	    "{tax_amt}"		 => __( 'Formatted tax amount for single item. Example: $0.25', 'stripe-payments' ),
+	    "{shipping_amt}"	 => __( 'Formatted shipping amount. Example: $2.50', 'stripe-payments' ),
+	    "{product_details}"	 => __( 'The item details of the purchased product (this will include the download link for digital items)', 'stripe-payments' ),
+	    "{transaction_id}"	 => __( 'The unique transaction ID of the purchase', 'stripe-payments' ),
+	    "{shipping_address}"	 => __( 'Shipping address of the buyer', 'stripe-payments' ),
+	    "{billing_address}"	 => __( 'Billing address of the buyer', 'stripe-payments' ),
+	    '{customer_name}'	 => __( 'Customer name. Available only if collect billing address option enabled', 'stripe-payments' ),
+	    "{payer_email}"		 => __( 'Email Address of the buyer', 'stripe-payments' ),
+	    "{currency}"		 => __( 'Currency symbol. Example: $', 'stripe-payments' ),
+	    "{currency_code}"	 => __( '3-letter currency code. Example: USD', 'stripe-payments' ),
+	    "{purchase_date}"	 => __( 'The date of the purchase', 'stripe-payments' ),
+	    "{custom_field}"	 => __( 'Custom field name and value (if enabled)', 'stripe-payments' ),
 	);
+
+	$email_tags_descr = '';
+
+	foreach ( $email_tags as $tag => $descr ) {
+	    $email_tags_descr .= sprintf( '<tr><td class="wp-asp-tag-name"><b>%s</b></td><td class="wp-asp-tag-descr">%s</td><tr>', $tag, $descr );
+	}
+
+	$email_tags_descr = sprintf( '<div><a class="wp-asp-toggle toggled-off" href="#0">%s</a><div class="wp-asp-tags-table-cont hidden"><table class="wp-asp-tags-hint" cellspacing="0"><tbody>%s</tbody></table></div></div>', __( 'Click here to toggle tags hint', 'stripe-payments' ), $email_tags_descr );
+	return $email_tags_descr;
     }
 
 }

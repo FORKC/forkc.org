@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Stripe Payments
  * Description: Easily accept credit card payments via Stripe payment gateway in WordPress.
- * Version: 1.9.3
+ * Version: 1.9.14.1
  * Author: Tips and Tricks HQ, wptipsntricks
  * Author URI: https://www.tipsandtricks-hq.com/
  * Plugin URI: https://s-plugins.com
@@ -17,7 +17,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; //Exit if accessed directly
 }
 
-define( 'WP_ASP_PLUGIN_VERSION', '1.9.3' );
+define( 'WP_ASP_PLUGIN_VERSION', '1.9.14.1' );
+define( 'WP_ASP_MIN_PHP_VERSION', '5.4' );
 define( 'WP_ASP_PLUGIN_URL', plugins_url( '', __FILE__ ) );
 define( 'WP_ASP_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -46,7 +47,6 @@ $ASPMain = new ASPMain();
  * ---------------------------------------------------------------------------- */
 require_once( WP_ASP_PLUGIN_PATH . 'includes/class-debug-logger.php' );
 require_once( WP_ASP_PLUGIN_PATH . 'public/class-asp.php' );
-require_once( WP_ASP_PLUGIN_PATH . 'public/includes/class-shortcode-asp.php' );
 require_once( WP_ASP_PLUGIN_PATH . 'admin/includes/class-products.php' );
 require_once( WP_ASP_PLUGIN_PATH . 'admin/includes/class-coupons.php' );
 require_once( WP_ASP_PLUGIN_PATH . 'admin/includes/class-order.php' );
@@ -64,7 +64,6 @@ register_deactivation_hook( __FILE__, array( 'AcceptStripePayments', 'deactivate
 /*
  */
 add_action( 'plugins_loaded', array( 'AcceptStripePayments', 'get_instance' ) );
-add_action( 'plugins_loaded', array( 'AcceptStripePaymentsShortcode', 'get_instance' ) );
 
 /* ----------------------------------------------------------------------------*
  * Dashboard and Administrative Functionality
@@ -81,24 +80,25 @@ add_action( 'plugins_loaded', array( 'AcceptStripePaymentsShortcode', 'get_insta
  * The code below is intended to to give the lightest footprint possible.
  */
 if ( is_admin() ) {
+    //check and redirect old Settings page
+    add_action( 'init', 'asp_init_handler' );
 
     require_once( plugin_dir_path( __FILE__ ) . 'admin/class-asp-admin.php' );
     add_action( 'plugins_loaded', array( 'AcceptStripePayments_Admin', 'get_instance' ) );
+    add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'asp_stripe_add_settings_link' );
+} else {
+    require_once( WP_ASP_PLUGIN_PATH . 'public/includes/class-shortcode-asp.php' );
+    add_filter( 'the_content', 'asp_filter_post_type_content' );
+    add_action( 'plugins_loaded', array( 'AcceptStripePaymentsShortcode', 'get_instance' ) );
 }
 
 /* Add a link to the settings page in the plugins listing page */
 
-function asp_stripe_add_settings_link( $links, $file ) {
-    if ( $file == plugin_basename( __FILE__ ) ) {
-	$settings_link = '<a href="edit.php?post_type=stripe_order&page=stripe-payments-settings">Settings</a>';
-	array_unshift( $links, $settings_link );
-    }
+function asp_stripe_add_settings_link( $links ) {
+    $settings_link = '<a href="edit.php?post_type=stripe_order&page=stripe-payments-settings">' . __( 'Settings', 'stripe-payments' ) . '</a>';
+    array_unshift( $links, $settings_link );
     return $links;
 }
-
-add_filter( 'plugin_action_links', 'asp_stripe_add_settings_link', 10, 2 );
-//check and redirect old Settings page
-add_action( 'init', 'asp_init_handler' );
 
 register_activation_hook( __FILE__, 'asp_activation_hook_handler' );
 
@@ -109,7 +109,13 @@ $ASPOrder	 = ASPOrder::get_instance();
 add_action( 'init', array( $ASPOrder, 'register_post_type' ), 0 );
 
 if ( session_id() == '' && ! wp_doing_ajax() ) {
-    session_start();
+    try {
+	ob_start();
+	session_start();
+    } catch ( Exception $e ) {
+	//looks like there were some issues with session. Let's do nothing about it for now.
+    }
+    ob_end_clean();
 }
 
 function asp_activation_hook_handler() {
@@ -134,8 +140,6 @@ function asp_init_handler() {
 	require_once(WP_ASP_PLUGIN_PATH . 'admin/includes/class-products-meta-boxes.php');
     }
 }
-
-add_filter( 'the_content', 'asp_filter_post_type_content' );
 
 function asp_filter_post_type_content( $content ) {
     global $post;

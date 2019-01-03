@@ -9,9 +9,9 @@ function asp_ipn_completed( $errMsg = '' ) {
 	$msg_after_process	 = __( "Error occured after user interacted with popup.", 'stripe-payments' );
 
 	if ( isset( $_POST[ 'clickProcessed' ] ) ) {
-	    $additional_msg = $msg_after_process . "\r\n";
+	    $additional_msg = $msg_after_process;
 	} else {
-	    $additional_msg = $msg_before_process . "\r\n";
+	    $additional_msg = $msg_before_process;
 	}
 
 	ASP_Debug_Logger::log( $additional_msg, false );
@@ -30,17 +30,17 @@ function asp_ipn_completed( $errMsg = '' ) {
 	    $body	 .= $additional_msg . "\r\n";
 	    $body	 .= __( 'Debug data:', 'stripe-payments' ) . "\r\n";
 	    foreach ( $_POST as $key => $value ) {
-		$body .= $key . ': ' . $value . "\r\n";
+		$value	 = is_array( $value ) ? json_encode( $value ) : $value;
+		$body	 .= $key . ': ' . $value . "\r\n";
 	    }
 	    wp_mail( $to, $subj, $body, $headers );
-	    global $aspRedirectURL;
-	    wp_redirect( $aspRedirectURL );
 	}
     } else {
-	ASP_Debug_Logger::log( 'Payment has been processed successfully.' . "\r\n" );
-	global $aspRedirectURL;
-	wp_redirect( $aspRedirectURL );
+	ASP_Debug_Logger::log( 'Payment has been processed successfully.' );
     }
+    global $aspRedirectURL;
+    ASP_Debug_Logger::log( sprintf( 'Redirecting to results page "%s"', $aspRedirectURL ) . "\r\n" );
+    wp_redirect( $aspRedirectURL );
     exit;
 }
 
@@ -86,15 +86,15 @@ $got_product_data_from_db = false;
 
 if ( isset( $_POST[ 'stripeProductId' ] ) && ! empty( $_POST[ 'stripeProductId' ] ) ) {
     //got product ID. Let's try to get required data from database instead of $_POST data
-    $id	 = intval( $_POST[ 'stripeProductId' ] );
-    ASP_Debug_Logger::log( 'Got product ID: ' . $id . '. Trying to get info from database.' );
-    $post	 = get_post( $id );
-    if ( ! $post || get_post_type( $id ) != ASPMain::$products_slug ) {
+    $prod_id = intval( $_POST[ 'stripeProductId' ] );
+    ASP_Debug_Logger::log( 'Got product ID: ' . $prod_id . '. Trying to get info from database.' );
+    $post	 = get_post( $prod_id );
+    if ( ! $post || get_post_type( $prod_id ) != ASPMain::$products_slug ) {
 	//this is not Stripe Payments product
-	asp_ipn_completed( 'Invalid product ID: ' . $id );
+	asp_ipn_completed( 'Invalid product ID: ' . $prod_id );
     }
     $item_name	 = $post->post_title;
-    $item_url	 = get_post_meta( $id, 'asp_product_upload', true );
+    $item_url	 = get_post_meta( $prod_id, 'asp_product_upload', true );
 
     if ( ! empty( $item_url ) ) {
 	$item_url = base64_encode( $item_url );
@@ -106,19 +106,25 @@ if ( isset( $_POST[ 'stripeProductId' ] ) && ! empty( $_POST[ 'stripeProductId' 
 
     if ( ! empty( $post_item_url ) ) {
 	if ( $item_url !== $post_item_url ) {
-	    $item_url = apply_filters( 'asp_item_url_process', $post_item_url, array( 'product_id' => $id, 'button_key' => $_POST[ 'stripeButtonKey' ] ) );
+	    $item_url = apply_filters( 'asp_item_url_process', $post_item_url, array( 'product_id' => $prod_id, 'button_key' => $_POST[ 'stripeButtonKey' ] ) );
 	}
     }
 
-    $currency_code = get_post_meta( $id, 'asp_product_currency', true );
+    $currency_code = get_post_meta( $prod_id, 'asp_product_currency', true );
+
+    $currency_variable = get_post_meta( $prod_id, 'asp_product_currency_variable', true );
+
+    if ( $currency_variable ) {
+	$currency_code = sanitize_text_field( $_POST[ 'stripeCurrency' ] );
+    }
 
     if ( ! $currency_code ) {
 	$currency_code = $asp_class->get_setting( 'currency_code' );
     }
 
-    $item_quantity = get_post_meta( $id, 'asp_product_quantity', true );
+    $item_quantity = get_post_meta( $prod_id, 'asp_product_quantity', true );
 
-    $item_custom_quantity = get_post_meta( $id, 'asp_product_custom_quantity', true );
+    $item_custom_quantity = get_post_meta( $prod_id, 'asp_product_custom_quantity', true );
 
     if ( $item_custom_quantity ) {
 	//custom quantity. Let's get the value from $_POST data
@@ -129,7 +135,7 @@ if ( isset( $_POST[ 'stripeProductId' ] ) && ! empty( $_POST[ 'stripeProductId' 
 
     $variable = false;
 
-    $item_price = get_post_meta( $id, 'asp_product_price', true );
+    $item_price = get_post_meta( $prod_id, 'asp_product_price', true );
 
     if ( empty( $item_price ) ) {
 	//this is probably custom price
@@ -137,11 +143,11 @@ if ( isset( $_POST[ 'stripeProductId' ] ) && ! empty( $_POST[ 'stripeProductId' 
 	$item_price	 = floatval( $_POST[ 'stripeAmount' ] );
     }
 
-    //apply tax and shipping if needed
+    //get tax and shipping amounts if applicable
 
-    $tax = get_post_meta( $id, 'asp_product_tax', true );
+    $tax = get_post_meta( $prod_id, 'asp_product_tax', true );
 
-    $shipping = floatval( get_post_meta( $id, 'asp_product_shipping', true ) );
+    $shipping = floatval( get_post_meta( $prod_id, 'asp_product_shipping', true ) );
 
     //let's apply filter so addons can change price, currency and shipping if needed
     $price_arr	 = array( 'price' => $item_price, 'currency' => $currency_code, 'shipping' => empty( $shipping ) ? false : $shipping, 'variable' => $variable );
@@ -210,6 +216,29 @@ $charge_description	 = sanitize_text_field( $_POST[ 'charge_description' ] );
 
 $orig_item_price = $item_price;
 
+//check if we have variatons selected for the product
+$variations	 = array();
+$varApplied	 = array();
+if ( $got_product_data_from_db && isset( $_POST[ 'stripeVariations' ] ) ) {
+// we got variations posted. Let's get variations from product
+    require_once(WP_ASP_PLUGIN_PATH . '/admin/includes/class-variations.php');
+    $v = new ASPVariations( $prod_id );
+    if ( ! empty( $v->variations ) ) {
+	//there are variations configured for the product
+	$posted_v = $_POST[ 'stripeVariations' ];
+	foreach ( $posted_v as $grp_id => $var_id ) {
+	    $var = $v->get_variation( $grp_id, $var_id[ 0 ] );
+	    if ( ! empty( $var ) ) {
+		$item_price	 = $item_price + $var[ 'price' ];
+		$variations[]	 = array( $var[ 'group_name' ] . ' - ' . $var[ 'name' ], $var[ 'price' ] );
+		$varApplied[]	 = $var;
+	    }
+	}
+    } else {
+	//no variations configured for the product
+    }
+}
+
 //check if we we need to apply coupon
 if ( ! empty( $_POST[ 'stripeCoupon' ] ) ) {
     $coupon_code	 = strtoupper( $_POST[ 'stripeCoupon' ] );
@@ -257,12 +286,6 @@ if ( ! AcceptStripePayments::is_zero_cents( $currency_code ) ) {
     $amount_in_cents = $amount_in_cents * 100;
 }
 
-ASP_Debug_Logger::log( 'Getting API keys and trying to create a charge.' );
-
-ASPMain::load_stripe_lib();
-
-\Stripe\Stripe::setApiKey( $asp_class->APISecKey );
-
 $GLOBALS[ 'asp_payment_success' ] = false;
 
 $opt = get_option( 'AcceptStripePayments-settings' );
@@ -283,16 +306,47 @@ $data[ 'currency_code' ]	 = $currency_code;
 $data[ 'charge_description' ]	 = $charge_description;
 $data[ 'addonName' ]		 = isset( $_POST[ 'stripeAddonName' ] ) ? sanitize_text_field( $_POST[ 'stripeAddonName' ] ) : '';
 $data[ 'button_key' ]		 = isset( $button_key ) ? $button_key : '';
-if ( isset( $_POST[ 'stripeCustomField' ] ) ) {
-    $data[ 'custom_field_value' ]	 = $_POST[ 'stripeCustomField' ];
-    $data[ 'custom_field_name' ]	 = $_POST[ 'stripeCustomFieldName' ];
+
+//Coupon
+if ( isset( $coupon ) ) {
+    $data[ 'coupon' ] = $coupon;
 }
 
+//Custom Field
+$data[ 'custom_fields' ] = array();
+if ( isset( $_POST[ 'stripeCustomField' ] ) ) {
+    $data[ 'custom_fields' ][] = array( 'name' => $_POST[ 'stripeCustomFieldName' ], 'value' => $_POST[ 'stripeCustomField' ] );
+}
+$data[ 'custom_fields' ] = apply_filters( 'asp_process_custom_fields', $data[ 'custom_fields' ], $data );
+
+//Filter so addons can modify applied variations if needed
+$variations = apply_filters( 'asp_filter_variations_display', $variations, $data );
+
 ob_start();
+
+ASP_Debug_Logger::log( 'Getting API keys and trying to create a charge.' );
+
+ASPMain::load_stripe_lib();
+
+if ( $data[ 'is_live' ] ) {
+    $sec_key = $asp_class->APISecKeyLive;
+} else {
+    $sec_key = $asp_class->APISecKeyTest;
+}
+
+\Stripe\Stripe::setApiKey( $sec_key );
 
 //let addons process payment if needed
 ASP_Debug_Logger::log( 'Firing pre-payment hook.' );
 $data = apply_filters( 'asp_process_charge', $data );
+
+if ( empty( $data[ 'charge' ] ) && $amount_in_cents == 0 ) {
+    //looks like we have zero amount. We won't be really processing the charge as it would result in error,
+    //so we just make it look like it was actually processed.
+    $data[ 'charge' ]		 = new stdClass();
+    $data[ 'charge' ]->id		 = 0;
+    $data[ 'charge' ]->created	 = time();
+}
 
 if ( empty( $data[ 'charge' ] ) ) {
     ASP_Debug_Logger::log( 'Processing payment.' );
@@ -315,21 +369,46 @@ if ( empty( $data[ 'charge' ] ) ) {
 	    $charge_opts[ 'source' ] = $stripeToken;
 	} else {
 
-	    $customer = \Stripe\Customer::create( array(
+	    $customer_data = array(
 		'email'	 => $stripeEmail,
-		'card'	 => $stripeToken
-	    ) );
+		'card'	 => $stripeToken,
+	    );
+
+	    $customer_data = apply_filters( 'asp_customer_data_before_create', $customer_data );
+
+	    $customer = \Stripe\Customer::create( $customer_data );
 
 	    $charge_opts[ 'customer' ] = $customer->id;
 	}
 
+	$charge_opts[ 'metadata' ] = array();
+
 	//Check if we need to include custom field in metadata
-	if ( isset( $_POST[ 'stripeCustomField' ] ) ) {
-	    $metadata			 = array(
-		'custom_field_value'	 => isset( $_POST[ 'stripeCustomField' ] ) ? $_POST[ 'stripeCustomField' ] : '',
-		'custom_field_name'	 => $_POST[ 'stripeCustomFieldName' ],
-	    );
-	    $charge_opts[ 'metadata' ]	 = $metadata;
+	if ( ! empty( $data[ 'custom_fields' ] ) ) {
+	    $cfStr = '';
+	    foreach ( $data[ 'custom_fields' ] as $cf ) {
+		$cfStr .= $cf[ 'name' ] . ': ' . $cf[ 'value' ] . ' | ';
+	    }
+	    $cfStr						 = rtrim( $cfStr, ' | ' );
+	    $charge_opts[ 'metadata' ][ 'Custom Fields' ]	 = $cfStr;
+	}
+
+	//Shipping address data (if any)
+	$shipping_address		 = "";
+	$shipping_address		 .= isset( $_POST[ 'stripeShippingName' ] ) ? $_POST[ 'stripeShippingName' ] . "\n" : '';
+	$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressLine1' ] ) ? $_POST[ 'stripeShippingAddressLine1' ] . "\n" : '';
+	$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressApt' ] ) ? $_POST[ 'stripeShippingAddressApt' ] . "\n" : '';
+	$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressZip' ] ) ? $_POST[ 'stripeShippingAddressZip' ] . "\n" : '';
+	$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressCity' ] ) ? $_POST[ 'stripeShippingAddressCity' ] . "\n" : '';
+	$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressState' ] ) ? $_POST[ 'stripeShippingAddressState' ] . "\n" : '';
+	$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressCountry' ] ) ? $_POST[ 'stripeShippingAddressCountry' ] . "\n" : '';
+	$data[ 'shipping_address' ]	 = $shipping_address;
+
+	if ( ! empty( $shipping_address ) ) {
+	    //add shipping address to metadata
+	    $shipping_address				 = str_replace( "\n", ", ", $shipping_address );
+	    $shipping_address				 = rtrim( $shipping_address, ', ' );
+	    $charge_opts[ 'metadata' ][ 'Shipping Address' ] = $shipping_address;
 	}
 
 	$data[ 'charge' ] = \Stripe\Charge::create( $charge_opts );
@@ -349,10 +428,9 @@ $txn_id			 = $data[ 'charge' ]->id; //$charge->balance_transaction;
 //Core transaction data
 $data[ 'txn_id' ]	 = $txn_id; //The Stripe charge ID
 
-$post_data = array_map( 'sanitize_text_field', $data );
+$post_data = $data;
 
-$_POST = filter_input_array( INPUT_POST, FILTER_SANITIZE_STRING );
-
+//$_POST = filter_input_array( INPUT_POST, FILTER_SANITIZE_STRING );
 //Billing address data (if any)
 $billing_address = "";
 $billing_address .= isset( $_POST[ 'stripeBillingName' ] ) ? $_POST[ 'stripeBillingName' ] . "\n" : '';
@@ -365,29 +443,35 @@ $billing_address .= isset( $_POST[ 'stripeBillingAddressCountry' ] ) ? $_POST[ '
 
 if ( empty( $billing_address ) && (isset( $data[ 'product_id' ] ) && get_post_meta( $data[ 'product_id' ], 'asp_product_collect_billing_addr', true )) ) {
     //let's try to fetch billing address from payment data
-    $billing_address .= ! empty( $data[ 'charge' ]->source->name ) ? $data[ 'charge' ]->source->name . "\n" : '';
-    $billing_address .= ! empty( $data[ 'charge' ]->source->address_line1 ) ? $data[ 'charge' ]->source->address_line1 . "\n" : '';
-    $billing_address .= ! empty( $data[ 'charge' ]->source->address_line2 ) ? $data[ 'charge' ]->source->address_line2 . "\n" : '';
-    $billing_address .= ! empty( $data[ 'charge' ]->source->address_zip ) ? $data[ 'charge' ]->source->address_zip . "\n" : '';
-    $billing_address .= ! empty( $data[ 'charge' ]->source->address_city ) ? $data[ 'charge' ]->source->address_city . "\n" : '';
-    $billing_address .= ! empty( $data[ 'charge' ]->source->address_state ) ? $data[ 'charge' ]->source->address_state . "\n" : '';
-    $billing_address .= ! empty( $data[ 'charge' ]->source->address_country ) ? $data[ 'charge' ]->source->address_country . "\n" : '';
+    $billing_address		 .= ! empty( $data[ 'charge' ]->source->name ) ? $data[ 'charge' ]->source->name . "\n" : '';
+    $_POST[ 'stripeBillingName' ]	 = ! empty( $billing_address ) ? $billing_address : NULL;
+    $billing_address		 .= ! empty( $data[ 'charge' ]->source->address_line1 ) ? $data[ 'charge' ]->source->address_line1 . "\n" : '';
+    $billing_address		 .= ! empty( $data[ 'charge' ]->source->address_line2 ) ? $data[ 'charge' ]->source->address_line2 . "\n" : '';
+    $billing_address		 .= ! empty( $data[ 'charge' ]->source->address_zip ) ? $data[ 'charge' ]->source->address_zip . "\n" : '';
+    $billing_address		 .= ! empty( $data[ 'charge' ]->source->address_city ) ? $data[ 'charge' ]->source->address_city . "\n" : '';
+    $billing_address		 .= ! empty( $data[ 'charge' ]->source->address_state ) ? $data[ 'charge' ]->source->address_state . "\n" : '';
+    $billing_address		 .= ! empty( $data[ 'charge' ]->source->address_country ) ? $data[ 'charge' ]->source->address_country . "\n" : '';
 }
 
 $post_data[ 'billing_address' ] = $billing_address;
 
-//Shipping address data (if any)
-$shipping_address		 = "";
-$shipping_address		 .= isset( $_POST[ 'stripeShippingName' ] ) ? $_POST[ 'stripeShippingName' ] . "\n" : '';
-$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressLine1' ] ) ? $_POST[ 'stripeShippingAddressLine1' ] . "\n" : '';
-$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressApt' ] ) ? $_POST[ 'stripeShippingAddressApt' ] . "\n" : '';
-$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressZip' ] ) ? $_POST[ 'stripeShippingAddressZip' ] . "\n" : '';
-$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressCity' ] ) ? $_POST[ 'stripeShippingAddressCity' ] . "\n" : '';
-$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressState' ] ) ? $_POST[ 'stripeShippingAddressState' ] . "\n" : '';
-$shipping_address		 .= isset( $_POST[ 'stripeShippingAddressCountry' ] ) ? $_POST[ 'stripeShippingAddressCountry' ] . "\n" : '';
-$post_data[ 'shipping_address' ] = $shipping_address;
+//get customer name
+$name = isset( $_POST[ 'stripeBillingName' ] ) ? sanitize_text_field( $_POST[ 'stripeBillingName' ] ) : '';
+if ( empty( $name ) && ! empty( $data[ 'charge' ]->source->name ) ) {
+    $name = $data[ 'charge' ]->source->name;
+}
+$post_data[ 'customer_name' ] = $name;
+
+$post_data[ 'purchase_date' ] = date( "F j, Y, g:i a", $data[ 'charge' ]->created );
 
 $post_data[ 'additional_items' ] = array();
+
+//check if we need to add variations
+if ( ! empty( $variations ) ) {
+    foreach ( $variations as $variation ) {
+	$post_data[ 'additional_items' ][ $variation[ 0 ] ] = $variation[ 1 ];
+    }
+}
 
 //check if we need to increase redeem coupon count
 if ( isset( $coupon ) && $coupon[ 'valid' ] ) {
@@ -400,26 +484,43 @@ if ( isset( $coupon ) && $coupon[ 'valid' ] ) {
 }
 
 if ( isset( $tax ) && ! empty( $tax ) ) {
-    $post_data[ 'additional_items' ][ __( 'Tax', 'stripe-payments' ) ]	 = $tax_amt;
-    $post_data[ 'tax_perc' ]						 = $tax;
-    $post_data[ 'tax' ]							 = $tax_amt;
+    $taxStr										 = apply_filters( 'asp_customize_text_msg', __( 'Tax', 'stripe-payments' ), 'tax_str' );
+    $post_data[ 'additional_items' ][ __( ucfirst( $taxStr ), 'stripe-payments' ) ]	 = $tax_amt;
+    $post_data[ 'tax_perc' ]							 = $tax;
+    $post_data[ 'tax' ]								 = $tax_amt;
 }
 
 if ( isset( $shipping ) && ! empty( $shipping ) ) {
-    $post_data[ 'additional_items' ][ __( 'Shipping', 'stripe-payments' ) ]	 = $shipping;
-    $post_data[ 'shipping' ]						 = $shipping;
+    $shipStr									 = apply_filters( 'asp_customize_text_msg', __( 'Shipping', 'stripe-payments' ), 'shipping_str' );
+    $post_data[ 'additional_items' ][ __( ucfirst( $shipStr ), 'stripe-payments' ) ] = $shipping;
+    $post_data[ 'shipping' ]							 = $shipping;
 }
 
 //Insert the order data to the custom post
-$order		 = ASPOrder::get_instance();
-$order_post_id	 = $order->insert( $post_data, $data[ 'charge' ] );
-
-$post_data[ 'order_post_id' ] = $order_post_id;
+$dont_create_order = $asp_class->get_setting( 'dont_create_order' );
+if ( ! $dont_create_order ) {
+    $order				 = ASPOrder::get_instance();
+    $order_post_id			 = $order->insert( $post_data, $data[ 'charge' ] );
+    $post_data[ 'order_post_id' ]	 = $order_post_id;
+}
 
 // handle download item url
 $item_url		 = apply_filters( 'asp_item_url_process', $item_url, $post_data );
 $item_url		 = base64_decode( $item_url );
 $post_data[ 'item_url' ] = $item_url;
+
+if ( ! empty( $varApplied ) ) {
+    //process variations URLs if needed
+    foreach ( $varApplied as $key => $var ) {
+	if ( ! empty( $var[ 'url' ] ) ) {
+	    $var			 = apply_filters( 'asp_variation_url_process', $var, $post_data );
+	    $varApplied[ $key ]	 = $var;
+	}
+    }
+}
+
+//add variations to the resulting array
+$post_data[ 'var_applied' ] = $varApplied;
 
 ASP_Debug_Logger::log( 'Firing post-payment hooks.' );
 
@@ -451,13 +552,9 @@ if ( ! empty( $data[ 'product_id' ] ) ) {
 	if ( ! empty( $level_id ) ) {
 	    //let's form data required for eMember_handle_subsc_signup_stand_alone function and call it
 
-	    $name = isset( $_POST[ 'stripeBillingName' ] ) ? sanitize_text_field( $_POST[ 'stripeBillingName' ] ) : '';
-	    if ( empty( $name ) && ! empty( $data[ 'charge' ]->source->name ) ) {
-		$name = $data[ 'charge' ]->source->name;
-	    }
 	    $first_name	 = '';
 	    $last_name	 = '';
-	    if ( ! empty( $name ) ) {
+	    if ( ! empty( $post_data[ 'customer_name' ] ) ) {
 		// let's try to create first name and last name from full name
 		$parts		 = explode( " ", $name );
 		$last_name	 = array_pop( $parts );
@@ -504,17 +601,17 @@ if ( ! empty( $data[ 'product_id' ] ) ) {
 
 	    ASP_Debug_Logger::log( 'Calling eMember_handle_subsc_signup_stand_alone' );
 
-            $emember_id = '';
-            if (class_exists('Emember_Auth')){
-                //Check if the user is logged in as a member.
-                $emember_auth = Emember_Auth::getInstance();
-                $emember_id = $emember_auth->getUserInfo('member_id');
-            }
+	    $emember_id = '';
+	    if ( class_exists( 'Emember_Auth' ) ) {
+		//Check if the user is logged in as a member.
+		$emember_auth	 = Emember_Auth::getInstance();
+		$emember_id	 = $emember_auth->getUserInfo( 'member_id' );
+	    }
 
-            if( defined('WP_EMEMBER_PATH') ){
-                require_once(WP_EMEMBER_PATH . 'ipn/eMember_handle_subsc_ipn_stand_alone.php');
-                eMember_handle_subsc_signup_stand_alone( $ipn_data, $level_id, $data['txn_id'], $emember_id );
-            }
+	    if ( defined( 'WP_EMEMBER_PATH' ) ) {
+		require_once(WP_EMEMBER_PATH . 'ipn/eMember_handle_subsc_ipn_stand_alone.php');
+		eMember_handle_subsc_signup_stand_alone( $ipn_data, $level_id, $data[ 'txn_id' ], $emember_id );
+	    }
 	}
     }
 }
@@ -526,10 +623,18 @@ if ( isset( $opt[ 'send_emails_to_buyer' ] ) ) {
 	$to	 = $post_data[ 'stripeEmail' ];
 	$subj	 = $opt[ 'buyer_email_subject' ];
 	$body	 = asp_apply_dynamic_tags_on_email_body( $opt[ 'buyer_email_body' ], $post_data );
-	$headers = 'From: ' . $from . "\r\n";
 
 	$subj	 = apply_filters( 'asp_buyer_email_subject', $subj, $post_data );
 	$body	 = apply_filters( 'asp_buyer_email_body', $body, $post_data );
+	$from	 = apply_filters( 'asp_buyer_email_from', $from, $post_data );
+
+	$headers = array();
+	if ( ! empty( $opt[ 'buyer_email_type' ] ) && $opt[ 'buyer_email_type' ] === 'html' ) {
+	    $headers[]	 = 'Content-Type: text/html; charset=UTF-8';
+	    $body		 = nl2br( $body );
+	}
+	$headers[] = 'From: ' . $from;
+
 	wp_mail( $to, $subj, $body, $headers );
 	ASP_Debug_Logger::log( 'Notification email sent to buyer: ' . $to . ', From email address used: ' . $from );
     }
@@ -539,11 +644,19 @@ if ( isset( $opt[ 'send_emails_to_seller' ] ) ) {
 	$from	 = $opt[ 'from_email_address' ];
 	$to	 = $opt[ 'seller_notification_email' ];
 	$subj	 = $opt[ 'seller_email_subject' ];
-	$body	 = asp_apply_dynamic_tags_on_email_body( $opt[ 'seller_email_body' ], $post_data );
-	$headers = 'From: ' . $from . "\r\n";
+	$body	 = asp_apply_dynamic_tags_on_email_body( $opt[ 'seller_email_body' ], $post_data, true );
 
 	$subj	 = apply_filters( 'asp_seller_email_subject', $subj, $post_data );
 	$body	 = apply_filters( 'asp_seller_email_body', $body, $post_data );
+	$from	 = apply_filters( 'asp_seller_email_from', $from, $post_data );
+
+	$headers = array();
+	if ( ! empty( $opt[ 'seller_email_type' ] ) && $opt[ 'seller_email_type' ] === 'html' ) {
+	    $headers[]	 = 'Content-Type: text/html; charset=UTF-8';
+	    $body		 = nl2br( $body );
+	}
+	$headers[] = 'From: ' . $from;
+
 	wp_mail( $to, $subj, $body, $headers );
 	ASP_Debug_Logger::log( 'Notification email sent to seller: ' . $to . ', From email address used: ' . $from );
     }
@@ -560,23 +673,55 @@ $_SESSION[ 'asp_data' ] = $post_data;
 
 asp_ipn_completed();
 
-function asp_apply_dynamic_tags_on_email_body( $body, $post ) {
+function asp_apply_dynamic_tags_on_email_body( $body, $post, $seller_email = false ) {
 
-    $product_details = __( "Product Name: ", "stripe-payments" ) . $post[ 'item_name' ] . "\n";
-    $product_details .= __( "Quantity: ", "stripe-payments" ) . $post[ 'item_quantity' ] . "\n";
-    $product_details .= __( "Item Price: ", "stripe-payments" ) . AcceptStripePayments::formatted_price( $post[ 'item_price' ], $post[ 'currency_code' ] ) . "\n";
+    $product_details = __( "Product Name: ", "stripe-payments" ) . '{item_name}' . "\n";
+    $product_details .= __( "Quantity: ", "stripe-payments" ) . '{item_quantity}' . "\n";
+    $product_details .= __( "Item Price: ", "stripe-payments" ) . '{item_price_curr}' . "\n";
     //check if there are any additional items available like tax and shipping cost
     $product_details .= AcceptStripePayments::gen_additional_items( $post );
     $product_details .= "--------------------------------" . "\n";
-    $product_details .= __( "Total Amount: ", "stripe-payments" ) . AcceptStripePayments::formatted_price( $post[ 'paid_amount' ], $post[ 'currency_code' ] ) . "\n";
+    $product_details .= __( "Total Amount: ", "stripe-payments" ) . '{purchase_amt_curr}' . "\n";
+    $varUrls	 = array();
+    // check if we have variations applied with download links
+    if ( ! empty( $post[ 'var_applied' ] ) ) {
+	foreach ( $post[ 'var_applied' ] as $var ) {
+	    if ( ! empty( $var[ 'url' ] ) ) {
+		$varUrls[] = $var[ 'url' ];
+	    }
+	}
+    }
+    $download_str = '';
     if ( ! empty( $post[ 'item_url' ] ) ) {
-	$product_details .= "\n\n" . __( "Download link: ", "stripe-payments" ) . $post[ 'item_url' ];
+	$download_str = "\n\n" . __( "Download link: ", "stripe-payments" ) . $post[ 'item_url' ];
+    }
+    if ( ! empty( $varUrls ) ) {
+	//show variations download link(s)
+	//those links will replace the one set for the product
+	if ( count( $varUrls ) === 1 ) {
+	    $download_str = __( "Download link: ", "stripe-payments" );
+	} else {
+	    $download_str = __( "Download links: ", "stripe-payments" ) . "\n";
+	}
+	foreach ( $varUrls as $url ) {
+	    $download_str .= $url . "\n";
+	}
     }
 
-    $custom_field = '';
-    if ( isset( $post[ 'custom_field_value' ] ) ) {
-	$custom_field = $post[ 'custom_field_name' ] . ': ' . $post[ 'custom_field_value' ];
+    $product_details .= rtrim( $download_str, "\n" );
+
+    //Add link to order info if this is email to the seller
+    if ( $seller_email && isset( $post[ 'order_post_id' ] ) ) {
+	$product_details .= "\n\n" . __( 'Order Info: ', 'stripe-payments' ) . admin_url( 'post.php?post=' . $post[ 'order_post_id' ] . '&action=edit' );
     }
+
+    $post[ 'product_details' ] = $product_details;
+
+    $custom_field = '';
+    foreach ( $post[ 'custom_fields' ] as $cf ) {
+	$custom_field .= $cf[ 'name' ] . ': ' . $cf[ 'value' ] . "\r\n";
+    }
+    $custom_field = rtrim( $custom_field, "\r\n" );
 
     $curr = $post[ 'currency_code' ];
 
@@ -589,12 +734,13 @@ function asp_apply_dynamic_tags_on_email_body( $body, $post ) {
 
     $item_price = AcceptStripePayments::formatted_price( $post[ 'item_price' ], false );
 
-    $item_price_curr = AcceptStripePayments::formatted_price( $post[ 'item_price' ], $post[ 'currency_code' ] );
+    $item_price_curr		 = AcceptStripePayments::formatted_price( $post[ 'item_price' ], $post[ 'currency_code' ] );
+    $post[ 'item_price_curr' ]	 = $item_price_curr;
 
     $purchase_amt = AcceptStripePayments::formatted_price( $post[ 'paid_amount' ], false );
 
-    $purchase_amt_curr = AcceptStripePayments::formatted_price( $post[ 'paid_amount' ], $post[ 'currency_code' ] );
-
+    $purchase_amt_curr		 = AcceptStripePayments::formatted_price( $post[ 'paid_amount' ], $post[ 'currency_code' ] );
+    $post[ 'purchase_amt_curr' ]	 = $purchase_amt_curr;
 
     $tax		 = 0;
     $tax_amt	 = 0;
@@ -610,10 +756,9 @@ function asp_apply_dynamic_tags_on_email_body( $body, $post ) {
 	$shipping = AcceptStripePayments::formatted_price( $post[ 'shipping' ], $post[ 'currency_code' ] );
     }
 
-    $customer_name = isset( $_POST[ 'stripeBillingName' ] ) ? sanitize_text_field( $_POST[ 'stripeBillingName' ] ) : '';
-
     $tags	 = array(
-	"{product_details}",
+	"{item_name}",
+	"{item_quantity}",
 	"{payer_email}",
 	"{customer_name}",
 	"{transaction_id}",
@@ -629,26 +774,32 @@ function asp_apply_dynamic_tags_on_email_body( $body, $post ) {
 	"{purchase_date}",
 	"{shipping_address}",
 	"{billing_address}",
-	'{custom_field}'
+	"{custom_field}"
     );
     $vals	 = array(
-	$product_details,
+	$post[ 'item_name' ],
+	$post[ 'item_quantity' ],
 	$post[ 'stripeEmail' ],
-	$customer_name,
+	$post[ 'customer_name' ],
 	$post[ 'txn_id' ],
 	$item_price,
-	$item_price_curr,
+	$post[ 'item_price_curr' ],
 	$purchase_amt,
-	$purchase_amt_curr,
+	$post[ 'purchase_amt_curr' ],
 	$tax,
 	$tax_amt,
 	$shipping,
 	$curr_sym,
 	$curr,
-	date( "F j, Y, g:i a", strtotime( 'now' ) ),
-	$post[ 'shipping_address' ],
-	$post[ 'billing_address' ],
-	$custom_field );
+	$post[ 'purchase_date' ],
+	isset( $post[ 'shipping_address' ] ) ? $post[ 'shipping_address' ] : '',
+	isset( $post[ 'billing_address' ] ) ? $post[ 'billing_address' ] : '',
+	$custom_field
+    );
+
+    $product_details = str_replace( $tags, $vals, $product_details );
+    $tags[]		 = "{product_details}";
+    $vals[]		 = $product_details;
 
     $body = stripslashes( str_replace( $tags, $vals, $body ) );
 

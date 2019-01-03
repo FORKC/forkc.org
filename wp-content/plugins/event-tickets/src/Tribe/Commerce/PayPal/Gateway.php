@@ -85,6 +85,15 @@ class Tribe__Tickets__Commerce__PayPal__Gateway {
 	public function add_to_cart() {
 		global $post;
 
+		/**
+		 * Action before adding to cart
+		 *
+		 * @since 4.9
+		 *
+		 * @param array $post_data
+		 */
+		do_action( 'tribe_tickets_commerce_paypal_gateway_pre_add_to_cart', $_POST );
+
 		// bail if this isn't a Tribe Commerce PayPal ticket
 		if (
 			empty( $_POST['product_id'] )
@@ -94,7 +103,7 @@ class Tribe__Tickets__Commerce__PayPal__Gateway {
 			return;
 		}
 
-		$cart_url           = $this->get_cart_url( '_cart' );
+		$cart_url      = $this->get_cart_url( '_cart' );
 		$post_url      = get_permalink( $post );
 		$currency_code = trim( tribe_get_option( 'ticket-commerce-currency-code' ) );
 		$product_ids   = $_POST['product_id'];
@@ -120,6 +129,10 @@ class Tribe__Tickets__Commerce__PayPal__Gateway {
 
 		$custom_args = array( 'user_id' => get_current_user_id(), 'tribe_handler' => 'tpp', 'pid' => $post->ID );
 
+		$invoice_number = $this->set_invoice_number();
+
+		$custom_args['invoice'] = $invoice_number;
+
 		/**
 		 * Filters the custom arguments that will be sent ot PayPal.
 		 *
@@ -133,8 +146,6 @@ class Tribe__Tickets__Commerce__PayPal__Gateway {
 
 		$custom      = Tribe__Tickets__Commerce__PayPal__Custom_Argument::encode( $custom_args );
 
-		$invoice_number = $this->set_invoice_number();
-
 		$args = array(
 			'cmd'           => '_cart',
 			'add'           => 1,
@@ -145,12 +156,10 @@ class Tribe__Tickets__Commerce__PayPal__Gateway {
 			'return'        => $this->get_success_page_url(),
 			'currency_code' => $currency_code ? $currency_code : 'USD',
 			'custom'        => $custom,
-			/**
-			 * A passthrough variable: it will be returned to the site intact.
-			 *
-			 * @link https://developer.paypal.com/docs/classic/paypal-payments-standard/integration-guide/formbasics/#variations-on-basic-variables
+			/*
+			 * We're not sending an invoice anymore.
+			 * It would mess up the cart cookies and we ended up not using it.
 			 */
-			'invoice'       => $invoice_number,
 		);
 
 		/** @var Tribe__Tickets__Commerce__PayPal__Cart__Interface $cart */
@@ -230,6 +239,17 @@ class Tribe__Tickets__Commerce__PayPal__Gateway {
 			array( 'tribe_tickets_redirect_to' => rawurlencode( $cart_url ) ),
 			home_url()
 		);
+
+		/**
+		 * Filters the add to cart redirect
+		 *
+		 * @since 4.9
+		 *
+		 * @param string $url
+		 * @param string $cart_url
+		 * @param array $post_data
+		 */
+		$url = apply_filters( 'tribe_tickets_commerce_paypal_gateway_add_to_cart_redirect', $url, $cart_url, $_POST );
 
 		wp_redirect( $url );
 		die;
@@ -403,7 +423,7 @@ class Tribe__Tickets__Commerce__PayPal__Gateway {
 
 		$invoice_number = $_COOKIE[ self::$invoice_cookie_name ];
 		unset( $_COOKIE[ self::$invoice_cookie_name ] );
-		delete_transient( $this->invoice_transient_name( $invoice_number ) );
+		$deleted = delete_transient( $this->invoice_transient_name( $invoice_number ) );
 
 		if ( ! headers_sent() ) {
 			$secure = 'https' === parse_url( home_url(), PHP_URL_SCHEME );
@@ -496,7 +516,7 @@ class Tribe__Tickets__Commerce__PayPal__Gateway {
 	 * @return string
 	 */
 	protected function get_invoice_number() {
-		$invoice_length = 127;
+		$invoice_length = 12;
 
 		if (
 			! empty( $_COOKIE[ self::$invoice_cookie_name ] )

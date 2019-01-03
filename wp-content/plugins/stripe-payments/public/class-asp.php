@@ -31,6 +31,7 @@ class AcceptStripePayments {
     );
     var $APISecKey	 = '';
     var $APIPubKey	 = '';
+    var $APIPubKeyTest	 = '';
     var $APISecKeyLive	 = '';
     var $APISecKeyTest	 = '';
     var $is_live		 = false;
@@ -88,11 +89,14 @@ class AcceptStripePayments {
 	    $this->APIPubKey = $this->get_setting( 'api_publishable_key' );
 	    $this->APISecKey = $this->get_setting( 'api_secret_key' );
 	}
+	$this->APIPubKeyTest	 = $this->get_setting( 'api_publishable_key_test' );
 	$this->APISecKeyLive	 = $this->get_setting( 'api_secret_key' );
 	$this->APISecKeyTest	 = $this->get_setting( 'api_secret_key_test' );
 
 	// Load plugin text domain
 	add_action( 'plugins_loaded', array( $this, 'load_asp_plugin_textdomain' ) );
+
+	add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
 
 	//Check if IPN submitted
 	add_action( 'init', array( $this, 'asp_check_ipn' ) );
@@ -106,6 +110,18 @@ class AcceptStripePayments {
 	add_action( 'after_switch_theme', array( $this, 'rewrite_flush' ) );
     }
 
+    function plugins_loaded() {
+	//check if we have view_log request with token
+	$action	 = filter_input( INPUT_GET, 'asp_action', FILTER_SANITIZE_STRING );
+	$token	 = filter_input( INPUT_GET, 'token', FILTER_SANITIZE_STRING );
+	if ( isset( $action ) && $action === 'view_log' && isset( $token ) ) {
+	    //let's check token
+	    if ( $this->get_setting( 'debug_log_access_token' ) === $token ) {
+		ASP_Debug_Logger::view_log();
+	    }
+	}
+    }
+
     public function asp_check_ipn() {
 	if ( isset( $_POST[ 'asp_action' ] ) ) {
 	    if ( $_POST[ 'asp_action' ] == 'process_ipn' ) {
@@ -114,9 +130,9 @@ class AcceptStripePayments {
 	}
     }
 
-    public function get_setting( $field ) {
+    public function get_setting( $field, $default = false ) {
 	$this->settings = (array) get_option( 'AcceptStripePayments-settings' );
-	return isset( $this->settings[ $field ] ) ? $this->settings[ $field ] : false;
+	return isset( $this->settings[ $field ] ) ? $this->settings[ $field ] : $default;
     }
 
     /**
@@ -274,7 +290,7 @@ class AcceptStripePayments {
 	    'use_new_button_method'			 => 0,
 	    'checkout_url'				 => site_url( 'checkout' ),
 	    'from_email_address'			 => get_bloginfo( 'name' ) . ' <sales@your-domain.com>',
-	    'buyer_email_subject'			 => __( 'Thank you for the purchase', 'strip-payments' ),
+	    'buyer_email_subject'			 => __( 'Thank you for the purchase', 'stripe-payments' ),
 	    'buyer_email_body'			 => __( "Hello", 'stripe-payments' ) . "\r\n\r\n"
 	    . __( "Thank you for your purchase! You ordered the following item(s):", 'stripe-payments' ) . "\r\n\r\n"
 	    . "{product_details}",
@@ -306,6 +322,8 @@ class AcceptStripePayments {
 	    $opt = $default;
 	}
 	$opt = array_merge( $default, $opt );
+	//force remove PHP warning dismissal
+	delete_option( 'wp_asp_php_warning_dismissed' );
 	update_option( 'AcceptStripePayments-settings', $opt );
 	if ( empty( $opt ) ) {
 //	    add_option( 'AcceptStripePayments-settings', $default );
@@ -419,38 +437,38 @@ class AcceptStripePayments {
 
     static function get_currencies() {
 	$currencies	 = array(
-	    ""	 => array( "(Default)", "" ),
-	    "USD"	 => array( "US Dollars (USD)", "$" ),
-	    "EUR"	 => array( "Euros (EUR)", "€" ),
-	    "GBP"	 => array( "Pounds Sterling (GBP)", "£" ),
-	    "AUD"	 => array( "Australian Dollars (AUD)", "AU$" ),
-	    "BRL"	 => array( "Brazilian Real (BRL)", "R$" ),
-	    "CAD"	 => array( "Canadian Dollars (CAD)", "CA$" ),
-	    "CNY"	 => array( "Chinese Yuan (CNY)", "CN￥" ),
-	    "CZK"	 => array( "Czech Koruna (CZK)", "Kč" ),
-	    "DKK"	 => array( "Danish Krone (DKK)", "kr" ),
-	    "HKD"	 => array( "Hong Kong Dollar (HKD)", "HK$" ),
-	    "HUF"	 => array( "Hungarian Forint (HUF)", "Ft" ),
-	    "INR"	 => array( "Indian Rupee (INR)", "₹" ),
-	    "IDR"	 => array( "Indonesia Rupiah (IDR)", "Rp" ),
-	    "ILS"	 => array( "Israeli Shekel (ILS)", "₪" ),
-	    "JPY"	 => array( "Japanese Yen (JPY)", "¥" ),
-	    "MYR"	 => array( "Malaysian Ringgits (MYR)", "RM" ),
-	    "MXN"	 => array( "Mexican Peso (MXN)", "MX$" ),
-	    "NZD"	 => array( "New Zealand Dollar (NZD)", "NZ$" ),
-	    "NOK"	 => array( "Norwegian Krone (NOK)", "kr" ),
-	    "PHP"	 => array( "Philippine Pesos (PHP)", "₱" ),
-	    "PLN"	 => array( "Polish Zloty (PLN)", "zł" ),
-	    "RUB"	 => array( "Russian Ruble (RUB)", "₽" ),
-	    "SGD"	 => array( "Singapore Dollar (SGD)", "SG$" ),
-	    "ZAR"	 => array( "South African Rand (ZAR)", "R" ),
-	    "KRW"	 => array( "South Korean Won (KRW)", "₩" ),
-	    "SEK"	 => array( "Swedish Krona (SEK)", "kr" ),
-	    "CHF"	 => array( "Swiss Franc (CHF)", "CHF" ),
-	    "TWD"	 => array( "Taiwan New Dollars (TWD)", "NT$" ),
-	    "THB"	 => array( "Thai Baht (THB)", "฿" ),
-	    "TRY"	 => array( "Turkish Lira (TRY)", "₺" ),
-	    "VND"	 => array( "Vietnamese Dong (VND)", "₫" ),
+	    ""	 => array( __( "(Default)", 'stripe-payments' ), "" ),
+	    "USD"	 => array( __( "US Dollars (USD)", 'stripe-payments' ), "$" ),
+	    "EUR"	 => array( __( "Euros (EUR)", 'stripe-payments' ), "€" ),
+	    "GBP"	 => array( __( "Pounds Sterling (GBP)", 'stripe-payments' ), "£" ),
+	    "AUD"	 => array( __( "Australian Dollars (AUD)", 'stripe-payments' ), "AU$" ),
+	    "BRL"	 => array( __( "Brazilian Real (BRL)", 'stripe-payments' ), "R$" ),
+	    "CAD"	 => array( __( "Canadian Dollars (CAD)", 'stripe-payments' ), "CA$" ),
+	    "CNY"	 => array( __( "Chinese Yuan (CNY)", 'stripe-payments' ), "CN￥" ),
+	    "CZK"	 => array( __( "Czech Koruna (CZK)", 'stripe-payments' ), "Kč" ),
+	    "DKK"	 => array( __( "Danish Krone (DKK)", 'stripe-payments' ), "kr" ),
+	    "HKD"	 => array( __( "Hong Kong Dollar (HKD)", 'stripe-payments' ), "HK$" ),
+	    "HUF"	 => array( __( "Hungarian Forint (HUF)", 'stripe-payments' ), "Ft" ),
+	    "INR"	 => array( __( "Indian Rupee (INR)", 'stripe-payments' ), "₹" ),
+	    "IDR"	 => array( __( "Indonesia Rupiah (IDR)", 'stripe-payments' ), "Rp" ),
+	    "ILS"	 => array( __( "Israeli Shekel (ILS)", 'stripe-payments' ), "₪" ),
+	    "JPY"	 => array( __( "Japanese Yen (JPY)", 'stripe-payments' ), "¥" ),
+	    "MYR"	 => array( __( "Malaysian Ringgits (MYR)", 'stripe-payments' ), "RM" ),
+	    "MXN"	 => array( __( "Mexican Peso (MXN)", 'stripe-payments' ), "MX$" ),
+	    "NZD"	 => array( __( "New Zealand Dollar (NZD)", 'stripe-payments' ), "NZ$" ),
+	    "NOK"	 => array( __( "Norwegian Krone (NOK)", 'stripe-payments' ), "kr" ),
+	    "PHP"	 => array( __( "Philippine Pesos (PHP)", 'stripe-payments' ), "₱" ),
+	    "PLN"	 => array( __( "Polish Zloty (PLN)", 'stripe-payments' ), "zł" ),
+	    "RUB"	 => array( __( "Russian Ruble (RUB)", 'stripe-payments' ), "₽" ),
+	    "SGD"	 => array( __( "Singapore Dollar (SGD)", 'stripe-payments' ), "SG$" ),
+	    "ZAR"	 => array( __( "South African Rand (ZAR)", 'stripe-payments' ), "R" ),
+	    "KRW"	 => array( __( "South Korean Won (KRW)", 'stripe-payments' ), "₩" ),
+	    "SEK"	 => array( __( "Swedish Krona (SEK)", 'stripe-payments' ), "kr" ),
+	    "CHF"	 => array( __( "Swiss Franc (CHF)", 'stripe-payments' ), "CHF" ),
+	    "TWD"	 => array( __( "Taiwan New Dollars (TWD)", 'stripe-payments' ), "NT$" ),
+	    "THB"	 => array( __( "Thai Baht (THB)", 'stripe-payments' ), "฿" ),
+	    "TRY"	 => array( __( "Turkish Lira (TRY)", 'stripe-payments' ), "₺" ),
+	    "VND"	 => array( __( "Vietnamese Dong (VND)", 'stripe-payments' ), "₫" ),
 	);
 	$opts		 = get_option( 'AcceptStripePayments-settings' );
 	if ( isset( $opts[ 'custom_currency_symbols' ] ) && is_array( $opts[ 'custom_currency_symbols' ] ) ) {
@@ -463,7 +481,7 @@ class AcceptStripePayments {
     static function formatted_price( $price, $curr = '', $price_is_cents = false ) {
 
 	if ( empty( $price ) ) {
-	    return '';
+	    $price = 0;
 	}
 
 	$opts = get_option( 'AcceptStripePayments-settings' );
@@ -561,6 +579,61 @@ class AcceptStripePayments {
 	    }
 	}
 	return $out;
+    }
+
+    static function get_small_product_thumb( $prod_id, $force_regen = false ) {
+	$ret		 = '';
+	//check if we have a thumbnail
+	$curr_thumb	 = get_post_meta( $prod_id, 'asp_product_thumbnail', true );
+	if ( empty( $curr_thumb ) ) {
+	    return $ret;
+	}
+	$ret		 = $curr_thumb;
+	//check if we have 100x100 preview generated
+	$thumb_thumb	 = get_post_meta( $prod_id, 'asp_product_thumbnail_thumb', true );
+	if ( empty( $thumb_thumb ) || $force_regen ) {
+	    //looks like we don't have one. Let's generate it
+	    $thumb_thumb	 = '';
+	    $image		 = wp_get_image_editor( $curr_thumb );
+	    if ( ! is_wp_error( $image ) ) {
+		$image->resize( 100, 100, true );
+		$upload_dir	 = wp_upload_dir();
+		$ext		 = pathinfo( $curr_thumb, PATHINFO_EXTENSION );
+		$file_name	 = 'asp_product_' . $prod_id . '_thumb_' . md5( $curr_thumb ) . '.' . $ext;
+		$res		 = $image->save( $upload_dir[ 'path' ] . '/' . $file_name );
+		if ( ! is_wp_error( $res ) ) {
+		    $thumb_thumb = $upload_dir[ 'url' ] . '/' . $file_name;
+		} else {
+		    //error saving thumb image
+		    return $ret;
+		}
+	    } else {
+		//error occured during image load
+		return $ret;
+	    }
+	    update_post_meta( $prod_id, 'asp_product_thumbnail_thumb', $thumb_thumb );
+	    $ret = $thumb_thumb;
+	} else {
+	    // we have one. Let's return it
+	    $ret = $thumb_thumb;
+	}
+	return $ret;
+    }
+
+    static function tofloat( $num ) {
+	$dotPos		 = strrpos( $num, '.' );
+	$commaPos	 = strrpos( $num, ',' );
+	$sep		 = (($dotPos > $commaPos) && $dotPos) ? $dotPos :
+	((($commaPos > $dotPos) && $commaPos) ? $commaPos : false);
+
+	if ( ! $sep ) {
+	    return floatval( preg_replace( "/[^0-9]/", "", $num ) );
+	}
+
+	return floatval(
+	preg_replace( "/[^0-9]/", "", substr( $num, 0, $sep ) ) . '.' .
+	preg_replace( "/[^0-9]/", "", substr( $num, $sep + 1, strlen( $num ) ) )
+	);
     }
 
 }

@@ -48,7 +48,6 @@ class WPSEO_Configuration_Page {
 		exit;
 	}
 
-
 	/**
 	 *  Registers the page for the wizard.
 	 */
@@ -80,6 +79,7 @@ class WPSEO_Configuration_Page {
 		 */
 		wp_enqueue_style( 'forms' );
 		$asset_manager = new WPSEO_Admin_Asset_Manager();
+		$asset_manager->register_wp_assets();
 		$asset_manager->register_assets();
 		$asset_manager->enqueue_script( 'configuration-wizard' );
 		$asset_manager->enqueue_style( 'yoast-components' );
@@ -107,7 +107,7 @@ class WPSEO_Configuration_Page {
 		<html <?php language_attributes(); ?>>
 		<!--<![endif]-->
 		<head>
-			<meta name="viewport" content="width=device-width"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 			<title><?php
 				printf(
@@ -157,7 +157,6 @@ class WPSEO_Configuration_Page {
 		</body>
 		</html>
 		<?php
-
 	}
 
 	/**
@@ -190,21 +189,6 @@ class WPSEO_Configuration_Page {
 	 */
 	protected function is_config_page() {
 		return ( filter_input( INPUT_GET, 'page' ) === self::PAGE_IDENTIFIER );
-	}
-
-	/**
-	 * Returns the translations necessary for the configuration wizard.
-	 *
-	 * @deprecated 4.9
-	 *
-	 * @returns array The translations for the configuration wizard.
-	 */
-	public function get_translations() {
-		_deprecated_function( __METHOD__, 'WPSEO 4.9', 'WPSEO_' );
-
-		$translations = new WPSEO_Configuration_Translations( WPSEO_Utils::get_user_locale() );
-
-		return $translations->retrieve();
 	}
 
 	/**
@@ -268,4 +252,21 @@ class WPSEO_Configuration_Page {
 		WPSEO_Options::set( 'show_onboarding_notice', false );
 	}
 
+	/* ********************* DEPRECATED METHODS ********************* */
+
+	/**
+	 * Returns the translations necessary for the configuration wizard.
+	 *
+	 * @deprecated 4.9
+	 * @codeCoverageIgnore
+	 *
+	 * @returns array The translations for the configuration wizard.
+	 */
+	public function get_translations() {
+		_deprecated_function( __METHOD__, 'WPSEO 4.9', 'WPSEO_' );
+
+		$translations = new WPSEO_Configuration_Translations( WPSEO_Utils::get_user_locale() );
+
+		return $translations->retrieve();
+	}
 }

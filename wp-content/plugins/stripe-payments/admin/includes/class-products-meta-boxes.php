@@ -2,7 +2,10 @@
 
 class asp_products_metaboxes {
 
+    var $ASPMain;
+
     public function __construct() {
+	$this->ASPMain = AcceptStripePayments::get_instance();
 	remove_post_type_support( ASPMain::$products_slug, 'editor' );
 	add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 	//products post save action
@@ -22,7 +25,7 @@ class asp_products_metaboxes {
 	add_meta_box( 'asp_appearance_meta_box', __( 'Appearance', 'stripe-payments' ), array( $this, 'display_appearance_meta_box' ), ASPMain::$products_slug, 'normal', 'default' );
 	add_meta_box( 'asp_coupons_meta_box', __( 'Coupons Settings', 'stripe-payments' ), array( $this, 'display_coupons_meta_box' ), ASPMain::$products_slug, 'normal', 'default' );
 	add_meta_box( 'asp_custom_field_meta_box', __( 'Custom Field', 'stripe-payments' ), array( $this, 'display_custom_field_meta_box' ), ASPMain::$products_slug, 'normal', 'default' );
-	add_meta_box( 'asp_shortcode_meta_box', __( 'Shortcode', 'stripe-payments' ), array( $this, 'display_shortcode_meta_box' ), ASPMain::$products_slug, 'normal', 'default' );
+	add_meta_box( 'asp_shortcode_meta_box', __( 'Shortcode', 'stripe-payments' ), array( $this, 'display_shortcode_meta_box' ), ASPMain::$products_slug, 'side', 'default' );
 
 	//check if eStore installed
 	if ( function_exists( 'wp_eMember_install' ) ) {
@@ -65,8 +68,9 @@ class asp_products_metaboxes {
     }
 
     function display_price_meta_box( $post ) {
-	$current_price	 = get_post_meta( $post->ID, 'asp_product_price', true );
-	$current_curr	 = get_post_meta( $post->ID, 'asp_product_currency', true );
+	$current_price		 = get_post_meta( $post->ID, 'asp_product_price', true );
+	$current_curr		 = get_post_meta( $post->ID, 'asp_product_currency', true );
+	$current_curr_var	 = get_post_meta( $post->ID, 'asp_product_currency_variable', true );
 	do_action( 'asp_product_price_metabox_before_content', $post );
 	?>
 	<label><?php _e( 'Price', 'stripe-payments' ); ?></label>
@@ -80,7 +84,117 @@ class asp_products_metaboxes {
 	<br/>
 	<select name="asp_product_currency" id="asp_currency_select"><?php echo AcceptStripePayments_Admin::get_currency_options( $current_curr ); ?>></select>
 	<p class = "description"><?php echo __( 'Leave "(Default)" option selected if you want to use currency specified on settings page.', 'stripe-payments' ); ?></p>
+	<label><input type="checkbox" name="asp_product_currency_variable" value="1"<?php echo ! empty( $current_curr_var ) ? ' checked' : ''; ?>> <?php _e( 'Allow customers to specify currency', 'stripe-payments' ); ?></label>
+	<p class="description"><?php _e( 'When enabled, it allows the customers to select the currency which is used to make the payment. It does not dynamically change the price. No dynamic currency conversion takes place. So this is mainly useful for a donation type product.', 'stripe-payments' ); ?></p>
+	<hr />
+	<h4><?php _e( 'Variations', 'stripe-payments' ); ?></h4>
+	<p><?php echo sprintf( __( 'You can find documentation on variations %s', 'stripe-payments' ), '<a href="https://s-plugins.com/creating-variable-products-using-the-stripe-payments-plugin/" target="_blank">here</a>' ); ?></p>
 	<?php
+	$variations_str		 = '';
+	$variations_groups	 = get_post_meta( $post->ID, 'asp_variations_groups', true );
+	$variations_names	 = get_post_meta( $post->ID, 'asp_variations_names', true );
+	$variations_prices	 = get_post_meta( $post->ID, 'asp_variations_prices', true );
+	$variations_urls	 = get_post_meta( $post->ID, 'asp_variations_urls', true );
+	if ( empty( $variations_groups ) ) {
+	    $variations_str = __( 'No variations configured for this product.', 'stripe-payments' );
+	}
+	?>
+	<style>
+	    .asp-html-tpl {
+		display: none;
+	    }
+	    .asp-variations-group-cont {
+		margin-bottom: 10px;
+		padding: 10px;
+		border: 1px solid #ddd;
+	    }
+	    .asp-variations-group-title {
+		padding: 5px;
+		text-align: center;
+	    }
+	    .asp-variations-group-name {
+		width: 70%;
+		display: inline-block;
+	    }
+	    .asp-variations-tbl {
+		margin-bottom: 5px;
+	    }
+	    .asp-variations-buttons-cont {
+		text-align: right;
+	    }
+	    #asp-variations-cont-main button span.dashicons {
+		vertical-align: middle !important;
+	    }
+	    #asp-variations-cont {
+		margin-bottom: 10px;
+	    }
+	    .asp-variations-tbl input {
+		width: 100%;
+	    }
+	    .asp-btn-small {
+		padding: 0 5px !important;
+	    }
+	    .asp-btn-small .dashicons {
+		font-size: 18px;
+	    }
+	    .asp-variations-select-from-ml-btn {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+	    }
+	</style>
+	<div id="asp-variations-cont-main">
+	    <div id="asp-variations-cont">
+		<span class="asp-variations-no-variations-msg"><?php echo $variations_str; ?></span>
+	    </div>
+	    <button type="button" class="button" id="asp-create-variations-group-btn"><span class="dashicons dashicons-welcome-add-page"></span> <?php _e( 'Create Group', 'stripe-payments' ); ?></button>
+	</div>
+	<div class="asp-html-tpl asp-html-tpl-variations-group">
+	    <div class="asp-variations-group-cont">
+		<div class="asp-variations-group-title">
+		    <span><?php _e( 'Group Name:', 'stripe-payments' ); ?> </span>
+		    <input type="text" value="" class="asp-variations-group-name">
+		    <button type="button" class="button asp-variations-delete-group-btn asp-btn-small"><span class="dashicons dashicons-trash" title="<?php _e( 'Delete group', 'stripe-payments' ); ?>"></span></button>
+		</div>
+		<table class="widefat asp-variations-tbl">
+		    <tr>
+			<th width="40%"><?php _e( 'Name', 'stripe-payments' ); ?></th>
+			<th width="10%"><?php _e( 'Price Mod', 'stripe-payments' ); ?></th>
+			<th width="40%"><?php _e( 'Product URL', 'stripe-payments' ); ?></th>
+		    </tr>
+		</table>
+		<div class="asp-variations-buttons-cont">
+		    <button type="button" class="button asp-variations-add-variation-btn"><span class="dashicons dashicons-plus"></span> <?php _e( 'Add Variation', 'stripe-payments' ); ?></button>
+		</div>
+	    </div>
+	</div>
+	<table class="asp-html-tpl asp-html-tpl-variation-row">
+	    <tbody>
+		<tr>
+		    <td><input type="text" value="" class="asp-variation-name"></td>
+		    <td><input type="text" value="" class="asp-variation-price"></td>
+		    <td style="position: relative;">
+			<input type="text" value="" class="asp-variation-url">
+			<button type="button" class="button asp-variations-select-from-ml-btn asp-btn-small"><span class="dashicons  dashicons-admin-media" title="<?php _e( 'Select from Media Library', 'stripe-payments' ); ?>"></span></button>
+		    </td>
+		    <td>
+			<button type="button" class="button asp-variations-delete-variation-btn asp-btn-small"><span class="dashicons dashicons-trash" title="<?php _e( 'Delete variation', 'stripe-payments' ); ?>"></span></button>
+		    </td>
+		</tr>
+	    </tbody>
+	</table>
+	<?php
+	wp_localize_script( 'asp-admin-edit-product-js', 'aspEditProdData', array(
+	    'varGroups'	 => ! empty( $variations_groups ) ? $variations_groups : '',
+	    'varNames'	 => $variations_names,
+	    'varPrices'	 => $variations_prices,
+	    'varUrls'	 => $variations_urls,
+	    'str'		 => array(
+		'groupDeleteConfirm'	 => __( 'Are you sure you want to delete this group?', 'stripe-payments' ),
+		'varDeleteConfirm'	 => __( 'Are you sure you want to delete this variation?', 'stripe-payments' ),
+	    )
+	) );
+	wp_enqueue_script( 'asp-admin-edit-product-js' );
 	do_action( 'asp_product_price_metabox_after_content', $post );
     }
 
@@ -303,14 +417,13 @@ class asp_products_metaboxes {
 	$current_val = get_post_meta( $post->ID, 'asp_product_custom_field', true );
 
 	$show_custom_field_settings	 = '';
-	$asp_settings			 = AcceptStripePayments::get_instance();
-	$field_name			 = $asp_settings->get_setting( 'custom_field_name' );
+	$field_name			 = $this->ASPMain->get_setting( 'custom_field_enabled' );
 	if ( ! empty( $field_name ) ) {//Custom field configured so show product specific settings
 	    $show_custom_field_settings = '1';
 	}
 	$show_custom_field_settings = apply_filters( 'asp_show_product_custom_field_settings', $show_custom_field_settings ); //Filter to allow addon to override this
 	if ( empty( $show_custom_field_settings ) ) {
-	    //Custom field isn't configured. Don't show the seettings
+	    //Custom field isn't configured. Don't show the settings
 	    _e( 'Custom field is disabled. Configure custom field in the settings menu of this plugin to enable it.', 'stripe-payments' );
 	    return;
 	}
@@ -320,6 +433,7 @@ class asp_products_metaboxes {
 	<label><input type="radio" name="asp_product_custom_field" value="1"<?php echo ($current_val === "1") ? ' checked' : ''; ?>><?php echo __( 'Enabled', 'stripe-payments' ); ?> </label>
 	<label><input type="radio" name="asp_product_custom_field" value="0"<?php echo ($current_val === "0") ? ' checked' : ''; ?>><?php echo __( 'Disabled', 'stripe-payments' ); ?> </label>
 	<?php
+	do_action( 'asp_product_custom_field_metabox_after', $post->ID );
     }
 
     function display_coupons_meta_box( $post ) {
@@ -335,7 +449,7 @@ class asp_products_metaboxes {
     function display_shortcode_meta_box( $post ) {
 	$current_val = get_post_meta( $post->ID, 'asp_product_button_text', true );
 	?>
-	<input type="text" name="asp_product_shortcode" size="50" class="asp-select-on-click" readonly value="[asp_product id=&quot;<?php echo $post->ID; ?>&quot;]">
+	<input type="text" name="asp_product_shortcode" style="width: 100%;" class="asp-select-on-click" readonly value="[asp_product id=&quot;<?php echo $post->ID; ?>&quot;]">
 	<p class="description"><?php _e( 'Use this shortcode to display button for your product.', 'stripe-payments' ); ?></p>
 	<script>
 	    jQuery('input.asp-select-on-click').click(function () {
@@ -354,9 +468,16 @@ class asp_products_metaboxes {
 	    return;
 	}
 	if ( isset( $post_id ) ) {
-	    update_post_meta( $post_id, 'asp_product_price', sanitize_text_field( $_POST[ 'asp_product_price' ] ) );
+	    $title = get_the_title( $post_id );
+	    if ( empty( $title ) ) {
+		//Display error message of product name is empty
+		$text = __( 'Please specify product name.', 'stripe-payments' );
+		AcceptStripePayments_Admin::add_admin_notice( 'error', $text, false );
+	    }
 	    update_post_meta( $post_id, 'asp_product_currency', sanitize_text_field( $_POST[ 'asp_product_currency' ] ) );
-	    update_post_meta( $post_id, 'asp_product_shipping', sanitize_text_field( $_POST[ 'asp_product_shipping' ] ) );
+	    $shipping	 = filter_input( INPUT_POST, 'asp_product_shipping', FILTER_SANITIZE_STRING );
+	    $shipping	 = ! empty( $shipping ) ? AcceptStripePayments::tofloat( $shipping ) : $shipping;
+	    update_post_meta( $post_id, 'asp_product_shipping', $shipping );
 	    update_post_meta( $post_id, 'asp_product_tax', sanitize_text_field( $_POST[ 'asp_product_tax' ] ) );
 	    update_post_meta( $post_id, 'asp_product_quantity', sanitize_text_field( $_POST[ 'asp_product_quantity' ] ) );
 	    update_post_meta( $post_id, 'asp_product_custom_quantity', isset( $_POST[ 'asp_product_custom_quantity' ] ) ? "1" : false  );
@@ -370,7 +491,18 @@ class asp_products_metaboxes {
 	    update_post_meta( $post_id, 'asp_product_button_only', isset( $_POST[ 'asp_product_button_only' ] ) ? 1 : 0  );
 	    update_post_meta( $post_id, 'asp_product_description', sanitize_text_field( $_POST[ 'asp_product_description' ] ) );
 	    update_post_meta( $post_id, 'asp_product_upload', esc_url( $_POST[ 'asp_product_upload' ], array( 'http', 'https', 'dropbox' ) ) );
-	    update_post_meta( $post_id, 'asp_product_thumbnail', esc_url( $_POST[ 'asp_product_thumbnail' ], array( 'http', 'https' ) ) );
+	    $thumb_url = esc_url( $_POST[ 'asp_product_thumbnail' ], array( 'http', 'https' ) );
+	    if ( ! empty( $thumb_url ) ) {
+		$curr_thumb	 = get_post_meta( $post_id, 'asp_product_thumbnail', true );
+		$force_regen	 = $thumb_url === $curr_thumb ? false : true;
+		update_post_meta( $post_id, 'asp_product_thumbnail', $thumb_url );
+		//generate small 100x100 thumbnail
+		AcceptStripePayments::get_small_product_thumb( $post_id, $force_regen );
+	    } else {
+		//thumbnail is removed
+		update_post_meta( $post_id, 'asp_product_thumbnail', '' );
+		update_post_meta( $post_id, 'asp_product_thumbnail_thumb', '' );
+	    }
 	    update_post_meta( $post_id, 'asp_product_no_popup_thumbnail', isset( $_POST[ 'asp_product_no_popup_thumbnail' ] ) ? "1" : false  );
 	    update_post_meta( $post_id, 'asp_product_thankyou_page', isset( $_POST[ 'asp_product_thankyou_page' ] ) && ! empty( $_POST[ 'asp_product_thankyou_page' ] ) ? esc_url( $_POST[ 'asp_product_thankyou_page' ] ) : ''  );
 	    $shipping_addr = false;
@@ -382,6 +514,65 @@ class asp_products_metaboxes {
 	    update_post_meta( $post_id, 'asp_product_emember_level',  ! empty( $_POST[ 'asp_product_emember_level' ] ) ? intval( $_POST[ 'asp_product_emember_level' ] ) : ""  );
 
 	    do_action( 'asp_save_product_handler', $post_id, $post, $update );
+
+	    //check if this is not subscription product
+	    $asp_plan_id = get_post_meta( $post_id, 'asp_sub_plan_id', true );
+	    if ( empty( $asp_plan_id ) ) {
+		$currency_variable	 = isset( $_POST[ 'asp_product_currency_variable' ] ) ? true : false;
+		update_post_meta( $post_id, 'asp_product_currency_variable', $currency_variable );
+		//check if price is in min-max range for the currency set by Stripe: https://stripe.com/docs/currencies#minimum-and-maximum-charge-amounts
+		$price			 = sanitize_text_field( $_POST[ 'asp_product_price' ] );
+		$price			 = AcceptStripePayments::tofloat( $price );
+		$currency		 = sanitize_text_field( $_POST[ 'asp_product_currency' ] );
+		if ( ! empty( $price ) ) {
+		    $price_cents = AcceptStripePayments::is_zero_cents( $currency ) ? round( $price ) : round( $price * 100 );
+		    //check if we have currency set
+		    if ( empty( $currency ) ) {
+			//we have not. This means default currency should be used
+			$currency = $this->ASPMain->get_setting( 'currency_code' );
+		    }
+		    $currency = strtoupper( $currency );
+		    //let's see if currency has specific minimum set
+		    if ( isset( $class_asp->minAmounts[ $currency ] ) ) {
+			//check if price < minAmount
+			if ( $price_cents < $class_asp->minAmounts[ $currency ] ) {
+			    // it is. Let's add error message
+			    $text = sprintf( __( '<b>Invalid product price</b>: minimum price in %s should be %s, you specified %s. This price limitation comes from Stripe.', 'stripe-payments' ), $currency, $class_asp->formatted_price( $class_asp->minAmounts[ $currency ], $currency, true ), AcceptStripePayments::formatted_price( $price_cents, $currency, true ) );
+			    AcceptStripePayments_Admin::add_admin_notice( 'error', $text, false );
+			    // we don't save invalid price
+			    return false;
+			}
+		    }
+		    //check if value is not above maximum allowed by Stripe (8 digits; e.g. 99999999 in cents)
+		    if ( $price_cents > 99999999 ) {
+			// it is. Let's add error message
+			$text = sprintf( __( '<b>Invalid product price</b>: maximum allowed product price is %s, you specified %s', 'stripe-payments' ), $class_asp->formatted_price( 99999999, $currency, true ), AcceptStripePayments::formatted_price( $price_cents, $currency, true ) );
+			AcceptStripePayments_Admin::add_admin_notice( 'error', $text, false );
+			// we don't save invalid price
+			return false;
+		    }
+		}
+		//price seems to be valid, let's save it
+		update_post_meta( $post_id, 'asp_product_price', $price );
+		//handle variations
+		$variations_groups = filter_input( INPUT_POST, 'asp-variations-group-names', FILTER_UNSAFE_RAW, FILTER_REQUIRE_ARRAY );
+		if ( ! empty( $variations_groups ) && is_array( $variations_groups ) ) {
+		    //we got variations groups. Let's process them
+		    update_post_meta( $post_id, 'asp_variations_groups', $variations_groups );
+		    $variations_names	 = filter_input( INPUT_POST, 'asp-variation-names', FILTER_UNSAFE_RAW, FILTER_REQUIRE_ARRAY );
+		    update_post_meta( $post_id, 'asp_variations_names', $variations_names );
+		    $variations_prices	 = filter_input( INPUT_POST, 'asp-variation-prices', FILTER_UNSAFE_RAW, FILTER_REQUIRE_ARRAY );
+		    update_post_meta( $post_id, 'asp_variations_prices', $variations_prices );
+		    $variations_urls	 = filter_input( INPUT_POST, 'asp-variation-urls', FILTER_UNSAFE_RAW, FILTER_REQUIRE_ARRAY );
+		    update_post_meta( $post_id, 'asp_variations_urls', $variations_urls );
+		} else {
+		    //we got no variations groups. Let's clear meta values
+		    update_post_meta( $post_id, 'asp_variations_groups', false );
+		    update_post_meta( $post_id, 'asp_variations_names', false );
+		    update_post_meta( $post_id, 'asp_variations_prices', false );
+		    update_post_meta( $post_id, 'asp_variations_urls', false );
+		}
+	    }
 	}
     }
 
