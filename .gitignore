@@ -25,3 +25,6 @@ wp-content/plugins/hello.php
 
 # Ignore IIS files
 web.config
+
+# Ignore OS files
+.DS_Store
