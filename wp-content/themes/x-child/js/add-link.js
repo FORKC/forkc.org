@@ -1,4 +1,3 @@
 jQuery('.x-logobar-inner').each(function() {
-  	var link = jQuery(this).html();
-  	jQuery(this).contents().wrap('<a class="riverfest-cta"href="http://forkc.org/kc-riverfest"></a>');
+  	jQuery(this).contents().wrap('<a class="riverfest-cta" href="https://www.etix.com/ticket/v/15007/berkley-riverfront-park"></a>');
 }); 
