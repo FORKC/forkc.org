@@ -2,12 +2,12 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /vhosts/dev.forkc.org/httpdocs
+    destination: /vhosts/forkc.org/httpdocs
 hooks:
   #  BeforeInstall:
   AfterInstall:
     - location: /scripts/reset-permissions.sh
-      timeout: 2
+      timeout: 5
       runas: root
 #  ApplicationStart:
 #  ApplicationStop:

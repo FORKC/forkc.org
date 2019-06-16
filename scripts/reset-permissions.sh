@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/vhosts/dev.forkc.org/perms.sh
+/vhosts/forkc.org/perms.sh
