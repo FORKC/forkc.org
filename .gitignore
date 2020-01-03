@@ -28,3 +28,6 @@ web.config
 
 # Ignore OS files
 .DS_Store
+
+# Composer files
+/vendor/
