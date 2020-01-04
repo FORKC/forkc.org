@@ -6,7 +6,7 @@
 * Description: Simple event ticketing system
 * Author: Tickera.com
 * Author URI: https://tickera.com/
-* Version: 3.4.6.6
+* Version: 3.4.6.7
 * Text Domain: tc
 * Domain Path: /languages/
 */
@@ -18,7 +18,7 @@ if ( !defined( 'ABSPATH' ) ) {
 if ( !class_exists( 'TC' ) ) {
     class TC
     {
-        var  $version = '3.4.6.6' ;
+        var  $version = '3.4.6.7' ;
         var  $title = 'Tickera' ;
         var  $name = 'tc' ;
         var  $dir_name = 'tickera-event-ticketing-system' ;
@@ -182,36 +182,48 @@ if ( !class_exists( 'TC' ) ) {
                 10,
                 1
             );
+            // Display Admin notices
+            add_action( 'admin_notices', array( &$this, 'admin_dashboard_notification' ) );
+            $tc_active_plugins = get_option( 'active_plugins' );
             $tc_general_settings = get_option( 'tc_general_setting', false );
-            //$tc_email_settings = get_option('tc_email_setting', false);
-            if ( isset( $tc_general_settings['show_cart_menu_item'] ) && $tc_general_settings['show_cart_menu_item'] == 'yes' && !in_array( 'bridge-for-woocommerce/bridge-for-woocommerce.php', get_option( 'active_plugins' ) ) ) {
-                add_filter(
-                    'wp_nav_menu_objects',
-                    array( &$this, 'main_navigation_links' ),
-                    10,
-                    2
-                );
-            }
 
-            if ( isset( $tc_general_settings['show_cart_menu_item'] ) && $tc_general_settings['show_cart_menu_item'] == 'yes' && !in_array( 'bridge-for-woocommerce/bridge-for-woocommerce.php', get_option( 'active_plugins' ) ) ) {
-                $theme_location = 'primary';
+            if ( in_array( 'bridge-for-woocommerce/bridge-for-woocommerce.php', $tc_active_plugins ) ) {
 
-                if ( !has_nav_menu( $theme_location ) ) {
-                    $theme_locations = get_nav_menu_locations();
-                    foreach ( (array) $theme_locations as $key => $location ) {
-                        $theme_location = $key;
-                        break;
+                if ( 'yes' == $tc_general_settings['show_cart_menu_item'] || 'yes' == $tc_general_settings['force_login'] ) {
+                    $tc_general_settings['show_cart_menu_item'] = 'no';
+                    $tc_general_settings['force_login'] = 'no';
+                    update_option( 'tc_general_setting', $tc_general_settings );
+                }
+
+            } else {
+
+                if ( 'yes' == $tc_general_settings['show_cart_menu_item'] ) {
+                    add_filter(
+                        'wp_nav_menu_objects',
+                        array( &$this, 'main_navigation_links' ),
+                        10,
+                        2
+                    );
+                    $theme_location = 'primary';
+
+                    if ( !has_nav_menu( $theme_location ) ) {
+                        $theme_locations = get_nav_menu_locations();
+                        foreach ( (array) $theme_locations as $key => $location ) {
+                            $theme_location = $key;
+                            break;
+                        }
+                    }
+
+                    if ( !has_nav_menu( $theme_location ) ) {
+                        add_filter(
+                            'wp_page_menu',
+                            array( &$this, 'main_navigation_links_fallback' ),
+                            20,
+                            2
+                        );
                     }
                 }
 
-                if ( !has_nav_menu( $theme_location ) ) {
-                    add_filter(
-                        'wp_page_menu',
-                        array( &$this, 'main_navigation_links_fallback' ),
-                        20,
-                        2
-                    );
-                }
             }
 
             add_filter(
@@ -286,11 +298,148 @@ if ( !class_exists( 'TC' ) ) {
 
         }
 
+        /**
+         * Modify this method for further admin notice
+         */
+        function admin_dashboard_notification()
+        {
+            global  $tc ;
+            $gateway = 'braintree';
+            $activePlugin = $tc->get_setting( 'gateways->active', array() );
+            $alternativeGateway = $this->tc_payment_gateway_alternative( $gateway );
+
+            if ( $alternativeGateway && in_array( $gateway, $activePlugin ) ) {
+                $html = '';
+                foreach ( $alternativeGateway as $val ) {
+                    $html .= '<div class="notice notice-info is-dismissible tc-admin-notice" style="display:none;"">';
+                    $html .= '<p>' . __( 'Tickera ', 'tc' ) . ucfirst( str_replace( '_', ' ', '<b>' . $val . '</b>' ) ) . __( ' is now available. Please activate it via', 'tc' ) . ' <a href="edit.php?post_type=tc_events&page=tc_settings&tab=gateways">' . __( 'Tickera > Settings > Payment Gateways Tab', 'tc' ) . '</a></p>';
+                    $html .= '</div>';
+                }
+            }
+
+            echo  $html ;
+        }
+
+        /**
+        * Check for a specific payment gateway alternative versions
+        * @param $code
+        * @return array|null
+        */
+        function tc_payment_gateway_alternative( $code )
+        {
+            global  $tc_gateway_plugins, $tc ;
+            $activePlugin = $tc->get_setting( 'gateways->active', array() );
+            $availablePlugin = array_keys( (array) $tc_gateway_plugins );
+            $alt = [];
+            foreach ( $availablePlugin as $key ) {
+                if ( strpos( $key, $code ) !== false ) {
+                    $alt[] = $key;
+                }
+            }
+            $pos = array_search( $code, $alt );
+            if ( $pos ) {
+                unset( $alt[$pos] );
+            }
+            if ( in_array( reset( $alt ), $activePlugin ) ) {
+                return null;
+            }
+            return $alt;
+        }
+
+        /**
+         * Retrieve individual tickets payment summary
+         * @param array $cart_contents
+         * @return array|null
+         */
+        function tc_payment_summary_individual_ticket( $cart_contents )
+        {
+            global  $tc ;
+            if ( !$cart_contents ) {
+                return null;
+            }
+            $overall_ordered_count = array_sum( $cart_contents );
+            // Initialize Discount variables
+
+            if ( $_SESSION['tc_discount_code'] ) {
+                $discount = new TC_Discounts();
+                $discount_object = get_page_by_title( $_SESSION['tc_discount_code'], OBJECT, 'tc_discounts' );
+                $discount_details = new TC_Discount( $discount_object->ID );
+                $current_usage = $discount->discount_used_times( $discount_details->details->post_title );
+                $usage_has_limit = ( ($usage_limit = $discount_details->details->usage_limit) ? $usage_limit : false );
+                $available_usage = (int) $usage_limit - (int) $current_usage;
+            }
+
+            // Initialize Tax variables
+            $tax_inclusive = tc_is_tax_inclusive();
+            // Initialize Fee variables
+            $tc_general_settings = get_option( 'tc_general_setting', false );
+            $global_fees = $tc_general_settings['use_global_fees'];
+            $global_fee_type = $tc_general_settings['global_fee_type'];
+            $global_fee_scope = $tc_general_settings['global_fee_scope'];
+            $global_fee_value = $tc_general_settings['global_fee_value'];
+            $data = [];
+            foreach ( $cart_contents as $ticket_type => $ordered_count ) {
+                $ticket = new TC_Ticket( $ticket_type );
+                for ( $x = 0 ;  $x < $ordered_count ;  $x++ ) {
+                    $ticket_id = $ticket->details->ID;
+                    // Ticket Subtotal
+                    $ticket_subtotal = tc_get_ticket_price( $ticket_id );
+                    // Ticket Discount
+
+                    if ( $_SESSION['tc_discount_code'] ) {
+                        $discount_value = ( ($discount_value = $discount->calculate_ticket_discount( $ticket, $discount_details )) ? $discount_value : 0 );
+                        $discount_value = ( !$usage_has_limit || $available_usage > 0 ? $discount_value : 0 );
+                        $available_usage--;
+                    } else {
+                        $discount_value = 0;
+                    }
+
+                    // Ticket Fee
+                    $ticket_fee = 0;
+                    // Ticket Fee: Enabled Global
+
+                    if ( 'yes' == $global_fees && $global_fee_value ) {
+                        $ticket_fee = ( 'order' == $global_fee_scope ? $global_fee_value / $overall_ordered_count : $global_fee_value );
+                        // Ticket Fee: Disabled Global
+                    } elseif ( 'no' == $global_fees ) {
+                        $ticket_fee = ( $ticket->details->ticket_fee ? $ticket->details->ticket_fee : 0 );
+                    }
+
+                    $ticket_fee_type = ( 'yes' == $global_fees ? $global_fee_type : $ticket->details->ticket_fee_type );
+                    $ticket_subtotal_after = ( 'yes' == $global_fees && 'order' == $global_fee_scope ? $_SESSION['cart_subtotal_pre'] : tc_get_ticket_price( $ticket_id ) );
+                    if ( $ticket_fee && 'percentage' == $ticket_fee_type ) {
+                        $ticket_fee = $ticket_fee / 100 * $ticket_subtotal_after;
+                    }
+                    // Ticket Tax
+                    $ticket_subtotal_after = $ticket_subtotal + $ticket_fee - $discount_value;
+
+                    if ( $tax_inclusive ) {
+                        $ticket_tax = $ticket_subtotal_after - $ticket_subtotal_after / ($tc->get_tax_value() / 100 + 1);
+                    } else {
+                        $ticket_tax = $tc->get_tax_value() / 100 * $ticket_subtotal_after;
+                    }
+
+                    // Ticket Total
+                    $ticket_total = ( $tax_inclusive ? $ticket_subtotal_after : $ticket_subtotal_after + $ticket_tax );
+                    $data['ticket_subtotal_post_meta'][$ticket_type][] = $ticket_subtotal;
+                    $data['ticket_discount_post_meta'][$ticket_type][] = $discount_value;
+                    $data['ticket_fee_post_meta'][$ticket_type][] = $ticket_fee;
+                    $data['ticket_tax_post_meta'][$ticket_type][] = $ticket_tax;
+                    $data['ticket_total_post_meta'][$ticket_type][] = $ticket_total;
+                }
+            }
+            return $data;
+        }
+
         function tc_change_editable_qty()
         {
             return false;
         }
 
+        /**
+         * Display Cart Summary Table
+         * @param array $cart_contents
+         */
         function tc_show_summary( $cart_contents )
         {
             global  $tc ;
@@ -1664,7 +1813,8 @@ if ( !class_exists( 'TC' ) ) {
                         $visible = false;
                     }
 
-                    if ( $plugin_name == 'custom_offline_payments' && in_array( $code, $settings['gateways']['active'] ) == true ) {
+                    $active_plugins = ( isset( $settings['gateways']['active'] ) ? $settings['gateways']['active'] : array() );
+                    if ( $plugin_name == 'custom_offline_payments' && in_array( $code, $active_plugins ) ) {
 
                         if ( apply_filters( 'tc_change_user_role_offline_payment', current_user_can( 'administrator' ) ) ) {
                             if ( $show_gateway_admin == 'yes' ) {
@@ -2848,6 +2998,7 @@ if ( !class_exists( 'TC' ) ) {
         {
             $premium_gateways = array(
                 'authorizenet-aim.php',
+                'braintree-3ds2.php',
                 'beanstream.php',
                 'braintree.php',
                 'ipay88.php',
@@ -3265,6 +3416,8 @@ if ( !class_exists( 'TC' ) ) {
             //Cart Contents
             add_post_meta( $post_id, 'tc_cart_contents', $cart_contents );
             //Cart Info
+            $ticket_summary['owner_data'] = $this->tc_payment_summary_individual_ticket( $cart_contents );
+            $cart_info = array_merge_recursive( $cart_info, $ticket_summary );
             add_post_meta( $post_id, 'tc_cart_info', $cart_info );
             //save row data - buyer and ticket owners data, gateway, total, currency, coupon code, etc.
             //Payment Info
@@ -3285,7 +3438,7 @@ if ( !class_exists( 'TC' ) ) {
             //Discount Code
             add_post_meta( $post_id, 'tc_paid_date', ( $paid ? time() : '' ) );
             //Save Ticket Owner(s) data
-            $owner_data = $_SESSION['cart_info']['owner_data'];
+            $owner_data = $cart_info['owner_data'];
             $owner_records = array();
             $different_ticket_types = array_keys( $owner_data['ticket_type_id_post_meta'] );
             $n = 0;
@@ -3356,8 +3509,8 @@ if ( !class_exists( 'TC' ) ) {
 
             }
             /* foreach ($metas as $meta_name => $mata_value) {
-              update_post_meta($owner_record_id, $meta_name, $mata_value);
-            } */
+                update_post_meta($owner_record_id, $meta_name, $mata_value);
+              } */
             //Send order status email to the customer
             $payment_class_name = $_SESSION['cart_info']['gateway_class'];
             $payment_gateway = new $payment_class_name();
@@ -4383,6 +4536,12 @@ if ( !class_exists( 'TC' ) ) {
                 array(),
                 $this->version
             );
+            wp_enqueue_script(
+                $this->name . '-admin-js',
+                $this->plugin_url . 'js/custom.js',
+                array(),
+                $this->version
+            );
 
             if ( $this->in_admin_pages_require_admin_styles() ) {
                 wp_enqueue_style(
@@ -4467,6 +4626,9 @@ if ( !class_exists( 'TC' ) ) {
                     'order_status_changed_message'               => __( 'Order status changed successfully.', 'tc' ),
                     'order_confirmation_email_resent_message'    => __( 'Order confirmation e-mail resent successfully.', 'tc' ),
                     'order_confirmation_email_resending_message' => __( 'Sending...', 'tc' ),
+                    'single_sold_ticket_trash_message'           => __( 'Are you sure you want to delete this Ticket Type? You have %s ticket sold for some of the selected ticket types', 'tc' ),
+                    'multi_sold_tickets_trash_message'           => __( 'Are you sure you want to delete this Ticket Type? You have %s tickets sold for some of the selected ticket types', 'tc' ),
+                    'multi_check_tickets_trash_message'          => __( 'Are you sure you want to delete all Ticket Types? You have tickets sold for some of the selected ticket types.', 'tc' ),
                 ) );
                 wp_enqueue_script(
                     $this->name . '-chosen',

@@ -1,4 +1,39 @@
 <?php
+
+/*
+ ** confirm to trash ticket type
+ */
+add_action('wp_ajax_trash_post_before', 'trash_post_before');
+    function trash_post_before(){
+        
+        $btn_action     =   sanitize_text_field($_POST['btn_action']);
+        global $wpdb;
+        if(isset($btn_action)){ 
+            if($btn_action == 'trash') 
+            {
+                $post_id = absint($_POST['trash_id']);
+                $ticket_type = new TC_Ticket($post_id);//$99 = id of the ticket type
+                $sold_tickets =  tc_get_tickets_count_sold($ticket_type->id);
+                $resp = $sold_tickets;
+                    echo json_encode($resp);
+                    die;
+            }
+            elseif($btn_action == 'multi_trash'){
+                $ids =$_POST['multi_trash_id'];
+                
+                foreach($ids as $id){
+                    $ticket_type = new TC_Ticket($id);//$99 = id of the ticket type
+                    $sold_tickets =  tc_get_tickets_count_sold($ticket_type->id);
+                    $resp = $sold_tickets;
+                    if($resp > 0){
+                        echo json_encode($resp);
+                        die;
+                    }
+                }
+            }
+        }
+    }   
+
 add_action('manage_users_columns', 'tc_modify_user_columns');
 
 function tc_modify_user_columns($column_headers) {

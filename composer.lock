@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "624bf9f82464e13fedd64d05292e7c89",
+    "content-hash": "96b7baf26a061b6bdfead4d28b61014f",
     "packages": [
         {
             "name": "composer/installers",
@@ -310,7 +310,7 @@
         },
         {
             "name": "wpackagist-plugin/tickera-event-ticketing-system",
-            "version": "3.4.6.6",
+            "version": "3.4.6.7",
             "source": {
                 "type": "svn",
                 "url": "https://plugins.svn.wordpress.org/tickera-event-ticketing-system/",
@@ -318,7 +318,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://downloads.wordpress.org/plugin/tickera-event-ticketing-system.zip?timestamp=1573124777"
+                "url": "https://downloads.wordpress.org/plugin/tickera-event-ticketing-system.zip?timestamp=1578044624"
             },
             "require": {
                 "composer/installers": "~1.0"

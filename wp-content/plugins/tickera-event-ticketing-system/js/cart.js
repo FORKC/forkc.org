@@ -357,3 +357,13 @@ jQuery(document).ready(function ($) {
     }
 
 });
+
+/**
+ * Tickear Cart: Preventing Default button to trigger on Enter Key
+ */
+jQuery(document).on('keypress','#tickera_cart input', function (e) {
+    if (e.keyCode === 13) {
+        e.preventDefault()
+        jQuery('#proceed_to_checkout').trigger('click');
+    }
+});

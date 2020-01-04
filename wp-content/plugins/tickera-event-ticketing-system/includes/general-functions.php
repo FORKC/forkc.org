@@ -765,36 +765,39 @@ function tc_order_paid_attendee_email($order_id) {
         add_filter('wp_mail_from_name', 'attendee_email_from_name', 999);
 
         $subject = isset($tc_email_settings['attendee_order_subject']) ? stripslashes($tc_email_settings['attendee_order_subject']) : __('Your Ticket is here!', 'tc');
-
+		
         $default_message = 'Hello, <br /><br />You can download ticket for EVENT_NAME here DOWNLOAD_URL';
 
         $order = new TC_Order($order_id);
-
+		
         $tc_attendee_order_message = $tc_email_settings['attendee_order_message'];
         $tc_attendee_order_message = apply_filters('tc_attendee_order_message', $tc_attendee_order_message, $order);
-
+		
         $attendee_headers = '';
 
         $order_attendees = TC_Orders::get_tickets_ids($order->details->ID);
-
-
+		
         foreach ($order_attendees as $order_attendee_id) {
-
+			
             $ticket_type = get_post_meta($order_attendee_id, 'ticket_type_id', true);
             $ticket_type_name = get_the_title($ticket_type);
             $event_id = get_post_meta($order_attendee_id, 'event_id', true);
+			//get attendees first-name and last-name 
+            $first_name = get_post_meta($order_attendee_id, 'first_name', true);
+            $last_name = get_post_meta($order_attendee_id, 'last_name', true);
             $event = new TC_Event($event_id);
-
+				
             $message = isset($tc_attendee_order_message) ? $tc_attendee_order_message : $default_message;
-            $placeholders = array('EVENT_NAME', 'DOWNLOAD_URL', 'TICKET_TYPE');
-            $placeholder_values = array($event->details->post_title, tc_get_ticket_download_link('', '', $order_attendee_id, true), $ticket_type_name);
-
+            $placeholders = array('EVENT_NAME', 'DOWNLOAD_URL', 'TICKET_TYPE','FIRST_NAME','LAST_NAME');
+			
+            $placeholder_values = array($event->details->post_title, tc_get_ticket_download_link('', '', $order_attendee_id, true), $ticket_type_name,$first_name,$last_name);
+				
             $to = get_post_meta($order_attendee_id, 'owner_email', true);
-
-            if (!empty($to)) {
+							
+		   if (!empty($to)) {
 
                 $message = str_replace(apply_filters('tc_order_completed_attendee_email_placeholders', $placeholders), apply_filters('tc_order_completed_attendee_email_placeholder_values', $placeholder_values), $message);
-
+					
                 if ($email_send_type == 'wp_mail') {
                     wp_mail($to, $subject, html_entity_decode(stripcslashes(apply_filters('tc_order_completed_attendee_email_message', wpautop($message)))), apply_filters('tc_order_completed_attendee_email_headers', $attendee_headers));
                 } else {
@@ -2489,6 +2492,9 @@ function tc_get_order_event($field_name = '', $post_id = '') {
         </tr>
 
         <?php
+
+        $ticket_summary_fields = ['ticket_subtotal','ticket_discount','ticket_fee','ticket_tax','ticket_total'];
+
         foreach ($tickets as $ticket) {
             $style = ( ' class="alternate"' == $style ) ? '' : ' class="alternate"';
             ?>
@@ -2503,6 +2509,11 @@ function tc_get_order_event($field_name = '', $post_id = '') {
                         } else {
                             if ($column['post_field_type'] == 'post_meta') {
                                 $value = get_post_meta($ticket->ID, $column['field_name'], true);
+
+                                if (in_array($column['field_name'],$ticket_summary_fields)) {
+                                    $value = apply_filters('tc_cart_currency_and_format', $value);
+                                }
+
                                 if (empty($value)) {
                                     echo '-';
                                 } else {

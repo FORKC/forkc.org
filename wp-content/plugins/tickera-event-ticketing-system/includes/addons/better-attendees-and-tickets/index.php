@@ -62,11 +62,21 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             add_filter('bulk_actions-edit-tc_tickets_instances', array($this, 'remove_edit_bulk_action'));
         }
 
+        /**
+         * Remove Edit Bulk Action
+         * @param $actions
+         * @return mixed
+         */
         function remove_edit_bulk_action($actions) {
             unset($actions['edit']);
             return $actions;
         }
 
+        /**
+         * Initialize Data Table Sorting
+         * @param $query
+         * @return mixed
+         */
         function pre_get_posts_reorder($query) {
             global $post_type, $pagenow;
             if ($pagenow == 'edit.php' && $post_type == 'tc_tickets_instances') {
@@ -76,12 +86,15 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             return $query;
         }
 
-
+        /**
+         * Logical Conditions for Custom Event Filter
+         * @param $query
+         * @return mixed
+         */
         function pre_get_posts_events_filter($query) {
             global $post_type, $pagenow;
             if ($pagenow == 'edit.php' && ($post_type == 'tc_tickets_instances' || $post_type == 'tc_tickets')) {
-
-                if (isset($_REQUEST['tc_event_filter']) && ($query->query['post_type'] == 'tc_tickets_instances' || $query->query['post_type'] == 'tc_tickets')) {
+                if (isset($_REQUEST['tc_event_filter']) && ($query->query['post_type'] == 'tc_tickets_instances' || $query->query['post_type'] == 'tc_tickets') && empty($_GET['s'])) {
                     if ((int) $_REQUEST['tc_event_filter'] !== 0 && $post_type == 'tc_tickets_instances') {
                         $query->set('meta_key', 'event_id');
                         $query->set('meta_value', (int) $_REQUEST['tc_event_filter']);
@@ -94,6 +107,11 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             return $query;
         }
 
+        /**
+         * Logical Conditions for Custom Order Status Filter
+         * @param $query
+         * @return mixed
+         */
         function pre_get_posts_order_status_filter($query) {
             global $post_type, $pagenow;
             if ($pagenow == 'edit.php' && $post_type == 'tc_tickets_instances') {
@@ -110,36 +128,59 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             return $query;
         }
 
+        /**
+         * Extended Logical Conditions for Custom Order Status Filter
+         * @param $where
+         * @return string
+         */
         function pre_get_posts_order_status_filter_where($where) {
             global $wpdb;
             $where .= " AND " . $wpdb->posts . ".post_parent IN (SELECT " . $wpdb->posts . ".ID FROM " . $wpdb->posts . " WHERE " . $wpdb->posts . ".post_status = '" . sanitize_text_field($_REQUEST['tc_order_status_filter']) . "')";
             return $where;
         }
 
-        function add_events_filter() {
-            global $post_type;
-            if ($post_type == 'tc_tickets_instances' || $post_type == 'tc_tickets') {
-
-                $wp_events_search = new TC_Events_Search('', '', '-1');
-
-                $currently_selected = isset($_REQUEST['tc_event_filter']) ? (int) $_REQUEST['tc_event_filter'] : '';
-                ?>
-                <select name="tc_event_filter">
-                    <option value="0"><?php _e('All Events', 'tc'); ?></option>
-                    <?php
-                    foreach ($wp_events_search->get_results() as $event) {
-                        $event_obj = new TC_Event($event->ID);
-                        $event_object = $event_obj->details;
-                        ?>
-                        <option value="<?php echo esc_attr($event_object->ID); ?>" <?php selected($currently_selected, $event_object->ID, true); ?>><?php echo apply_filters('tc_event_select_name', $event_object->post_title, $event_object->ID); ?></option>
-                        <?php
-                    }
-                    ?>
-                </select>
-                <?php
+        /**
+         * Generate an array of Events
+         * @return array
+         */
+        function events_filter_list() {
+            $wp_events_search = new TC_Events_Search('', '', '-1');
+            $wp_events_filter = [];
+            foreach (array_values($wp_events_search->get_results()) as $event) {
+                $wp_events_filter[$event->ID] = $event->post_title;
             }
+            return $wp_events_filter;
         }
 
+        /**
+         * Custom Events Filter
+         */
+        function add_events_filter() {
+            global $post_type;
+            if ($post_type == 'tc_tickets_instances' || $post_type == 'tc_tickets') : ?>
+
+                <?php
+                $currently_selected = isset($_REQUEST['tc_event_filter']) ? (int) $_REQUEST['tc_event_filter'] : '';
+                $wp_events_search = $this->events_filter_list();
+                ?>
+
+                <select name="tc_event_filter">
+                    <option value="0"><?php _e('All Events', 'tc'); ?></option>
+
+                    <?php foreach ($wp_events_search as $event_id => $event_title) : ?>
+                        <option value="<?php echo esc_attr($event_id); ?>" <?php selected($currently_selected, $event_id, true); ?>><?php echo apply_filters('tc_event_select_name', $event_title, $event_id); ?></option>
+                    <?php endforeach; ?>
+
+                    ?>
+                </select>
+            <?php endif; ?>
+
+            <?php // Open PHP for succeeding source codes
+        }
+
+        /**
+         * Custom Order Status Filter
+         */
         function add_order_status_filter() {
             global $post_type;
             if ($post_type == 'tc_tickets_instances') {
@@ -168,6 +209,11 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             }
         }
 
+        /**
+         * @param $post_id
+         * @param $post
+         * @param $update
+         */
         function save_tickets_instances_meta($post_id, $post, $update) {
             $ticket_instance = new TC_Ticket_Instance((int) $post_id);
             $ticket_type = new TC_Ticket($ticket_instance->details->ticket_type_id);
@@ -196,6 +242,11 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             }
         }
 
+        /**
+         * Extends Search Filter with Table Posts
+         * @param $join
+         * @return string
+         */
         function extended_search_join($join) {
             global $pagenow, $wpdb;
             if (is_admin() && $pagenow == 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] == 'tc_tickets_instances' && isset($_REQUEST['s']) && $_REQUEST['s'] != '') {
@@ -204,15 +255,56 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             return $join;
         }
 
+        /**
+         * Extends Search Filter with Custom WHERE Clause
+         * @param $where
+         * @return string|string[]|null
+         */
         function extended_search_where($where) {
             global $pagenow, $wpdb;
-            if (is_admin() && $pagenow == 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] == 'tc_tickets_instances' && isset($_REQUEST['s']) && $_REQUEST['s'] != '') {
-                $where = preg_replace(
-                        "/\(\s*" . $wpdb->posts . ".post_title\s+LIKE\s*(\'[^\']+\')\s*\)/", "(" . $wpdb->posts . ".post_title LIKE $1) OR (" . $wpdb->postmeta . ".meta_value LIKE $1)", $where);
+
+            // Sanitize Variables
+            $search_filter = sanitize_text_field($_GET['s']);
+            $tc_post_type_field = sanitize_text_field($_GET['post_type']);
+            $tc_event_filter_field = sanitize_text_field($_GET['tc_event_filter']);
+
+            if (is_admin() && $pagenow == 'edit.php' && isset($_GET['post_type']) && $tc_post_type_field == 'tc_tickets_instances' && isset($_REQUEST['s']) && $search_filter) {
+
+                // Search Event Name via Search Filter
+                $data = [];
+                $wp_event_filter = $this->events_filter_list();
+                foreach ($wp_event_filter as $event_id => $event_name) {
+                    if (stripos($event_name, $search_filter) !== false) {
+                        $data[] = $event_id;
+                    }
+                }
+
+                if ($data && !$tc_event_filter_field) { // IF: Event is not Filtered and Search Field is Filtered
+                    $where .= ' OR (' . $wpdb->postmeta . '.meta_value IN (' . implode(',',$data) . ') AND ' . $wpdb->postmeta . '.meta_key = \'event_id\')';
+
+                } elseif ($tc_event_filter_field) { // IF: Event is Filtered and Search Field is Filtered
+                    $search_filter = explode(' ',$search_filter);
+                    $search_filter = (int)$tc_event_filter_field . ",'" . implode("','",$search_filter) . "'";
+                    $where = preg_replace (
+                        "/\(\s*" . $wpdb->posts . ".post_title\s+LIKE\s*(\'[^\']+\')\s*\)/",
+                        "(LOWER(" . $wpdb->postmeta . ".meta_value) IN (" . $search_filter . ")) OR (LOWER(" . $wpdb->posts . ".post_title) IN (" . $search_filter . "))", $where
+                    );
+                } else {
+                    $search_filter = explode(' ',$search_filter);
+                    $search_filter = "'" . implode("','",$search_filter) . "'";
+                    $where = preg_replace (
+                        "/\(\s*" . $wpdb->posts . ".post_title\s+LIKE\s*(\'[^\']+\')\s*\)/",
+                        "(LOWER(" . $wpdb->posts . ".post_title) IN (" . $search_filter . ")) OR (LOWER(" . $wpdb->postmeta . ".meta_value) IN (" . $search_filter . "))", $where
+                    );
+                }
             }
             return $where;
         }
 
+        /**
+         * @param $messages
+         * @return mixed
+         */
         function post_updated_messages($messages) {
 
             $post = get_post();
@@ -240,6 +332,11 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             return $messages;
         }
 
+        /**
+         * @param $actions
+         * @param $post
+         * @return mixed
+         */
         function post_row_actions($actions, $post) {
             unset($actions['view']);
             unset($actions['edit']);
@@ -247,10 +344,9 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             return $actions;
         }
 
-        /*
+        /**
          * Enqueue scripts and styles
          */
-
         function admin_enqueue_scripts_and_styles() {
             global $post, $post_type;
             if ($post_type == 'tc_tickets_instances') {
@@ -258,10 +354,11 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             }
         }
 
-        /*
+        /**
          * Change tickets intances post type arguments
+         * @param $args
+         * @return mixed|void
          */
-
         function tc_tickets_instances_post_type_args($args) {
             $args['show_in_menu'] = 'edit.php?post_type=tc_events';
             $args['show_ui'] = true;
@@ -276,10 +373,11 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             return apply_filters('tc_tickets_instances_post_type_args_val', $args);
         }
 
-        /*
+        /**
          * Add table column titles
+         * @param $columns
+         * @return mixed
          */
-
         function manage_tc_tickets_instances_columns($columns) {
 
             $tickets_instances_columns = TC_Tickets_Instances::get_tickets_instances_fields();
@@ -293,10 +391,11 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             return $columns;
         }
 
-        /*
+        /**
          * Add table column values
+         * @param $name
+         * @param $post_id
          */
-
         function manage_tc_tickets_instances_posts_custom_column($name, $post_id) {
             global $post, $tc;
             $tickets_instances_columns = TC_Tickets_Instances::get_tickets_instances_fields();
@@ -332,6 +431,9 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             }
         }
 
+        /**
+         * Metabox for Check Ins
+         */
         function add_tickets_instances_metaboxes() {
             global $pagenow, $typenow, $post;
             add_meta_box('attendees-checkin-details-tc-metabox-wrapper', __('Check-in List', 'tc'), 'tc_attendees_check_in_details_metabox', 'tc_tickets_instances', 'normal');
@@ -343,6 +445,9 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
     $TC_Better_Attendees_and_Tickets = new TC_Better_Attendees_and_Tickets();
 }
 
+/**
+ * Generate Template with Logical Conditions for Check Ins Metabox
+ */
 function tc_attendees_check_in_details_metabox() {
 
     $ticket_instance = new TC_Ticket_Instance((int) $_GET['post']);

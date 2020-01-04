@@ -46,11 +46,32 @@ if (!class_exists('TC_Checkin_API')) {
             $this->results_per_page = apply_filters('tc_tickets_info_results_per_page_var_name', $results_per_page);
             $this->keyword = apply_filters('tc_tickets_info_keyword_var_name', $keyword);
 
+
+
+
             if ($execute_request) {
+
                 header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1.
                 header("Pragma: no-cache"); // HTTP 1.0.
                 header("Expires: 0"); // Proxies.
                 header("Content-type: application/json;");
+
+                // Allow from any origin
+                if (isset($_SERVER['HTTP_ORIGIN'])) {
+                   header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+                   header('Access-Control-Allow-Credentials: true');
+                   header('Access-Control-Max-Age: 86400');    // cache for 1 day
+                }
+
+                // Access-Control headers are received during OPTIONS requests
+                if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+
+                   if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
+                       header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+
+                   if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
+                       header("Access-Control-Allow-Headers:        {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+                }
 
                 try {
                     if ((int) @ini_get('output_buffering') === 1 || strtolower(@ini_get('output_buffering')) === 'on') {

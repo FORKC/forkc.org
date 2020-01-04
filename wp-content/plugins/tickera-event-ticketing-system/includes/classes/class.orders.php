@@ -186,6 +186,13 @@ if (!class_exists('TC_Orders')) {
             return apply_filters('tc_order_fields', $default_fields);
         }
 
+
+        /**
+         * Initialize Ticket(s) Table Header.
+         * This will populate Ticket(s) table headers under order page
+         * @return mixed|void
+         */
+        
         function get_owner_info_fields() {
 
             $default_fields = array(
@@ -247,6 +254,46 @@ if (!class_exists('TC_Orders')) {
                     'field_description' => '',
                     'post_field_type' => 'post_meta'
                 ),
+                // array(
+                //     'id' => 'ticket_subtotal',
+                //     'field_name' => 'ticket_subtotal',
+                //     'field_title' => __('Subtotal', 'tc'),
+                //     'field_type' => 'text',
+                //     'field_description' => '',
+                //     'post_field_type' => 'post_meta'
+                // ),
+                // array(
+                //     'id' => 'ticket_discount',
+                //     'field_name' => 'ticket_discount',
+                //     'field_title' => __('Discount', 'tc'),
+                //     'field_type' => 'text',
+                //     'field_description' => '',
+                //     'post_field_type' => 'post_meta'
+                // ),
+                // array(
+                //     'id' => 'ticket_fee',
+                //     'field_name' => 'ticket_fee',
+                //     'field_title' => __('Fee', 'tc'),
+                //     'field_type' => 'text',
+                //     'field_description' => '',
+                //     'post_field_type' => 'post_meta'
+                // ),
+                // array(
+                //     'id' => 'ticket_tax',
+                //     'field_name' => 'ticket_tax',
+                //     'field_title' => __('Tax', 'tc'),
+                //     'field_type' => 'text',
+                //     'field_description' => '',
+                //     'post_field_type' => 'post_meta'
+                // ),
+                // array(
+                //     'id' => 'ticket_total',
+                //     'field_name' => 'ticket_total',
+                //     'field_title' => __('Total', 'tc'),
+                //     'field_type' => 'text',
+                //     'field_description' => '',
+                //     'post_field_type' => 'post_meta'
+                // ),
             );
 
             return apply_filters('tc_owner_info_orders_table_fields', $default_fields);

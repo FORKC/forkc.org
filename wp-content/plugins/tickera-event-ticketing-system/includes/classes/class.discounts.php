@@ -101,6 +101,85 @@ if (!class_exists('TC_Discounts')) {
             return $discount_used_times;
         }
 
+        /**
+         * Calculate discount values based on backend settings
+         * @param obj $ticket
+         * @param obj|null $discount
+         * @return float|int|null
+         */
+        function calculate_ticket_discount($ticket, $discount = null) {
+            global $tc;
+
+            if (!$discount)
+                return null;
+
+            $is_published = ('publish' == $discount->details->post_status) ? true : false;
+            $overall_ordered_count = array_sum($tc->get_cart_cookie());
+            $overall_cart_subtotal = $_SESSION['cart_subtotal_pre'];
+
+            // Check for Initialized Discount Object
+            if ($discount->id && $is_published) {
+
+                // Check Discount Code for expiration
+                $current_date = current_time("Y-m-d H:i:s");
+                if ($discount->details->expiry_date >= $current_date) {
+                    $applicable_tickets = $discount->details->discount_availability;
+                    $applicable_ticket_type = explode(',', $applicable_tickets);
+                    $applicable_ticket_type = array_filter($applicable_ticket_type);
+                    $applicable_ticket_type = array_values($applicable_ticket_type);
+
+                    $usage = $this->discount_used_times($discount->details->post_title);
+                    $usage_has_limit = ($usage_limit = $discount->details->usage_limit) ? $usage_limit : false;
+                    $available_usage = (int) $usage_limit - (int) $usage;
+
+                    // Check Discount Code usage limit
+                    if (!$usage_has_limit || $available_usage > 0){
+
+                        $ticket_id = $ticket->details->ID;
+                        $ticket_price = tc_get_ticket_price($ticket_id);
+
+                        $discount_type = $discount->details->discount_type;
+                        $discount_value = $discount->details->discount_value;
+
+                        switch ($discount_type) {
+                            case '1': // Fixed Amount (per item) | Maximum discount value is equal to subtotal
+                                if (in_array($ticket_id, $applicable_ticket_type) || empty($applicable_tickets)) {
+                                    $discount_value = ($discount_value > $ticket_price) ? $ticket_price : $discount_value;
+                                    return $discount_value;
+                                } else {
+                                    return null;
+                                }
+                                break;
+
+                            case '2': // Percentage % | Maximum discount value is equal to subtotal
+                                if (in_array($ticket_id, $applicable_ticket_type) || empty($applicable_tickets)) {
+                                    $discount_value = ($discount_value < 101) ? (($ticket_price / 100) * $discount_value) : $ticket_price;
+                                    return $discount_value;
+                                } else {
+                                    return null;
+                                }
+                                break;
+
+                            case '3': // Fixed Amount (per order) | Maximum discount value is equal to subtotal
+                                $discount_ratio = $ticket_price / $overall_cart_subtotal;
+                                $discount_value = ($discount_value > $overall_cart_subtotal) ? $ticket_price : ($discount_value * $discount_ratio);
+                                return $discount_value;
+                                break;
+
+                            default:
+                                return null;
+                        }
+                    } else {
+                        $this->unset_discount();
+                        return null;
+                    }
+                }
+            } else {
+                $this->unset_discount();
+                return null;
+            }
+        }
+
         function discounted_cart_total($total = false, $discount_code = '') {
             global $tc, $discount, $discount_value_total, $init_total, $new_total;
 

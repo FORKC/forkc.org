@@ -508,7 +508,64 @@ jQuery(document).ready(function ($) {
     jQuery(window).resize(function () {
         tc_page_names_width();
     });
+    // js for trash confirmation
+    jQuery(document).ready(function($){
+        $('.post-type-tc_tickets a.submitdelete').click(function(e){
+            e.preventDefault();
+            var href = $(this).attr('href');
+                splt_hrf = href.split('=');
+                splt_hrf = splt_hrf[1].split('&');
+                id = splt_hrf[0];
+            $.post(tc_vars.ajaxUrl, {action: "trash_post_before", trash_id: id, btn_action: 'trash'}, function (data) {
+                var sold = data;
+                if(sold >0){
 
+                   if(sold == 1){
+                        var r = confirm(tc_vars.single_sold_ticket_trash_message.replace("%s",sold));
+                       }else{
+                        var r = confirm(tc_vars.multi_sold_tickets_trash_message.replace("%s",sold));
+                       }
+
+                    if(r){
+                        window.location = href;
+                    }
+                   }
+                else{
+                     window.location = href;
+                }
+            });
+        });
+        $('#doaction').click(function(e){
+            
+            if($('#bulk-action-selector-top').val() == 'trash'){
+                e.preventDefault();
+                if($('input[name="post[]"]:checked').length > 0){
+                    var tids = [];
+                    $.each($('input[name="post[]"]:checked'), function(){
+                        tids.push($(this).val());
+                    });
+                    $.post(tc_vars.ajaxUrl, {action: "trash_post_before", multi_trash_id: tids, btn_action: 'multi_trash'}, function (data) {
+                        var sold = data;
+                        
+                        if(sold > 0){
+                           var r = confirm(tc_vars.multi_check_tickets_trash_message);
+                            if(!r){
+                                e.preventDefault();
+                            }
+                            else{
+                                $('#doaction').unbind(e);
+                                $('#doaction').click();
+                            }
+                        }
+                        else{
+                            $('#doaction').unbind(e);
+                            $('#doaction').click();
+                        }
+                    });
+                }
+            }
+        });
+    });
     function tc_page_names_width() {
         jQuery('.tc_wrap .nav-tab-wrapper ul').width(jQuery('.tc_wrap .nav-tab-wrapper').width());
     }

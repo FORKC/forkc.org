@@ -328,7 +328,10 @@ if (!class_exists('TC_Ticket_Templates')) {
 
             $columns['edit'] = __('Edit', 'tc');
             $columns['delete'] = __('Delete', 'tc');
-
+            //add duplicate field
+           	if (tc_iw_is_pr() && !tets_fs()->is_free_plan()) {
+            	$columns['tc_duplicate'] = __('Action', 'tc');
+			}
             return $columns;
         }
 

@@ -258,7 +258,7 @@ if (!class_exists('TC_Settings_Email')) {
                     'field_type' => 'function',
                     'function' => 'tc_get_attendee_order_message',
                     'default_value' => 'Hello, <br /><br />You can download ticket for EVENT_NAME here DOWNLOAD_URL',
-                    'field_description' => sprintf(__('Body of the e-mail. You can use following placeholders (%s)', 'tc'), apply_filters('tc_attendee_order_completed_message_placeholders_description', 'DOWNLOAD_URL, EVENT_NAME, TICKET_TYPE')),
+                    'field_description' => sprintf(__('Body of the e-mail. You can use following placeholders (%s)', 'tc'), apply_filters('tc_attendee_order_completed_message_placeholders_description', 'DOWNLOAD_URL, EVENT_NAME, TICKET_TYPE, FIRST_NAME, LAST_NAME')),
                     'section' => 'attendee_order_completed_email',
                     'conditional' => array(
                         'field_name' => 'attendee_send_message',
@@ -266,7 +266,7 @@ if (!class_exists('TC_Settings_Email')) {
                         'value' => 'no',
                         'action' => 'hide'
                     )
-                ),
+                ),  
             );
 
             $attendee_order_completed_email_fields = apply_filters('attendee_order_completed_email_fields', $attendee_order_completed_email_fields);

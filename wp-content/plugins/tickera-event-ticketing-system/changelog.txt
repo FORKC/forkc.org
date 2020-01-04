@@ -1,6 +1,17 @@
 Plugin Name: Tickera
 Author: Tickera.com
 
+
+= 3.4.6.7 - 03/JAN/2020 =
+- Added duplicate feature for ticket template
+- Add Attendee name placeholder for attendee order completed 
+- Added new element event category in ticket template
+- Added new element ticket date of purchase in ticket template
+- Added confirmation for deleting ticket types
+- Added Braintree 3DS2 Payment Gateway to comply with SCA/PSD2 Regulations.
+- Additional (Attendee/Ticket) data saving for extended reports.
+- Bug fixed: PHP Error appearing in the checkout page if only the free payment gateway is enabled.
+
 = 3.4.6.6 - 07/NOV/2019 =
 - Hide "Install Pages" admin notice when Bridge for WooCommerce is active
 - PayU Latam - updated with the new API

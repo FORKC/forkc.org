@@ -1,10 +1,11 @@
 <?php
-global $tc_template_elements, $tc_gateway_plugins;
+global $tc_template_elements, $tc_gateway_plugins,$wpdb;
 
 $templates = new TC_Ticket_Templates();
 $template_elements = new TC_Ticket_Template_Elements();
 $template_elements_set = array();
 $page = $_GET['page'];
+
 
 if (isset($_POST['add_new_template'])) {
     if (check_admin_referer('save_template')) {
@@ -37,6 +38,112 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete') {
     }
 }
 
+/*
+**Click to duplicate ticket template start
+*/
+if ((isset($_GET['action'])) && $_GET['action'] == 'tc_duplicate') {// && check_admin_referer('save_template')
+    /*
+    ** Get the original post ID
+    */
+    $post_id = (int) $_GET['ID'];
+    /*
+    ** fetch all post data by ID
+    */
+    $post = get_post($post_id);
+    /*
+    ** if you don't want current user to be the new post author,
+    ** then change next couple of lines to this: $new_post_author = $post->post_author;
+    */
+    $current_user = wp_get_current_user();
+    $new_post_author = $current_user->ID;
+    /*
+    ** if post data exists, create the post duplicate
+    */
+    if (isset($post) && $post != null) {
+
+        /*
+        ** new post data array
+        */
+        $new_post_author = wp_get_current_user();
+        $new_post_date = current_time('mysql');
+        $new_post_date_gmt = get_gmt_from_date($new_post_date);
+        $duplicate_title_extension = ' [duplicate]';
+
+        $args = apply_filters('tc_duplicate_template_args', array(
+            'post_author' => $new_post_author->ID,
+            'post_date' => $new_post_date,
+            'post_date_gmt' => $new_post_date_gmt,
+            'post_content' => $post->post_content,
+            'post_content_filtered' => $post->post_content_filtered,
+            'post_title' => $post->post_title . $duplicate_title_extension,
+            'post_excerpt' => $post->post_excerpt,
+            'post_status' => 'draft',
+            'post_type' => $post->post_type,
+            'comment_status' => $post->comment_status,
+            'ping_status' => $post->ping_status,
+            'post_password' => $post->post_password,
+            'to_ping' => $post->to_ping,
+            'pinged' => $post->pinged,
+            'post_modified' => $new_post_date,
+            'post_modified_gmt' => $new_post_date_gmt,
+            'menu_order' => $post->menu_order,
+            'post_mime_type' => $post->post_mime_type,
+                ), $post_id);
+
+        /*
+        ** insert the post by wp_insert_post() function
+        */
+        $new_post_id = wp_insert_post($args);
+        /*
+        ** get all current post terms ad set them to the new post draft
+        */
+        $taxonomies = get_object_taxonomies($post->post_type); // returns array of taxonomy names for post type, ex array("category", "post_tag");
+
+        foreach ($taxonomies as $taxonomy) {
+            $post_terms = wp_get_object_terms($post_id, $taxonomy, array('fields' => 'slugs'));
+            wp_set_object_terms($new_post_id, $post_terms, $taxonomy, false);
+        }
+
+        /*
+        ** duplicate all post meta just in two SQL queries
+        */        
+        $post_meta_infos = $wpdb->get_results("SELECT meta_key, meta_value FROM $wpdb->postmeta WHERE post_id=$post_id");
+        if (count($post_meta_infos) != 0) {
+            $sql_query = "INSERT INTO $wpdb->postmeta (post_id, meta_key, meta_value) ";
+            foreach ($post_meta_infos as $meta_info) {
+                $meta_key = $meta_info->meta_key;
+                $meta_value = addslashes($meta_info->meta_value);
+                $sql_query_sel[] = "SELECT $new_post_id, '$meta_key', '$meta_value'";
+            }
+            $sql_query .= implode(" UNION ALL ", $sql_query_sel);
+            $wpdb->query($sql_query);
+        }
+
+        /*
+        ** finally, redirect to the edit post screen for the new draft
+        */
+        $new_post_url = add_query_arg(array(
+            'post_type' => $_GET['post_type'],
+            'page'      =>  $page,
+            'action'    => 'edit',
+            'ID'        => $new_post_id
+                ), admin_url('edit.php'));
+        /*
+        ** Redirect ticket template to new url
+        */
+        wp_redirect($new_post_url);
+        ?>
+        <script type="text/javascript">
+            window.location = "<?php echo $new_post_url; ?>";
+        </script>
+        <?php
+
+    }else {
+        wp_die('Post creation failed, could not find original post: ' . $post_id);
+    }
+}
+//click to duplicate ticket template end
+
 if (isset($_GET['page_num'])) {
     $page_num = (int) $_GET['page_num'];
 } else {
@@ -63,6 +170,7 @@ $templates_add_new_url = add_query_arg(array(
     'page' => $_GET['page'],
     'action' => 'add_new'
         ), admin_url('edit.php'));
+
 ?>
 
 <div class="wrap tc_wrap">
@@ -107,6 +215,7 @@ $templates_add_new_url = add_query_arg(array(
                     <?php
                     $n = 1;
                     foreach ($columns as $key => $col) {
+                        
                         ?>
                         <th style="" class="manage-column column-<?php echo esc_attr($key); ?>" width="<?php echo (isset($col_sizes[$n]) ? esc_attr($col_sizes[$n] . '%') : ''); ?>" id="<?php echo esc_attr($key); ?>" scope="col"><?php echo $col; ?></th>
                         <?php
@@ -124,13 +233,14 @@ $templates_add_new_url = add_query_arg(array(
                     if ($template->post_status !== 'trash') {
                         $template_obj = new TC_Template($template->ID);
                         $template_object = apply_filters('tc_template_object_details', $template_obj->details);
-
+                        
                         $style = ( ' class="alternate"' == $style ) ? '' : ' class="alternate"';
                         ?>
                         <tr id='user-<?php echo $template_object->ID; ?>' <?php echo $style; ?>>
                             <?php
                             $n = 1;
                             foreach ($columns as $key => $col) {
+                                
                                 if ($key == 'edit') {
                                     ?>
                                     <td>                    
@@ -142,7 +252,13 @@ $templates_add_new_url = add_query_arg(array(
                                         <a class="templates_edit_link tc_delete_link" href="<?php echo wp_nonce_url('edit.php?post_type=tc_events&page=' . $page . '&action=' . $key . '&ID=' . $template_object->ID, 'delete_' . $template_object->ID); ?>"><?php _e('Delete', 'tc'); ?></a>
                                     </td>
                                     <?php
-                                } else {
+                                }elseif ($key == 'tc_duplicate') {//Add Duplicate field
+                                    ?>
+                                    <td>
+                                        <a class="templates_edit_link" id="tc_template_duplicate" title="<?php esc_attr(__('Duplicate this ticket templatet', 'tc'));?>" href="<?php echo wp_nonce_url('edit.php?post_type=tc_events&page=' . $page . '&action=' . $key . '&ID=' . $template_object->ID, 'tc_duplicate' . $template_object->ID); ?>" rel="permalink"><?php _e('Duplicate', 'tc'); ?></a>
+                                    </td>
+                                    <?php
+								} else {
                                     ?>
                                     <td>
                                         <?php echo apply_filters('tc_template_field_value', $template_object->{$key}); ?>
