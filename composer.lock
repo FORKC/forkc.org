@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9ae4bc977c50594a465e4fffa34622b7",
+    "content-hash": "624bf9f82464e13fedd64d05292e7c89",
     "packages": [
         {
             "name": "composer/installers",
@@ -343,6 +343,24 @@
             },
             "type": "wordpress-plugin",
             "homepage": "https://wordpress.org/plugins/woocommerce/"
+        },
+        {
+            "name": "wpackagist-plugin/woocommerce-admin",
+            "version": "0.23.3",
+            "source": {
+                "type": "svn",
+                "url": "https://plugins.svn.wordpress.org/woocommerce-admin/",
+                "reference": "tags/0.23.3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://downloads.wordpress.org/plugin/woocommerce-admin.0.23.3.zip"
+            },
+            "require": {
+                "composer/installers": "~1.0"
+            },
+            "type": "wordpress-plugin",
+            "homepage": "https://wordpress.org/plugins/woocommerce-admin/"
         },
         {
             "name": "wpackagist-plugin/woocommerce-gateway-stripe",

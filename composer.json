@@ -24,6 +24,7 @@
         "wpackagist-plugin/woocommerce-gateway-stripe": "^4.3",
         "wpackagist-plugin/wordpress-seo": "^12.7",
         "wpackagist-plugin/wp-fullcalendar": "^1.2",
-        "wpackagist-plugin/wp-super-cache": "^1.7"
+        "wpackagist-plugin/wp-super-cache": "^1.7",
+        "wpackagist-plugin/woocommerce-admin": "^0.23.3"
     }
 }
