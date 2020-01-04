@@ -643,7 +643,7 @@ function tc_ticket_instance_field_value($value = false, $field_value = false, $p
         $value .= __(' Details', 'tc');
         $value .= '</a>';
     }
-
+    
     if ($field_id == 'owner_name') {
         $owner_name = get_post_meta($value, 'first_name', true) . ' ' . get_post_meta($value, 'last_name', true);
         if (trim($owner_name) == '') {
@@ -669,7 +669,8 @@ function tc_ticket_instance_field_value($value = false, $field_value = false, $p
             $value = $owner_name;
         }
     }
-    return $value;
+    
+    return apply_filters('tc_column_value', $value, $field_id);
 }
 
 add_filter('tc_api_key_field_value', 'tc_api_key_field_value', 10, 3);
@@ -810,9 +811,9 @@ function my_custom_tc_discount_values($value, $post_field_type, $var_name) {
 
     if ($var_name == 'usage_limit') {
         if ($value == '') {
-            $value = /* TC_Discounts::discount_used_times( $tc_last_discount_code ) . ' / ' . */__('Unlimited', 'tc');
+            $value = /*TC_Discounts::discount_used_times( $tc_last_discount_code ) . ' / ' .*/ __('Unlimited', 'tc');
         } else {
-            $value = /* TC_Discounts::discount_used_times( $tc_last_discount_code ) . ' / ' . */$value;
+            $value = /*TC_Discounts::discount_used_times( $tc_last_discount_code ) . ' / ' .*/ $value;
         }
     }
 

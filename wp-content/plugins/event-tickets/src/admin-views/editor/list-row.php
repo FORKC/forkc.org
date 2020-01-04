@@ -40,7 +40,7 @@ if (
 
 ?>
 <tr class="<?php echo esc_attr( $provider ); ?> is-expanded" data-ticket-order-id="order_<?php echo esc_attr( $ticket->ID ); ?>" data-ticket-type-id="<?php echo esc_attr( $ticket->ID ); ?>">
-	<td class="column-primary ticket_name <?php echo esc_attr( $provider ); ?>" data-label="<?php esc_html_e( 'Ticket Type:', 'event-tickets' ); ?>">
+	<td class="column-primary ticket_name <?php echo esc_attr( $provider ); ?>" data-label="<?php echo esc_attr( sprintf( _x( '%s Type:', 'ticket type label', 'event-tickets' ), tribe_get_ticket_label_singular( 'ticket_type_label' ) ) ); ?>">
 		<span class="dashicons dashicons-screenoptions tribe-handle"></span>
 		<input
 			type="hidden"
@@ -94,12 +94,7 @@ if (
 
 	<td class="ticket_available">
 		<span class='tribe-mobile-only'><?php esc_html_e( 'Available:', 'event-tickets' ); ?></span>
-		<?php if ( $needs_warning ) : ?>
-			<span class="dashicons dashicons-warning required" title="<?php esc_attr_e( 'The number of Complete ticket sales does not match the number of attendees. Please check the Attendees list and adjust ticket stock in WooCommerce as needed.', 'event-tickets' ) ?>"></span>
-		<?php endif; ?>
-		<?php if ( $stk_warning ) : ?>
-			<span class="dashicons dashicons-warning required" title="<?php esc_attr_e( 'Stock management is disabled. Enable it on the related Woocommerce product\'s inventory settings.', 'event-tickets' ) ?>"></span>
-		<?php endif; ?>
+		<?php do_action( 'tribe_ticket_available_warnings', $ticket, $event->ID ); ?>
 		<?php tribe_tickets_get_readable_amount( $available, $mode, true ); ?>
 	</td>
 
@@ -109,7 +104,11 @@ if (
 			"<button data-provider='%s' data-ticket-id='%s' title='%s' class='ticket_edit_button'><span class='ticket_edit_text'>%s</span></a>",
 			esc_attr( $ticket->provider_class ),
 			esc_attr( $ticket->ID ),
-			esc_attr( sprintf( __( '( Ticket ID: %d )', 'tribe-tickets' ), $ticket->ID ) ),
+			esc_attr( sprintf(
+				_x( '%s ID: %d', 'ticket ID title attribute', 'event-tickets' ),
+				tribe_get_ticket_label_singular( 'ticket_id_title_attribute' ),
+				$ticket->ID
+			) ),
 			esc_html( $ticket->name )
 		);
 		?>

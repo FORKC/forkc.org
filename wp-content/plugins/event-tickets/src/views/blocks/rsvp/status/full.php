@@ -8,10 +8,12 @@
  *
  * See more documentation about our Blocks Editor templating system.
  *
- * @link {INSERT_ARTCILE_LINK_HERE}
+ * @link {INSERT_ARTICLE_LINK_HERE}
  *
- * @version 4.9.3
+ * @since 4.9.3
+ * @since 4.10.9 Use function for text.
  *
+ * @version 4.10.9
  */
 
-esc_html_e( 'RSVP Full', 'event-tickets' );
+echo esc_html( sprintf( _x( '%s Full', 'blocks rsvp status full', 'event-tickets' ), tribe_get_rsvp_label_singular( 'blocks_rsvp_status_full' ) ) );

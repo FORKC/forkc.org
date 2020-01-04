@@ -30,6 +30,7 @@ class ActionScheduler_AdminView extends ActionScheduler_AdminView_Deprecated {
 
 			if ( class_exists( 'WooCommerce' ) ) {
 				add_action( 'woocommerce_admin_status_content_action-scheduler', array( $this, 'render_admin_ui' ) );
+				add_action( 'woocommerce_system_status_report', array( $this, 'system_status_report' ) );
 				add_filter( 'woocommerce_admin_status_tabs', array( $this, 'register_system_status_tab' ) );
 			}
 
@@ -37,6 +38,10 @@ class ActionScheduler_AdminView extends ActionScheduler_AdminView_Deprecated {
 		}
 	}
 
+	public function system_status_report() {
+		$table = new ActionScheduler_wcSystemStatus( ActionScheduler::store() );
+		$table->render();
+	}
 
 	/**
 	 * Registers action-scheduler into WooCommerce > System status.
@@ -45,7 +50,7 @@ class ActionScheduler_AdminView extends ActionScheduler_AdminView_Deprecated {
 	 * @return array $tabs An associative array of tab key => label, including Action Scheduler's tabs
 	 */
 	public function register_system_status_tab( array $tabs ) {
-		$tabs['action-scheduler'] = __( 'Scheduled Actions', 'action-scheduler' );
+		$tabs['action-scheduler'] = __( 'Scheduled Actions', 'woocommerce' );
 
 		return $tabs;
 	}
@@ -60,8 +65,8 @@ class ActionScheduler_AdminView extends ActionScheduler_AdminView_Deprecated {
 	public function register_menu() {
 		add_submenu_page(
 			'tools.php',
-			__( 'Scheduled Actions', 'action-scheduler' ),
-			__( 'Scheduled Actions', 'action-scheduler' ),
+			__( 'Scheduled Actions', 'woocommerce' ),
+			__( 'Scheduled Actions', 'woocommerce' ),
 			'manage_options',
 			'action-scheduler',
 			array( $this, 'render_admin_ui' )

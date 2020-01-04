@@ -34,13 +34,16 @@ class Tribe__Tickets__REST__V1__Attendee_Repository
 	 * An override of the default query building process to add clauses
 	 * specific to REST API queries
 	 *
+	 * @param bool $use_query_builder Whether to use the query builder, if set, or not.
+	 *
 	 * @return WP_Query
 	 */
-	public function build_query() {
+	public function build_query( $use_query_builder = true ) {
 		if ( ! current_user_can( 'read_private_posts' ) ) {
 			$this->decorated->by( 'optout', 'no' );
 			$this->decorated->by( 'post_status', 'publish' );
-			$this->decorated->by( 'rsvp_status', 'yes' );
+			$this->decorated->by( 'rsvp_status__or_none', 'yes' );
+			$this->decorated->by( 'event__show_attendees' );
 		}
 
 		$this->decorated->set_query_builder( null );
@@ -52,15 +55,16 @@ class Tribe__Tickets__REST__V1__Attendee_Repository
 	 * Overrides the base `order_by` method to map and convert some REST API
 	 * specific criteria.
 	 *
-	 * @param string $order_by
+	 * @param string $order_by The post field, custom field or alias key to order posts by.
+	 * @param string $order The order direction; optional; shortcut for the `order` method; defaults
+	 *                      to `DESC`.
 	 *
 	 * @return $this
 	 */
-	public function order_by( $order_by ) {
-		// @todo what is 'relevance' order?
+	public function order_by( $order_by, $order = 'DESC' ) {
 		$map = array(
 			'date'      => 'date',
-			'relevance' => '',
+			'relevance' => 'relevance',
 			'id'        => 'id',
 			'include'   => 'meta_value_num',
 			'title'     => 'title',
@@ -77,7 +81,7 @@ class Tribe__Tickets__REST__V1__Attendee_Repository
 			return $this;
 		}
 
-		$this->decorated->order_by( $converted_order_by );
+		$this->decorated->order_by( $converted_order_by, $order );
 
 		return $this;
 	}
@@ -113,7 +117,7 @@ class Tribe__Tickets__REST__V1__Attendee_Repository
 
 		$this->decorated->by( 'optout', 'no' );
 		$this->decorated->by( 'post_status', 'publish' );
-		$this->decorated->by( 'rsvp_status', 'yes' );
+		$this->decorated->by( 'rsvp_status__or_none', 'yes' );
 
 		$cap_query = $this->decorated->get_query();
 		$cap_query->set( 'fields', 'ids' );

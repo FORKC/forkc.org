@@ -26,10 +26,11 @@ if (!class_exists('TC_Better_Events')) {
             global $post;
 
             if (!isset($post)) {
-                $post = isset($_GET['post']) ? $_GET['post'] : '';
+                $post_id = isset($_GET['post']) ? $_GET['post'] : '';
+                $post_type = get_post_type($post_id);
+            } else {
+                $post_type = get_post_type($post);
             }
-
-            $post_type = get_post_type($post);
 
             if (empty($post_type)) {
                 $post_type = isset($_GET['post_type']) ? $_GET['post_type'] : '';
@@ -72,13 +73,42 @@ if (!class_exists('TC_Better_Events')) {
             add_action('admin_action_tc_duplicate_event_as_draft', 'TC_Better_Events::tc_duplicate_event_as_draft');
 
             add_action('pre_get_posts', 'TC_Better_Events::tc_maybe_hide_events');
+            add_action('pre_get_posts', array($this, 'tc_sort_end_start_date_columns'));
+        }
+
+        function tc_sort_end_start_date_columns($query) {
+            global $post_type;
+            if ($post_type == 'tc_events' && is_admin() && $query->is_main_query() && isset($_GET['orderby'])) {
+                if ($_GET['orderby'] == 'event_date_time') {
+                    $query->set('meta_key', 'event_date_time');
+                    $query->set('meta_type', 'DATE');
+                    $query->set('orderby', 'meta_value');
+                } elseif ($_GET['orderby'] == 'event_end_date_time') {
+                    $query->set('meta_key', 'event_end_date_time');
+                    $query->set('meta_type', 'DATE');
+                    $query->set('orderby', 'meta_value');
+                }
+            }
+            return $query;
         }
 
         public static function tc_maybe_hide_events($query) {
             global $post_type;
-            $hidden_events = TC_Events::get_hidden_events_ids();
-            
-            if ($query->is_main_query() && !is_admin() && in_array($query->get('post_type'), array('tc_events')) && $query->is_archive == true) {
+
+            if (isset($query->tax_query->queries[0]['taxonomy'])) {
+                $tc_check_taxonomy = $query->tax_query->queries[0]['taxonomy'];
+            } else {
+                $tc_check_taxonomy = '';
+            }
+
+            if (isset($query->queried_object->taxonomy)) {
+                $tc_event_category = $query->queried_object->taxonomy == 'event_category';
+            } else {
+                $tc_event_category = '';
+            }
+
+            if ($query->is_main_query() && !is_admin() && (in_array($query->get('post_type'), array('tc_events')) || $tc_event_category == 'event_category' || $tc_check_taxonomy == 'event_category') && $query->is_archive == true) {
+                $hidden_events = TC_Events::get_hidden_events_ids();//removed from top and improved performance
                 if (count($hidden_events) > 0) {
                     $query->set('post__not_in', $hidden_events);
                 }
@@ -300,10 +330,10 @@ if (!class_exists('TC_Better_Events')) {
                     'parent_item' => __('Parent Event Category', 'tc'),
                     'parent_item_colon' => __('Parent Event Category:', 'tc'),
                     'search_items' => __('Search Event Categories', 'tc'),
-                    'separate_items_with_commas' => __('Separate product categories with commas', 'tc'),
-                    'add_or_remove_items' => __('Add or remove product categories', 'tc'),
-                    'choose_from_most_used' => __('Choose from the most used product categories', 'tc'),
-                    'not_found' => __('No product categories found', 'tc'),
+                    'separate_items_with_commas' => __('Separate event categories with commas', 'tc'),
+                    'add_or_remove_items' => __('Add or remove event categories', 'tc'),
+                    'choose_from_most_used' => __('Choose from the most used event categories', 'tc'),
+                    'not_found' => __('No event categories found', 'tc'),
                 ),
                 'capabilities' => array(
                     'manage_categories' => 'manage_options',
@@ -546,15 +576,15 @@ if (!class_exists('TC_Better_Events')) {
             );
             return $sections;
         }
-        
+
         function tc_settings_gdpr_sections($sections) {
             $sections[] = array(
                 'name' => 'gdpr_settings',
                 'title' => __('GDPR Settings'),
                 'description' => '',
             );
-            
-            $sections = apply_filters( 'tc_settings_gdpr_sections', $sections );
+
+            $sections = apply_filters('tc_settings_gdpr_sections', $sections);
             return $sections;
         }
 
@@ -604,7 +634,7 @@ if (!class_exists('TC_Better_Events')) {
 
             return $pages_settings_default_fields;
         }
-        
+
         function tc_gdpr_settings_page_fields($pages_settings_default_fields) {
             $pages_settings_default_fields[] = array(
                 'field_name' => 'tc_gateway_collection_data',
@@ -615,7 +645,7 @@ if (!class_exists('TC_Better_Events')) {
                 //'tooltip' => __('', 'tc'),
                 'section' => 'gdpr_settings'
             );
-            
+
             $pages_settings_default_fields[] = array(
                 'field_name' => 'tc_collection_data_text',
                 'field_title' => __('Collection Data Text', 'tc'),
@@ -684,9 +714,17 @@ if (!class_exists('TC_Better_Events')) {
                 if (isset($events_column['table_visibility']) && $events_column['table_visibility'] == true && $events_column['field_name'] !== 'post_title') {
                     if ($events_column['field_name'] == $name) {
                         if (isset($events_column['post_field_type']) && $events_column['post_field_type'] == 'post_meta') {
-                            $value = get_post_meta($post->ID, $events_column['field_name'], true);
-                            $value = !empty($value) ? $value : '-';
-                            echo $value;
+                            if ($events_column['field_name'] == 'event_date_time' || $events_column['field_name'] == 'event_end_date_time') {
+                                $value = get_post_meta($post->ID, $events_column['field_name'], true);
+
+                                $start_date = date_i18n(get_option('date_format'), strtotime($value));
+                                $start_time = date_i18n(get_option('time_format'), strtotime($value));
+                                echo $start_date . ' ' . $start_time;
+                            } else {
+                                $value = get_post_meta($post->ID, $events_column['field_name'], true);
+                                $value = !empty($value) ? $value : '-';
+                                echo $value;
+                            }
                         } else if ($events_column['field_name'] == 'event_active') {
                             $event_status = get_post_status($post->ID);
                             $on = $event_status == 'publish' ? 'tc-on' : '';
@@ -746,12 +784,12 @@ if (!class_exists('TC_Better_Events')) {
                     $show_tickets_automatically = false;
                 }
 
-                if (current_user_can(apply_filters('tc_event_activation_capability', 'edit_others_events')) || current_user_can('manage_options')) {
+                /*if (current_user_can(apply_filters('tc_event_activation_capability', 'edit_others_events')) || current_user_can('manage_options')) {
                     ?>
                     <div class="misc-pub-section misc-pub-visibility-activity" id="visibility">
                         <span id="post-visibility-display"><?php echo '<div class="tc-control ' . $on . '" event_id="' . esc_attr($post->ID) . '"><div class="tc-toggle"></div></div>'; ?></span>
                     </div>
-                <?php } ?>
+                <?php }*/ ?>
 
                 <div class="misc-pub-section event_append_tickets" id="append_tickets">
 
@@ -800,7 +838,7 @@ if (!class_exists('TC_Better_Events')) {
                     eval("if(!function_exists('" . $events_column['field_name'] . "_metabox')){function " . $events_column['field_name'] . "_metabox() {
 						tc_render_metabox(" . $post_id . ", '" . $events_column['field_name'] . "');
 						}}");
-                    add_meta_box($events_column['field_name'] . '-tc-metabox-wrapper', $events_column['field_title'] . (isset($events_column['tooltip']) ? tc_tooltip($events_column['tooltip'], false) : ''), $events_column['field_name'] . '_metabox', 'tc_events'); //, isset( $events_column[ 'metabox_position' ] ) ? $events_column[ 'metabox_position' ] : 'core', isset( $events_column[ 'metabox_priority' ] ) ? $events_column[ 'metabox_priority' ] : 'low' 
+                    add_meta_box($events_column['field_name'] . '-tc-metabox-wrapper', $events_column['field_title'] . (isset($events_column['tooltip']) ? tc_tooltip($events_column['tooltip'], false) : ''), $events_column['field_name'] . '_metabox', 'tc_events'); //, isset( $events_column[ 'metabox_position' ] ) ? $events_column[ 'metabox_position' ] : 'core', isset( $events_column[ 'metabox_priority' ] ) ? $events_column[ 'metabox_priority' ] : 'low'
                 }
             }
         }
@@ -825,13 +863,13 @@ if (!class_exists('TC_Better_Events')) {
                 if ($field['field_type'] == 'text') {
                     ?>
                     <input type="text" class="regular-<?php echo $field['field_type']; ?>" value="<?php
-                    if (isset($event)) {
-                        if ($field['post_field_type'] == 'post_meta') {
-                            echo esc_attr(isset($event->details->{$field['field_name']}) ? $event->details->{$field['field_name']} : '' );
-                        } else {
-                            echo esc_attr($event->details->{$field['post_field_type']});
-                        }
+                if (isset($event)) {
+                    if ($field['post_field_type'] == 'post_meta') {
+                        echo esc_attr(isset($event->details->{$field['field_name']}) ? $event->details->{$field['field_name']} : '' );
+                    } else {
+                        echo esc_attr($event->details->{$field['post_field_type']});
                     }
+                }
                     ?>" id="<?php echo esc_attr($field['field_name']); ?>" name="<?php echo esc_attr($field['field_name'] . '_' . $field['post_field_type']); ?>">
                            <?php
                            if (isset($field['field_description'])) {

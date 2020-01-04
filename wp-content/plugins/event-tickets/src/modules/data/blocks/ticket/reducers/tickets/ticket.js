@@ -18,9 +18,12 @@ export const DEFAULT_STATE = {
 	currencySymbol: getDefaultProviderCurrency(),
 	currencyPosition: getDefaultCurrencyPosition(),
 	provider: '',
+	hasAttendeeInfoFields: false,
 	isLoading: false,
+	isModalOpen: false,
 	hasBeenCreated: false,
 	hasChanges: false,
+	hasDurationError: false,
 	isSelected: false,
 };
 
@@ -96,10 +99,20 @@ export default ( state = DEFAULT_STATE, action ) => {
 				...state,
 				provider: action.payload.provider,
 			};
+		case types.SET_TICKET_HAS_ATTENDEE_INFO_FIELDS:
+			return {
+				...state,
+				hasAttendeeInfoFields: action.payload.hasAttendeeInfoFields,
+			};
 		case types.SET_TICKET_IS_LOADING:
 			return {
 				...state,
 				isLoading: action.payload.isLoading,
+			};
+		case types.SET_TICKET_IS_MODAL_OPEN:
+			return {
+				...state,
+				isModalOpen: action.payload.isModalOpen,
 			};
 		case types.SET_TICKET_HAS_BEEN_CREATED:
 			return {
@@ -110,6 +123,11 @@ export default ( state = DEFAULT_STATE, action ) => {
 			return {
 				...state,
 				hasChanges: action.payload.hasChanges,
+			};
+		case types.SET_TICKET_HAS_DURATION_ERROR:
+			return {
+				...state,
+				hasDurationError: action.payload.hasDurationError,
 			};
 		case types.SET_TICKET_IS_SELECTED:
 			return {

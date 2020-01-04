@@ -30,7 +30,7 @@ $tc_general_settings = get_option('tc_general_setting', false);
     <div id="poststuff" class="metabox-holder tc-settings">
         <form id="tc-system-info">
             <div class="postbox">
-                <h3 class='hndle'><span><?php _e('WordPress Environment', 'tc'); ?></span></h3>
+                <h3><span><?php _e('WordPress Environment', 'tc'); ?></span></h3>
                 <div class="inside">
                     <span class="description"></span>
 
@@ -126,12 +126,17 @@ $tc_general_settings = get_option('tc_general_setting', false);
                                 <td>
                                     <?php if (defined('WP_CACHE') && WP_CACHE) : ?>
                                         <?php
-                                        echo '<mark class="error"><span class="dashicons dashicons-warning"></span> ' . sprintf(__('It seems that you have a caching plugin installed. In order to avoid potential issues, you should exclude all the pages which contains one of %s shortcodes from caching.', 'tc'), $tc->title) . '</mark>';
+                                        echo '<mark class="error"><span class="dashicons dashicons-warning"></span> ' . sprintf(__('It seems that you have a caching plugin installed. In order to avoid potential issues, you should exclude all the pages which contains one of %s shortcodes from caching as well as all the cookies. Read more %shere%s', 'tc'), $tc->title, '<a href="https://tickera.com/tickera-documentation/configuring-caching-plugins/">', '</a>') . '</mark>';
                                         ?>
                                     <?php else : ?>
                                         <mark class="no">&ndash;</mark>
                                     <?php endif; ?>
                                 </td>
+                            </tr>
+                            <tr>
+                                <td><?php _e('Cookie Hash', 'tc'); ?>:</td>
+                                <td class="help"><?php echo tc_tooltip(__('COOKIEHASH constant used for naming cookies.', 'tc')); ?></td>
+                                <td><?php echo COOKIEHASH; ?></td>
                             </tr>
                             <tr>
                                 <td><?php _e('Cookie Path', 'tc'); ?>:</td>
@@ -149,7 +154,7 @@ $tc_general_settings = get_option('tc_general_setting', false);
             </div>
 
             <div class="postbox">
-                <h3 class='hndle'><span><?php _e('Server Environment', 'tc'); ?></span></h3>
+                <h3><span><?php _e('Server Environment', 'tc'); ?></span></h3>
                 <div class="inside">
                     <span class="description"></span>
                     <table class="form-table" cellspacing="0">
@@ -206,43 +211,6 @@ $tc_general_settings = get_option('tc_general_setting', false);
                                         ?></td>
                                 </tr>
 
-                                <tr>
-                                    <td><?php _e('TLS Version', 'tc'); ?>:</td>
-                                    <td class="help"><?php echo tc_tooltip(__('The version of TLS.', 'tc')); ?></td>
-                                    <td><?php
-                                        if (function_exists('curl_version')) {
-                                            $ch = @curl_init();
-                                            @curl_setopt($ch, CURLOPT_URL, 'https://www.howsmyssl.com/a/check');
-                                            @curl_setopt($ch, CURLOPT_POST, true);
-                                            @curl_setopt($ch, CURLOPT_POSTFIELDS, $request_string);
-                                            @curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                                            @curl_setopt($ch, CURLOPT_HEADER, false);
-                                            @curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-                                            @curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                                            @curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-                                            @curl_setopt($ch, CURLOPT_VERBOSE, true);
-                                            $result = @curl_exec($ch);
-                                            if (!$result) {
-                                                _e('N/A');
-                                            }
-                                            @curl_close($ch);
-
-                                            if ($result) {
-                                                $json = json_decode($result);
-                                                if (isset($json->tls_version)) {
-                                                    $tls_version = str_replace('TLS ', '', $json->tls_version);
-                                                    if ((float) $tls_version >= 1.2) {
-                                                        echo $tls_version;
-                                                    } else {
-                                                        echo '<mark class="error"><span class="dashicons dashicons-warning"></span> ' . sprintf(__('%s - PayPal requires a minimum TLS version of 1.2. We suggest you to contact your hosting and request an update.', 'tc'), $tls_version) . '</mark>';
-                                                    }
-                                                } else {
-                                                    _e('N/A');
-                                                }
-                                            }
-                                        }
-                                        ?></td>
-                                </tr>
                             <?php endif; ?>
                             <tr>
                                 <td><?php _e('Max Upload Size', 'tc'); ?>:</td>
@@ -252,7 +220,8 @@ $tc_general_settings = get_option('tc_general_setting', false);
 
                             <tr>
                                 <?php
-                                $mark = ini_get('allow_url_fopen') ? 'yes' : 'error';
+                                //allow_url_include 
+                                $mark = @ini_get('allow_url_fopen') ? 'yes' : 'error';
                                 ?>
                                 <td><?php _e('allow_url_fopen', 'tc'); ?>:</td>
                                 <td class="help"><?php echo tc_tooltip(__('Ticket template might need allow_url_fopen to be allowed on your server in order to retrieve images.', 'tc')); ?></td>
@@ -262,72 +231,10 @@ $tc_general_settings = get_option('tc_general_setting', false);
                                     </mark>
                                 </td>
                             </tr>
+                            
+                         
                             <?php
-                            $posting = array();
-
-                            // fsockopen/cURL.
-                            $posting['fsockopen_curl']['name'] = 'fsockopen/cURL';
-                            $posting['fsockopen_curl']['help'] = tc_tooltip(sprintf(__('Payment gateways can use cURL to communicate with remote servers to authorize payments, other add-ons may also use it when communicating with remote services. %s use it for ticket templates when getting images. If you have issues with ticket template (blank page), you should turn this option on.', 'tc'), $tc->title), false);
-
-                            if (function_exists('fsockopen') || function_exists('curl_init')) {
-                                $posting['fsockopen_curl']['success'] = true;
-                            } else {
-                                $posting['fsockopen_curl']['success'] = false;
-                                $posting['fsockopen_curl']['note'] = __('Your server does not have fsockopen or cURL enabled - PayPal IPN and other scripts which communicate with other servers will not work. Contact your hosting provider.', 'tc');
-                            }
-
-                            // WP Remote Post Check.
-                            $posting['wp_remote_post']['name'] = __('Remote Post', 'tc');
-                            $posting['wp_remote_post']['help'] = tc_tooltip(__('PayPal uses this method of communicating when sending back transaction information.', 'tc'), false);
-
-                            $response = wp_safe_remote_post('https://www.paypal.com/cgi-bin/webscr', array(
-                                'timeout' => 60,
-                                'user-agent' => $tc->title . '/' . $tc->version,
-                                'httpversion' => '1.1',
-                                'body' => array(
-                                    'cmd' => '_notify-validate'
-                                )
-                            ));
-
-                            if (!is_wp_error($response) && $response['response']['code'] >= 200 && $response['response']['code'] < 300) {
-                                $posting['wp_remote_post']['success'] = true;
-                            } else {
-                                $posting['wp_remote_post']['success'] = false;
-                            }
-
-                            // WP Remote Get Check.
-                            $posting['wp_remote_get']['name'] = __('Remote Get', 'tc');
-                            $posting['wp_remote_get']['help'] = tc_tooltip(sprintf(__('%s plugin and/or its add-ons may use this when checking for plugin updates.', 'tc'), $tc->title), false);
-
-                            $response = wp_safe_remote_get('https://www.paypal.com/cgi-bin/webscr', array(
-                                'timeout' => 60,
-                                'user-agent' => $tc->title . '/' . $tc->version,
-                                'httpversion' => '1.1',
-                                'body' => array(
-                                    'cmd' => '_notify-validate'
-                                )
-                            ));
-
-                            if (!is_wp_error($response) && $response['response']['code'] >= 200 && $response['response']['code'] < 300) {
-                                $posting['wp_remote_get']['success'] = true;
-                            } else {
-                                $posting['wp_remote_get']['success'] = false;
-                            }
-
-                            foreach ($posting as $post) {
-                                $mark = !empty($post['success']) ? 'yes' : 'error';
-                                ?>
-                                <tr>
-                                    <td><?php echo esc_html($post['name']); ?>:</td>
-                                    <td class="help"><?php echo isset($post['help']) ? $post['help'] : ''; ?></td>
-                                    <td>
-                                        <mark class="<?php echo $mark; ?>">
-                                            <?php echo!empty($post['success']) ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no-alt"></span>'; ?> <?php echo!empty($post['note']) ? wp_kses_data($post['note']) : ''; ?>
-                                        </mark>
-                                    </td>
-                                </tr>
-                                <?php
-                            }
+                            
                             $mark = (!extension_loaded('imagick') && !extension_loaded('gd')) ? 'error' : 'yes';
                             ?>
                             <tr>
@@ -339,13 +246,17 @@ $tc_general_settings = get_option('tc_general_setting', false);
                                     </mark>
                                 </td>
                             </tr>
+
+                            <?php
+                            do_action('tc_system_info_server_environment_options');
+                            ?>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <div class="postbox">
-                <h3 class='hndle'><span><?php _e('Active Plugins', 'tc'); ?></span></h3>
+                <h3><span><?php _e('Active Plugins', 'tc'); ?></span></h3>
                 <div class="inside">
                     <span class="description"></span>
                     <table class="form-table" cellspacing="0">
@@ -389,7 +300,7 @@ $tc_general_settings = get_option('tc_general_setting', false);
             if (!is_plugin_active('bridge-for-woocommerce/bridge-for-woocommerce.php')) {
                 ?>
                 <div class="postbox">
-                    <h3 class='hndle'><span><?php printf(__('%s Pages', 'tc'), $tc->title); ?></span></h3>
+                    <h3><span><?php printf(__('%s Pages', 'tc'), $tc->title); ?></span></h3>
                     <div class="inside">
                         <span class="description"></span>
                         <table class="form-table" cellspacing="0">
@@ -482,7 +393,7 @@ $tc_general_settings = get_option('tc_general_setting', false);
             <?php } ?>
 
             <div class="postbox">
-                <h3 class='hndle'><span><?php _e('Theme', 'tc'); ?></span></h3>
+                <h3><span><?php _e('Theme', 'tc'); ?></span></h3>
                 <div class="inside">
                     <span class="description"></span>
                     <table class="form-table" cellspacing="0">
@@ -546,15 +457,15 @@ $tc_general_settings = get_option('tc_general_setting', false);
             </div>
 
             <div class="postbox">
-                <h3 class='hndle'><span><?php _e('Full Report', 'tc'); ?></span></h3>
+                <h3><span><?php _e('Full Report', 'tc'); ?></span></h3>
                 <div class="inside">
                     <span class="description"><?php _e('You can copy and paste this report when contacting support.', 'tc'); ?></span>
                     <textarea id="tc_system_info_text" style="width: 100%; height: 200px;"></textarea>
                     <input type="submit" name="tc_system_info_button" id="tc_system_info_button" class="button button-primary" style="display: none;" value="Show Report">
                 </div>
             </div>
-            
-            <?php do_action('tc_after_system');?>
+
+            <?php do_action('tc_after_system'); ?>
 
 
     </div>

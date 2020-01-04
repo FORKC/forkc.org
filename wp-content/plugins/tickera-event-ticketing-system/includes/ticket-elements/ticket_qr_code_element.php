@@ -33,9 +33,9 @@ class tc_ticket_qr_code_element extends TC_Ticket_Template_Elements {
             $order = new TC_Order($ticket_instance->details->post_parent);
 
             if (apply_filters('tc_qr_code_quick_scan_info', true)) {
-                $qrstring = $ticket_instance->details->ticket_code;
+                $qrstring = apply_filters('tc_qr_code_info', $ticket_instance->details->ticket_code, $ticket_instance, $order);
             } else {
-                $qrstring = 'id|' . $ticket_instance_id . '|name|' . $ticket_instance->details->first_name . ' ' . $ticket_instance->details->last_name . '|city|' . ($ticket_instance->details->city ? $ticket_instance->details->city : '') . '|address|' . ($ticket_instance->details->address ? $ticket_instance->details->address : '') . '|country|' . ($ticket_instance->details->country ? $ticket_instance->details->country : '') . '|state|' . ($ticket_instance->details->state ? $ticket_instance->details->state : '') . '|payment_date|' . $order->details->post_date . '|checksum|' . $ticket_instance->details->ticket_code;
+                $qrstring = apply_filters('tc_qr_code_info', 'id|' . $ticket_instance_id . '|name|' . $ticket_instance->details->first_name . ' ' . $ticket_instance->details->last_name . '|city|' . ($ticket_instance->details->city ? $ticket_instance->details->city : '') . '|address|' . ($ticket_instance->details->address ? $ticket_instance->details->address : '') . '|country|' . ($ticket_instance->details->country ? $ticket_instance->details->country : '') . '|state|' . ($ticket_instance->details->state ? $ticket_instance->details->state : '') . '|payment_date|' . $order->details->post_date . '|checksum|' . $ticket_instance->details->ticket_code, $ticket_instance, $order);
             }
         }
 

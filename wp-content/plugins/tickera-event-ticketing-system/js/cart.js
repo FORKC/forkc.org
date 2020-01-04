@@ -1,7 +1,8 @@
 jQuery(document).ready(function ($) {
+
     
     //check age restriction
-    if (tc_ajax.tc_show_age_check == 'yes') {
+    if (tc_ajax.tc_show_age_check == 'yes' && jQuery('#tc_age_check').length !== 0) {
 
         var checkout_form = $('form.checkout');
 
@@ -72,7 +73,7 @@ jQuery(document).ready(function ($) {
             .appendTo($tc_payment_gateway_wrapper);
 
     $("#tc_payment_form").submit(function (event) {
-        $('.tc_payment_confirm').attr("disabled", "disabled");
+        $('#tc_payment_confirm').attr("disabled", "disabled");
     });
 
     /**
@@ -84,7 +85,7 @@ jQuery(document).ready(function ($) {
 
         if ($("#tickera_cart").length) {//make sure tickera standalone version is active
 
-            $('.quantity').each(function (index) {
+            $('.ticket-quantity .quantity').each(function (index) {
                 total_quantity = parseInt(total_quantity) + parseInt($(this).val());
             });
 

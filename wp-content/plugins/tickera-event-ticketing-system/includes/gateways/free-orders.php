@@ -123,9 +123,10 @@ class TC_Gateway_Free_Orders extends TC_Gateway_API {
         global $tc;
         ?>
         <div id="<?php echo esc_attr($this->plugin_name); ?>" class="postbox" <?php echo (!$visible ? 'style="display:none;"' : ''); ?>>
-            <h3 class='hndle'><span><?php printf(__('%s Settings', 'tc'), esc_attr(wp_unslash($this->admin_name))); ?></span></h3>
+            <h3><span><?php printf(__('%s Settings', 'tc'), esc_attr(wp_unslash($this->admin_name))); ?></span>
+                            <span class="description"><?php _e('This method will be automatically activated if order total is 0 (zero). This is the only method which will be shown to buyers in this case - other payment options will be hidden.', 'tc') ?></span>
+</h3>
             <div class="inside">
-                <span class="description"><?php _e('This method will be automatically activated if order total is 0 (zero). This is the only method which will be shown to buyers in this case - other payment options will be hidden.', 'tc') ?></span>
                 <?php
                 $fields = array(
                     'public_name' => array(

@@ -32,7 +32,7 @@ class Tribe__Tickets__REST__V1__Ticket_Repository
 		$this->decorated->set_query_builder( $this );
 		$this->decorated->set_default_args( array_merge(
 			$this->decorated->get_default_args(),
-			array( 'order' => 'ASC', 'orderby' => array( 'id', 'title' ) )
+			[ 'order' => 'ASC', 'orderby' => [ 'id', 'title' ] ]
 		) );
 	}
 
@@ -68,9 +68,11 @@ class Tribe__Tickets__REST__V1__Ticket_Repository
 	 *
 	 * @since 4.8
 	 *
+	 * @param bool $use_query_builder Whether to use the query builder, if set, or not.
+	 *
 	 * @return WP_Query
 	 */
-	public function build_query() {
+	public function build_query( $use_query_builder = true ) {
 		$this->add_related_post_clauses();
 
 		return $this->decorated->build_query();
@@ -98,7 +100,7 @@ class Tribe__Tickets__REST__V1__Ticket_Repository
 			ON {$wpdb->posts}.ID != related_event.ID" );
 		$this->decorated->join_clause( "JOIN {$wpdb->postmeta} related_event_meta
 			ON {$wpdb->posts}.ID = related_event_meta.post_id" );
-		$keys = array();
+		$keys = [];
 		foreach ( $this->decorated->ticket_to_event_keys() as $key ) {
 			$keys[] = $wpdb->prepare( '%s', $key );
 		}

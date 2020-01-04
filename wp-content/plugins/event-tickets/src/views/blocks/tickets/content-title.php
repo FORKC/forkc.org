@@ -8,16 +8,36 @@
  *
  * See more documentation about our Blocks Editor templating system.
  *
- * @link {INSERT_ARTCILE_LINK_HERE}
+ * @link {INSERT_ARTICLE_LINK_HERE}
  *
- * @version 4.9
+ * @since 4.9
+ * @version 4.11.0
  *
  */
 
 $ticket = $this->get( 'ticket' );
+$post_id = $this->get( 'post_id' );
+$is_mini = $this->get( 'is_mini' );
+$title_classes = [
+	'tribe-common-h7',
+	'tribe-common-h6--min-medium',
+	'tribe-tickets__item__content__title',
+];
+
+$event_title_classes =[
+	'tribe-common-b3',
+	'tribe-tickets__item__content__subtitle'
+];
+
+if ( ! $ticket->show_description() || empty( $ticket->description ) || $is_mini ) {
+	$title_classes[] = 'tribe-tickets--no-description';
+}
 ?>
-<div
-	class="tribe-block__tickets__item__content__title"
->
-	<?php echo $ticket->name; ?>
+<div <?php tribe_classes( $title_classes ); ?> >
+	<?php if ( $is_mini ) : ?>
+		<div <?php tribe_classes( $event_title_classes ); ?> >
+			<?php echo esc_html( get_the_title( $post_id ) ); ?>
+		</div>
+	<?php endif; ?>
+	<?php echo esc_html( $ticket->name ); ?>
 </div>

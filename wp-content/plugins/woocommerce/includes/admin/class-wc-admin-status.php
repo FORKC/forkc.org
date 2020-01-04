@@ -31,6 +31,10 @@ class WC_Admin_Status {
 	 * Handles output of tools.
 	 */
 	public static function status_tools() {
+		if ( ! class_exists( 'WC_REST_System_Status_Tools_Controller' ) ) {
+			wp_die( 'Cannot load the REST API to access WC_REST_System_Status_Tools_Controller.' );
+		}
+
 		$tools = self::get_tools();
 
 		if ( ! empty( $_GET['action'] ) && ! empty( $_REQUEST['_wpnonce'] ) && wp_verify_nonce( wp_unslash( $_REQUEST['_wpnonce'] ), 'debug_action' ) ) { // WPCS: input var ok, sanitization ok.

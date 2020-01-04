@@ -8,13 +8,26 @@
  *
  * See more documentation about our Blocks Editor templating system.
  *
- * @link {INSERT_ARTCILE_LINK_HERE}
+ * @link {INSERT_ARTICLE_LINK_HERE}
  *
- * @version 4.9
+ * @since 4.9
+ * @version 4.9.4
  *
  */
 
 ?>
-<div class="tribe-block__rsvp__loading">
-	<?php $this->template( 'blocks/rsvp/loader-svg' ); ?>
-</div>
+<?php
+	ob_start();
+	/**
+	 * Allows filtering of extra classes used on the rsvp-block loader.
+	 *
+	 * @since  4.11.1
+	 *
+	 * @param  array $classes The array of classes that will be filtered.
+	 */
+	$loader_classes = apply_filters( 'tribe_rsvp_block_loader_classes', [ 'tribe-block__rsvp__loading' ] );
+	include Tribe__Tickets__Templates::get_template_hierarchy( 'components/loader.php' );
+	$html = ob_get_contents();
+	ob_end_clean();
+	echo $html;
+?>

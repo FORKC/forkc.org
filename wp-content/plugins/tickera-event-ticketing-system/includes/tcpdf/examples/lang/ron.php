@@ -1,5 +1,4 @@
 <?php
-
 //============================================================+
 // File name   : ron.php
 // Begin       : 2004-03-03
@@ -25,6 +24,7 @@
  * @author Nicola Asuni
  * @since 2004-03-03
  */
+
 // Romanian, Moldavian, Moldovan
 
 global $l;
@@ -32,12 +32,12 @@ $l = Array();
 
 // PAGE META DESCRIPTORS --------------------------------------
 
-$l[ 'a_meta_charset' ]	 = 'UTF-8';
-$l[ 'a_meta_dir' ]		 = 'ltr';
-$l[ 'a_meta_language' ]	 = 'ro';
+$l['a_meta_charset'] = 'UTF-8';
+$l['a_meta_dir'] = 'ltr';
+$l['a_meta_language'] = 'ro';
 
 // TRANSLATIONS --------------------------------------
-$l[ 'w_page' ] = 'pagina';
+$l['w_page'] = 'pagina';
 
 //============================================================+
 // END OF FILE

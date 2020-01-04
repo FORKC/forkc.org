@@ -3,8 +3,8 @@ Contributors: Simon Dirlik, Ramon Fincken
 Donate link: http://donate.ramonfincken.com
 Tags: admin,admins,add,mass,simple,easy,post,posts,page,pages,multiple,about,default
 Requires at least: 3.0
-Tested up to: 4.8
-Stable tag: 1.8.2
+Tested up to: 5.2.2
+Stable tag: 2.0.0
 
 Plugin to simply add multiple posts or pages at once by entering their titles. Handy tool if you have a new blog and want to quickly add pages..
 
@@ -16,7 +16,7 @@ Plugin to simply add multiple posts or pages at once by entering their titles. H
 <a href="https://webshop.mijnpress.nl/shop/simple-add-pages-posts-cpt">Buy our premium plugin to add Custom Post Type (CPT) support!</a>
 
 <br>
-<br>Coding by: <a href="http://www.mijnpress.nl">MijnPress.nl</a> <a href="http://twitter.com/#!/ramonfincken">Twitter profile</a> <a href="http://wordpress.org/extend/plugins/profile/ramon-fincken">More plugins</a>
+<br>Coding by: <a href="https://www.mijnpress.nl">MijnPress.nl</a> <a href="https://twitter.com/#!/ramonfincken">Twitter profile</a> <a href="https://profiles.wordpress.org/ramon-fincken/">More plugins</a>
 
 == Installation ==
 
@@ -28,11 +28,14 @@ Plugin to simply add multiple posts or pages at once by entering their titles. H
 
 = I have a lot of questions and I want support where can I go? =
 
-<a href="http://pluginsupport.mijnpress.nl/">http://pluginsupport.mijnpress.nl/</a> or drop me a tweet to notify me of your support topic over here.<br>
+<a href="https://pluginsupport.mijnpress.nl/">https://pluginsupport.mijnpress.nl/</a> or drop me a tweet to notify me of your support topic over here.<br>
 I always check my tweets, so mention my name with @ramonfincken and your problem.
 
 
 == Changelog ==
+= 2.0.0 =
+* Added: Strict standards fixes
+
 = 1.8.2 =
 * Added: Strict standards fixes
 

@@ -30,12 +30,24 @@ describe( 'RSVP block actions', () => {
 			expect( actions.setRSVPIsSettingsLoading( true ) ).toMatchSnapshot();
 		} );
 
+		test( 'set RSVP is modal open', () => {
+			expect( actions.setRSVPIsModalOpen( true ) ).toMatchSnapshot();
+		} );
+
 		test( 'set RSVP going count', () => {
 			expect( actions.setRSVPGoingCount( 10 ) ).toMatchSnapshot();
 		} );
 
 		test( 'set RSVP not going count', () => {
 			expect( actions.setRSVPNotGoingCount( 10 ) ).toMatchSnapshot();
+		} );
+
+		test( 'set RSVP has attendee info fields', () => {
+			expect( actions.setRSVPHasAttendeeInfoFields( true ) ).toMatchSnapshot();
+		} );
+
+		test( 'set RSVP has duration error', () => {
+			expect( actions.setRSVPHasDurationError( true ) ).toMatchSnapshot();
 		} );
 
 		test( 'set RSVP header image', () => {
@@ -228,6 +240,18 @@ describe( 'RSVP block actions', () => {
 
 		test( 'handle RSVP end time', () => {
 			expect( actions.handleRSVPEndTime( 1000 ) ).toMatchSnapshot();
+		} );
+
+		test( 'fetch RSVP header image', () => {
+			expect( actions.fetchRSVPHeaderImage( 10 ) ).toMatchSnapshot();
+		} );
+
+		test( 'fetch RSVP header image', () => {
+			expect( actions.updateRSVPHeaderImage( {} ) ).toMatchSnapshot();
+		} );
+
+		test( 'fetch RSVP header image', () => {
+			expect( actions.deleteRSVPHeaderImage() ).toMatchSnapshot();
 		} );
 	} );
 } );

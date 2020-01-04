@@ -19,14 +19,12 @@
 }
 
 .tc_wrap #poststuff h3 {
-    background-color: #FFFFFF;
-    padding: 15px 20px 15px 30px;
+    background-color: #f3f3f3;
+    padding: 15px 20px 15px 25px;
     font-family: 'Open Sans', Arial, serif;
     font-weight: 500;
     font-size: 1.6em;
     letter-spacing: 0.05em;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
     color: #5d5d5d;
 }
 
@@ -65,7 +63,7 @@
 }
 
 .tc_wrap #poststuff .inside {
-    padding-left: 30px;
+    padding-left: 25px;
 }
 
 .tc_events_page_tc_settings {
@@ -83,10 +81,6 @@
     border-left: none;
     margin-left: 0;
     box-shadow: none;
-}
-
-.tc_wrap  .postbox {
-    border-radius: 5px;
 }
 
 .post-type-tc_events #poststuff .tc_tooltip,
@@ -115,17 +109,17 @@ body .ui-tooltip {
 }
 
 
-.nav-tab {
-    background-color: #FBFBFB;
-}
-
-.tc_wrap .nav-tab-active, 
-.tc_wrap .nav-tab-active:focus, 
-.tc_wrap .nav-tab-active:focus:active, 
-.tc_wrap .nav-tab-active:hover {
+.tc_outside_wrap a.nav-tab-active, 
+.tc_outside_wrap a.nav-tab-active:focus, 
+.tc_outside_wrap a.nav-tab-active:focus:active, 
+.tc_outside_wrap a.nav-tab-active:hover {
     background-color: #6b5f89;
     color: #fff;
-    border-color: #6b5f89;
+
+}
+
+.tc_wrap .postbox {
+    margin-bottom: 0;
 }
 
 .tc_wrap .chosen-container-active.chosen-with-drop .chosen-single,
@@ -184,6 +178,7 @@ body .ui-tooltip {
 .post-type-tc_tickets .button-primary,
 .post-type-tc_tickets_instances .button-primary,
 .post-type-tc_orders .button-primary,
+.post-type-tc_speakers .button-primary,
 .tc_events_page_tc_ticket_templates .button-primary {
     background-color: #6b5f89;/*#ffdf3b;   */
     text-shadow: none;
@@ -195,6 +190,27 @@ body .ui-tooltip {
     transition: all 0.1s linear;
     -webkit-transition: all 0.1s linear;
     -moz-transition: all 0.1s linear;
+    height: auto;
+    letter-spacing: 0.03em;
+    float: left;
+}
+
+.tc_wrap .button-primary {
+    background-color: #6b5f89;/*#ffdf3b;   */
+    text-shadow: none;
+    border: none;
+    box-shadow: none;
+    color: #fff;/*#3b3b3b*/
+    border: 1px solid #6b5f89; /*#ffdf3b;*/
+    font-weight: bold;
+    transition: all 0.1s linear;
+    -webkit-transition: all 0.1s linear;
+    -moz-transition: all 0.1s linear;
+    padding: 7px 20px;
+    height: auto;
+    font-size: 1.2em;
+    letter-spacing: 0.03em;
+    float: left;
 }
 
 .post-type-tc_events .button-secondary,
@@ -237,6 +253,8 @@ body .ui-tooltip {
 .tc_wrap .button-primary:focus,
 .post-type-tc_events .button-primary:hover,
 .post-type-tc_events .button-primary:focus,
+.post-type-tc_speakers .button-primary:hover,
+.post-type-tc_speakers .button-primary:focus,
 .post-type-tc_tickets .button-primary:hover,
 .post-type-tc_tickets .button-primary:focus,
 .post-type-tc_tickets_instances .button-primary:hover,
@@ -245,9 +263,10 @@ body .ui-tooltip {
 .post-type-tc_orders .button-primary:focus,
 .tc_events_page_tc_ticket_templates .button-primary:hover,
 .tc_events_page_tc_ticket_templates .button-primary:focus{
-    color: #9a9a9a;    
-    background-color: transparent;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    
+    background-color: #ffdf3b;
+    color: #5d5d5d;
+    border: 1px solid #ffdf3b;
     outline: none;
     box-shadow: none;
     -webkit-box-shadow: none;
@@ -460,7 +479,6 @@ body .ui-tooltip {
     margin: 7px 0 0 0;
 }
 
-
 /* events */
 
 .misc-pub-section.event_end_date_time:before,
@@ -490,30 +508,7 @@ body .ui-tooltip {
 
 /* datepicker */
 
-.post-type-tc_tickets .datepicker > .datepicker_header {
-    padding-top: 8px;
-    padding-bottom: 8px;
-    background-color: #8a7da9;
-}
-
-.post-type-tc_tickets .datepicker > .datepicker_header > span {
-    color: #fff;
-}
-
-.post-type-tc_tickets .datepicker > .datepicker_header > a {
-    color: #fff;
-}
-
-.post-type-tc_tickets .datepicker > .datepicker_header > a:hover {
-    background: none;
-    color: #fff;
-}
-
-.post-type-tc_tickets .datepicker > .datepicker_header > .icon-home > svg > g > path {
-    fill: #fff;
-}
-
-.post-type-tc_tickets .datepicker > .datepicker_inner_container > .datepicker_calendar > .datepicker_table > tbody > tr > td.wday_sat {
+.post-type-tc_tickets .tc_datepicker > .datepicker_inner_container > .datepicker_calendar > .datepicker_table > tbody > tr > td.wday_sat {
     color: #8a7da9;
 }
 

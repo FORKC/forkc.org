@@ -12,37 +12,53 @@
  */
 class WPSEO_Sitemaps_Cache {
 
-	/** @var array $cache_clear Holds the options that, when updated, should cause the cache to clear. */
-	protected static $cache_clear = array();
+	/**
+	 * Holds the options that, when updated, should cause the cache to clear.
+	 *
+	 * @var array
+	 */
+	protected static $cache_clear = [];
 
-	/** @var bool $is_enabled Mirror of enabled status for static calls. */
+	/**
+	 * Mirror of enabled status for static calls.
+	 *
+	 * @var bool
+	 */
 	protected static $is_enabled = false;
 
-	/** @var bool $clear_all Holds the flag to clear all cache. */
+	/**
+	 * Holds the flag to clear all cache.
+	 *
+	 * @var bool
+	 */
 	protected static $clear_all = false;
 
-	/** @var array $clear_types Holds the array of types to clear. */
-	protected static $clear_types = array();
+	/**
+	 * Holds the array of types to clear.
+	 *
+	 * @var array
+	 */
+	protected static $clear_types = [];
 
 	/**
 	 * Hook methods for invalidation on necessary events.
 	 */
 	public function __construct() {
 
-		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'init', [ $this, 'init' ] );
 
-		add_action( 'deleted_term_relationships', array( __CLASS__, 'invalidate' ) );
+		add_action( 'deleted_term_relationships', [ __CLASS__, 'invalidate' ] );
 
-		add_action( 'update_option', array( __CLASS__, 'clear_on_option_update' ) );
+		add_action( 'update_option', [ __CLASS__, 'clear_on_option_update' ] );
 
-		add_action( 'edited_terms', array( __CLASS__, 'invalidate_helper' ), 10, 2 );
-		add_action( 'clean_term_cache', array( __CLASS__, 'invalidate_helper' ), 10, 2 );
-		add_action( 'clean_object_term_cache', array( __CLASS__, 'invalidate_helper' ), 10, 2 );
+		add_action( 'edited_terms', [ __CLASS__, 'invalidate_helper' ], 10, 2 );
+		add_action( 'clean_term_cache', [ __CLASS__, 'invalidate_helper' ], 10, 2 );
+		add_action( 'clean_object_term_cache', [ __CLASS__, 'invalidate_helper' ], 10, 2 );
 
-		add_action( 'user_register', array( __CLASS__, 'invalidate_author' ) );
-		add_action( 'delete_user', array( __CLASS__, 'invalidate_author' ) );
+		add_action( 'user_register', [ __CLASS__, 'invalidate_author' ] );
+		add_action( 'delete_user', [ __CLASS__, 'invalidate_author' ] );
 
-		add_action( 'shutdown', array( __CLASS__, 'clear_queued' ) );
+		add_action( 'shutdown', [ __CLASS__, 'clear_queued' ] );
 	}
 
 	/**
@@ -65,7 +81,7 @@ class WPSEO_Sitemaps_Cache {
 		/**
 		 * Filter if XML sitemap transient cache is enabled.
 		 *
-		 * @param bool $unsigned Enable cache or not, defaults to true
+		 * @param bool $unsigned Enable cache or not, defaults to true.
 		 */
 		return apply_filters( 'wpseo_enable_xml_sitemap_transient_caching', false );
 	}
@@ -91,7 +107,7 @@ class WPSEO_Sitemaps_Cache {
 	}
 
 	/**
-	 * Get the sitemap that is cached
+	 * Get the sitemap that is cached.
 	 *
 	 * @param string $type Sitemap type.
 	 * @param int    $page Page number to retrieve.
@@ -163,7 +179,7 @@ class WPSEO_Sitemaps_Cache {
 	 */
 	public static function invalidate( $type ) {
 
-		self::clear( array( $type ) );
+		self::clear( [ $type ] );
 	}
 
 	/**
@@ -245,7 +261,7 @@ class WPSEO_Sitemaps_Cache {
 	 *
 	 * @return void
 	 */
-	public static function clear( $types = array() ) {
+	public static function clear( $types = [] ) {
 
 		if ( ! self::$is_enabled ) {
 			return;
@@ -279,7 +295,7 @@ class WPSEO_Sitemaps_Cache {
 
 			WPSEO_Sitemaps_Cache_Validator::invalidate_storage();
 			self::$clear_all   = false;
-			self::$clear_types = array();
+			self::$clear_types = [];
 
 			return;
 		}
@@ -288,11 +304,11 @@ class WPSEO_Sitemaps_Cache {
 			WPSEO_Sitemaps_Cache_Validator::invalidate_storage( $type );
 		}
 
-		self::$clear_types = array();
+		self::$clear_types = [];
 	}
 
 	/**
-	 * Adds a hook that when given option is updated, the cache is cleared
+	 * Adds a hook that when given option is updated, the cache is cleared.
 	 *
 	 * @since 3.2
 	 *
@@ -305,7 +321,7 @@ class WPSEO_Sitemaps_Cache {
 	}
 
 	/**
-	 * Clears the transient cache when a given option is updated, if that option has been registered before
+	 * Clears the transient cache when a given option is updated, if that option has been registered before.
 	 *
 	 * @since 3.2
 	 *

@@ -1,3 +1,25 @@
+.updated.success.fs-notice.fs-sticky.fs-has-title.fs-type-plugin{
+    display: none !important;
+}
+
+#pframe,
+#connect_account.fs-slug-tickera-event-ticketing-system{
+    display: none !important;
+}
+
+[data-id="plan_upgraded"].div.fs-notice.success,
+[data-id="plan_upgraded"].div.fs-notice.success{
+    display: none !important;
+}
+
+/*.tc_events_page_tickera-event-ticketing-system-pricing{
+    display: none !important;
+}*/
+
+a[href="edit.php?post_type=tc_events&page=tickera-event-ticketing-system-pricing"]{
+    display: none !important; 
+}
+
 .tc_wrap label.error{
     color: red !important;
     padding-left: 10px;
@@ -22,6 +44,8 @@ a.tc_tooltip_link{
     color: #fff !important;
 }
 
+
+
 a[href="post-new.php?post_type=tc_events"]{
     display: none !important;
 }
@@ -34,6 +58,14 @@ a[href="post-new.php?post_type=tc_events"]{
 .regular-textarea{
     width: 351px;
     height: 100px;
+}
+
+.tc_wrap .nav-tab-wrapper {
+    width: 15%;
+}
+
+#sticky-wrapper .nav-tab-wrapper {
+    width: 100%;
 }
 
 .tablenav .actions{
@@ -429,6 +461,14 @@ label[for=api_key]{
     /*max-width: 500px;*/
 }
 
+.tc_wrap h3 .description {
+    font-weight: normal;
+    font-style: normal;
+    margin: 5px 0 0 0;
+    font-size: 0.63em;
+    letter-spacing: 0.02em;
+}
+
 .tc_wrap .message_placeholder{
     display: none;
 }
@@ -519,7 +559,6 @@ a.tc_link:hover {
 
 
 .tc_wrap select{
-    width: 25em !important;
     max-width: 100% !important;
     min-width: 1em !important;
 }
@@ -531,6 +570,17 @@ a.tc_link:hover {
     width: 350px !important;
 }
 
+/* API KEYS PAGE */
+
+#wpbody-content .tc_wrap #poststuff.tc-api-keys {
+    padding-top: 0;
+}
+
+.tc-api-keys .tablenav {
+    margin-top: 0;
+    width: 330px;
+    float: right;
+}
 
 @media only screen and (max-width: 1070px){
     .left-holder, .right-holder {
@@ -669,6 +719,20 @@ a.tc_link:hover {
     display: inline-block;
 }
 
+.tc_wrap .postbox {
+    border-top: none;
+    border-left: none;
+}
+
+.tc_wrap .metabox-holder#poststuff {
+    padding-top: 9px;
+}
+
+.tc_wrap form .postbox:nth-child(3),
+.tc_wrap .postbox:nth-child(2),
+.tc_wrap .postbox:first-child{
+    border-top: 1px solid #e5e5e5;
+}
 
 /* TICKERA ADDONS */
 
@@ -820,7 +884,7 @@ label.tc_checkboxes_label{
 }
 
 .post-type-tc_events .datepicker > .datepicker_inner_container > .datepicker_calendar > .datepicker_table > tbody > tr > td {
-    padding: 4px;
+    padding: 3px;
 }
 
 .post-type-tc_events .datepicker > .datepicker_inner_container > .datepicker_calendar > .datepicker_table > tbody > tr > td.hover,
@@ -926,9 +990,156 @@ ul.tc_order_notes li p.meta .exact-date {
 
 .tc-shortcodes-colorbox#colorbox,
 .tc-shortcodes-colorbox#cboxOverlay {
- z-index: 99999;   
+    z-index: 99999;   
 }
 
+
+/* SETTINGS PAGE */
+
+.tc_outside_wrap .nav-tab-wrapper {
+    float: left;
+    width: 15%;
+}
+
+.tc_outside_wrap .nav-tab-wrapper ul {
+    float: left;
+    border-left: 1px solid #e3e3e3;
+    margin: 0;
+    border-right: 1px solid #e3e3e3;
+}
+
+#sticky-wrapper {
+    float: left; 
+    width: 15%;
+    clear:both;
+}
+
+.tc_outside_wrap .nav-tab-wrapper ul li {
+    width: 100%;
+    float: left;
+    margin: 0;
+    border-bottom: 1px solid #e3e3e3;
+}
+
+.tc_outside_wrap .nav-tab-wrapper ul li:first-child {
+    border-top: 1px solid #e3e3e3;
+}
+
+.tc_outside_wrap a.nav-tab:active,
+.tc_outside_wrap a.nav-tab:focus{
+    outline: none;
+}
+
+.tc_outside_wrap  a.nav-tab {
+    border: 0;
+    margin: 0;
+    padding: 10px 5px 10px 17px;
+    width: 100%;
+    background-color: #fff;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.tc_outside_wrap .nav-tab-wrapper {
+    border:none;
+    padding: 0;
+    margin: 9px 0 0 0px;
+}
+
+.tc_events_page_tc_settings .tc_wrap {
+    width: 85%;
+    float: left;
+    margin: 0;
+}
+
+.tc_wrap .chosen-container {
+    min-width: 150px;
+}
+
+.tc_wrap .nav-tab-wrapper {
+    overflow: hidden;
+}
+
+.tc_wrap .tc-tickera-secondary {
+    color: #9a9a9a;
+    background-color: transparent;
+    text-shadow: none;
+    border: none;
+    box-shadow: none;
+    border: 1px solid #cccccc;
+    font-weight: bold;
+    transition: all 0.1s linear;
+    -webkit-transition: all 0.1s linear;
+    -moz-transition: all 0.1s linear;
+    padding: 7px 20px;
+    height: auto;
+    font-size: 1.2em;
+    letter-spacing: 0.03em;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    float: left;
+    line-height: 26px;
+    margin: 3px 0 0 5px;
+}
+
+.tc_wrap .tc-tickera-secondary:hover {
+    background-color: #ffdf3b;
+    color: #5d5d5d;
+    border: 1px solid #ffdf3b;
+}
+
+.tc_wrap input[type="submit"]{
+    margin-left: 20px;
+}
+
+.tc_wrap .inside input[type="submit"] {
+    margin-left: 0;
+}
+
+.tc_wrap .search-box input[type="submit"] {
+    margin-left: 5px;
+}
+
+#order-details-tc-metabox-wrapper {
+    padding-bottom: 30px;
+}
+
+.tc-tablenav .tablenav-pages a {
+    color: #6b5f89;
+}
+
+.tc-tablenav .tablenav-pages a:hover {
+    background-color: #6b5f89;
+    color: #fff;
+}
+
+.tc_wrap table.widefat {
+    border: none;
+}
+
+.tc_events_page_tc_discount_codes .tc_wrap .postbox {
+    border-left: 1px solid #e5e5e5;
+}
+
+#add_new_template,
+#add_new_discount {
+    margin-left: 0;
+}
+
+.tc_options_search{
+    float: right;
+    font-weight: normal;
+}
+
+
+.fs-section #sticky-wrapper {
+    width: 100%;
+    float: none;
+}
 
 @media only screen and (max-width: 650px) {
     #ticket_elements .element-icon {
@@ -964,6 +1175,16 @@ ul.tc_order_notes li p.meta .exact-date {
     }
 }
 
+@media only screen and (max-width : 1300px){
+    .tc_events_page_tc_settings .tc_wrap {
+        width: 75%;
+    }
+
+    #sticky-wrapper {
+        width: 25%;
+    }
+
+}
 @media only screen and (min-width: 1200px)  and (max-width: 1600px)  {
 
     .tc_addon {
@@ -1007,6 +1228,50 @@ ul.tc_order_notes li p.meta .exact-date {
     }
 }
 
+@media only screen and (max-width : 780px){
+    #sticky-wrapper,
+    .tc_outside_wrap .nav-tab-wrapper ul {
+        width: 100%;
+    }
+
+    .tc_outside_wrap .nav-tab-wrapper,
+    .tc_outside_wrap .sticky-wrapper {
+        position: static !important;
+        height: auto !important;
+    }
+
+    .tc_events_page_tc_settings .tc_wrap {
+        width: 100%;
+    }
+
+    .tc_outside_wrap a.nav-tab {
+        padding: 3px 5px 3px 10px;
+        font-size: 12px;
+    }
+
+    .tc_wrap .tablenav {
+        width: 60%;
+    }
+
+    .tc_wrap p.search-box {
+        position: static;
+        height: auto;
+        margin-right: 0;
+        display: inline;
+    }
+
+
+    .tc_wrap p.search-box input[name="s"] {
+        width: 60%;
+    }
+
+    .tc_wrap .search-box input[type="submit"] {
+        width: 40%;
+    }
+
+}
+
+
 @media only screen and (min-width: 400px)  and (max-width: 780px)  {
 
     .tc_addon {
@@ -1026,6 +1291,20 @@ ul.tc_order_notes li p.meta .exact-date {
     .tc_addon img {
         height: 30px;
     }
+
+    .tc_wrap a.nav-tab {
+        font-size: 0.9em;
+        padding: 12px 2px 12px 10px;
+    }
+
+    .tc_wrap .tablenav  {
+        width: 70%;
+    }
+
+    .tc_wrap p.search-box input[name="s"] {
+        width: 55%;
+    }
+
 }
 
 @media only screen and (min-width: 465px)  and (max-width: 500px)  {
@@ -1044,6 +1323,15 @@ ul.tc_order_notes li p.meta .exact-date {
 
     .tc_addon a {
         min-height: 200px;
+    }
+
+    .tc_wrap .nav-tab-wrapper,
+    .tc_wrap .tc_wrap {
+        width: 100%;
+    }
+
+    .tc_wrap .nav-tab-wrapper ul {
+        position: static;
     }
 
 }

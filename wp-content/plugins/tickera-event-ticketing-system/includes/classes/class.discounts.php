@@ -133,8 +133,9 @@ if (!class_exists('TC_Discounts')) {
                 $discount_code = (isset($_POST['coupon_code']) ? sanitize_text_field($_POST['coupon_code']) : '');
             }
 
-            $discount_object = get_page_by_title($discount_code, OBJECT, 'tc_discounts');
-   
+            if (!empty($discount_code)) {
+                $discount_object = get_page_by_title($discount_code, OBJECT, 'tc_discounts');
+            }
 
             if (!empty($discount_object) && $discount_object->post_status == 'publish') {
                 $discount_object = new TC_Discount($discount_object->ID);
@@ -158,9 +159,9 @@ if (!class_exists('TC_Discounts')) {
 
 
                         if ($discount_object->details->discount_type == 3) {//fixed per order
-                            if($discount_codes_available > 0){
+                            if ($discount_codes_available > 0) {
                                 $discount_value = round($discount_object->details->discount_value, 2);
-                            }else{
+                            } else {
                                 $discount->discount_message = __('Discount code invalid or expired', 'tc');
                                 $this->unset_discount();
                             }
@@ -208,19 +209,18 @@ if (!class_exists('TC_Discounts')) {
                                 if ($is_in_cart) {
 
                                     $discount_value = 0;
-
                                     foreach ($discount_availability as $ticket_id) {
                                         if (isset($cart_contents[$ticket_id])) {
-
                                             $ordered_count = $cart_contents[$ticket_id];
-
                                             $ticket = new TC_Ticket($ticket_id);
                                             $ticket_price = tc_get_ticket_price($ticket->details->ID);
-
                                             $discount_value_per_each = ($discount_object->details->discount_type == 1 ? $discount_object->details->discount_value : round((($ticket_price / 100) * $discount_object->details->discount_value), 2));
-
+                                            
+                                            if($discount_object->details->discount_type == 1 && $discount_object->details->discount_value > $ticket_price) {
+                                                    $discount_value_per_each = $ticket_price;
+                                            }
+                                            
                                             $max_discount = ($ordered_count >= $discount_codes_available ? $discount_codes_available : $ordered_count);
-
                                             if ($max_discount > 0) {
                                                 for ($i = 1; $i <= $max_discount; $i++) {
 
@@ -256,7 +256,6 @@ if (!class_exists('TC_Discounts')) {
             }
 
             $discount_value_total = round($discount_value, 2);
-
             add_filter('tc_cart_discount', 'tc_cart_discount_value_total', 10, 0);
 
             if (!function_exists('tc_cart_discount_value_total')) {

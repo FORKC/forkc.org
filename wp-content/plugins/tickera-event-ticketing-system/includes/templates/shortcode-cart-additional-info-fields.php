@@ -135,7 +135,7 @@ $cart_contents = apply_filters('tc_cart_contents', array());
     </div><!-- tickera_buyer_info -->  
 
     <?php
-    if (!isset($tc_general_settings['show_owner_fields']) || (isset($tc_general_settings['show_owner_fields']) && $tc_general_settings['show_owner_fields'] == 'yes')) {
+    if (!isset($tc_general_settings['show_owner_fields']) || (isset($tc_general_settings['show_owner_fields']) && $tc_general_settings['show_owner_fields'] == 'yes') ) {
         $show_owner_fields = true;
     } else {
         $show_owner_fields = false;
@@ -149,13 +149,29 @@ $cart_contents = apply_filters('tc_cart_contents', array());
              <?php
              $ticket_type_order = 1;
              foreach ($cart_contents as $ticket_type => $ordered_count) {
-
+                $tc_get_post_type = get_post_type($ticket_type);
+                
+                if($tc_get_post_type == 'product_variation') {
+                    $tc_get_variation_parent = wp_get_post_parent_id( $ticket_type );
+                    $tc_get_custom_form = get_post_meta($tc_get_variation_parent, '_owner_form_template', true);
+                } else {
+                    $tc_get_custom_form = get_post_meta($ticket_type, '_owner_form_template', true);
+                }
                  $owner_form = new TC_Cart_Form(apply_filters('tc_ticket_type_id', $ticket_type));
                  $owner_form_fields = $owner_form->get_owner_info_fields(apply_filters('tc_ticket_type_id', $ticket_type));
-
                  $ticket = new TC_Ticket($ticket_type);
                  ?>
-            <h2><?php
+        <?php if(($tc_general_settings['show_attendee_first_and_last_name_fields'] !== 'no' || $tc_general_settings['show_owner_email_field'] !== 'no' ) || (!empty($tc_get_custom_form) && $tc_get_custom_form !== 0 && $tc_get_custom_form !== "-1" && is_plugin_active( 'custom-forms/tickera-custom-forms.php'))){
+        
+            $tc_display_fields = '';
+            
+        } else {
+            $tc_display_fields = 'style="display: none"';
+        }
+        ?>
+        <div class="tc-form-ticket-fields-wrap" <?php echo $tc_display_fields; ?>>   
+        
+        <h2><?php
                 do_action('tc_before_checkout_owner_info_ticket_title', $ticket_type, $cart_contents);
                 echo apply_filters('tc_checkout_owner_info_ticket_title', $ticket->details->post_title, $ticket_type, $cart_contents, false);
                 do_action('tc_after_checkout_owner_info_ticket_title', $ticket_type, $cart_contents);
@@ -177,7 +193,15 @@ $cart_contents = apply_filters('tc_cart_contents', array());
                         }
                         if ($show_owner_fields) {
                             ?>
-                            <?php if ($field['field_type'] == 'text') { ?>
+                            <?php if ($field['field_type'] == 'text') {
+                                if ($field['field_name'] == 'owner_email') { 
+                                    $input_value = apply_filters( 'tc_input_email_field', '', wp_get_current_user() );
+                                } elseif ($field['field_name'] == 'first_name') { 
+                                    $input_value = apply_filters( 'tc_input_first_name_field', '', wp_get_current_user() );
+                                } elseif ($field['field_name'] == 'last_name') {
+                                    $input_value = apply_filters( 'tc_input_last_name_field', '', wp_get_current_user() );
+                                } ?>
+                                
                                 <?php if ((isset($tc_general_settings['show_owner_email_field']) && $tc_general_settings['show_owner_email_field'] == 'yes' && $field['field_name'] == 'owner_email' ) || $field['field_name'] !== 'owner_email') { ?><div class="fields-wrap <?php
                                     if (isset($field['field_class'])) {
                                         echo $field['field_class'];
@@ -191,7 +215,7 @@ $cart_contents = apply_filters('tc_cart_contents', array());
                                                  if (isset($field['field_placeholder'])) {
                                                      echo 'placeholder="' . esc_attr($field['field_placeholder']) . '"';
                                                  }
-                                                 ?> class="owner-field-<?php echo esc_attr($field['field_type']) . ' ' . $validation_class; ?> tickera-input-field tc-owner-field <?php if ($field['field_name'] == 'owner_email') { ?>tc_owner_email<?php } ?>" value="" name="<?php echo esc_attr('owner_data_' . $field['field_name'] . '_' . $field['post_field_type']); ?>[<?php echo $ticket_type; ?>][<?php echo $owner_index; ?>]"></label><span class="description"><?php echo $field['field_description']; ?></span></div><!-- fields-wrap --><?php } ?><?php } ?>
+                                                 ?> class="owner-field-<?php echo esc_attr($field['field_type']) . ' ' . $validation_class; ?> tickera-input-field tc-owner-field <?php if ($field['field_name'] == 'owner_email') { ?>tc_owner_email<?php } ?>" value="<?php echo $input_value; ?>" name="<?php echo esc_attr('owner_data_' . $field['field_name'] . '_' . $field['post_field_type']); ?>[<?php echo $ticket_type; ?>][<?php echo $owner_index; ?>]"></label><span class="description"><?php echo $field['field_description']; ?></span></div><!-- fields-wrap --><?php } ?><?php } ?>
 
                             <?php if ($field['field_type'] == 'textarea') { ?><div class="fields-wrap <?php
                                 if (isset($field['field_class'])) {
@@ -307,10 +331,12 @@ $cart_contents = apply_filters('tc_cart_contents', array());
                 </div><!-- owner-info-wrap -->																																																															                                                                                
     <?php } $i++; ?>
             <div class="tc-clearfix"></div>     
+    </div>
 
 
 
-    <?php } //foreach ( $cart_contents as $ticket_type => $ordered_count )     ?>
+    <?php 
+    } //foreach ( $cart_contents as $ticket_type => $ordered_count )     ?>
 
     </div><!-- tickera_owner_info -->
     <?php

@@ -8,17 +8,17 @@
  *
  * See more documentation about our Blocks Editor templating system.
  *
- * @link {INSERT_ARTCILE_LINK_HERE}
+ * @link {INSERT_ARTICLE_LINK_HERE}
  *
- * @version 4.9.3
+ * @since 4.9.3
+ * @since 4.10.9 Uses new functions to get singular and plural texts.
  *
+ * @version 4.11.0
  */
 
 ?>
-<div class="tribe-block__tickets__registration__title">
+<div class="tribe-tickets__registration__title">
 	<header>
-		<h2><?php esc_html_e( 'Ticket Registration', 'event-tickets' ); ?></h2>
+		<h2 class="tribe-common-h4 tribe-common-h3--min-medium"><?php echo esc_html( sprintf( __( '%s Registration', 'event-tickets' ), tribe_get_ticket_label_singular( basename( __FILE__ ) ) ) ); ?></h2>
 	</header>
 </div>
-
-

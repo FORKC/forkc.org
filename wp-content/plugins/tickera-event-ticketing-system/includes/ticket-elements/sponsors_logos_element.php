@@ -24,7 +24,7 @@ class tc_sponsors_logos_element extends TC_Ticket_Template_Elements {
 			$sponsors_logo	 = apply_filters( 'tc_sponsors_logos_element', get_post_meta( $event_id, 'sponsors_logo_file_url', true ) );
 
 			if ( $sponsors_logo ) {
-				return '<img src="' . $sponsors_logo . '" />';
+                                return '<img src="' . tc_ticket_template_image_url($sponsors_logo) . '" />';
 			} else {
 				return '';
 			}

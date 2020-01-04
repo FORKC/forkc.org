@@ -22,7 +22,7 @@ class Tribe__Tickets__Tickets_Handler {
 	public $key_provider_field = '_tribe_default_ticket_provider';
 
 	/**
-	 * Post meta key for the ticket capacty
+	 * Post meta key for the ticket capacity
 	 *
 	 * @since  4.6
 	 *
@@ -162,7 +162,7 @@ class Tribe__Tickets__Tickets_Handler {
 	}
 
 	/**
-	 * Allow us to Toggle flaging the update of Date Meta
+	 * Allow us to Toggle flagging the update of Date Meta
 	 *
 	 * @since   4.6
 	 *
@@ -179,7 +179,7 @@ class Tribe__Tickets__Tickets_Handler {
 	}
 
 	/**
-	 * On update of the Event End date we update the ticket end date
+	 * On update of the event start date we update the ticket end date
 	 * if it wasn't manually updated
 	 *
 	 * @since  4.6
@@ -193,7 +193,7 @@ class Tribe__Tickets__Tickets_Handler {
 	 */
 	public function update_meta_date( $meta_id, $object_id, $meta_key, $date ) {
 		$meta_map = array(
-			'_EventEndDate' => $this->key_end_date,
+			'_EventStartDate' => $this->key_end_date,
 		);
 
 		// Bail when it's not on the Map Meta
@@ -484,11 +484,11 @@ class Tribe__Tickets__Tickets_Handler {
 		$event_types = Tribe__Tickets__Main::instance()->post_types();
 
 		// Bail on non event like post type
-		if ( ! in_array( get_post_type( $object_id ), $event_types ) ) {
+		if ( ! in_array( get_post_type( $object_id ), $event_types, true ) ) {
 			return false;
 		}
 
-		// We don't accept any non-numeric values here
+		// We don't accept any non-numeric values here.
 		if ( ! is_numeric( $event_capacity ) ) {
 			return false;
 		}
@@ -585,6 +585,12 @@ class Tribe__Tickets__Tickets_Handler {
 
 		// Do the migration
 		$capacity = $this->migrate_object_capacity( $object_id );
+
+		if ( false === $capacity ) {
+			$capacity = '';
+		} elseif ( is_int( $capacity ) ) {
+			$capacity = (string) $capacity;
+		}
 
 		// Hook it back up
 		add_filter( 'get_post_metadata', array( $this, 'filter_capacity_support' ), 15, 4 );
@@ -717,19 +723,19 @@ class Tribe__Tickets__Tickets_Handler {
 		}
 
 		if ( ! $ticket instanceof WP_Post ) {
-			return false;
+			return [];
 		}
 
 		$provider = tribe_tickets_get_ticket_provider( $ticket->ID );
 
-		$totals = array(
+		$totals = [
 			'stock'   => get_post_meta( $ticket->ID, '_stock', true ),
 			'sold'    => 0,
 			'pending' => 0,
-		);
+		];
 
 		if ( $provider instanceof Tribe__Tickets_Plus__Commerce__EDD__Main ) {
-			$totals['sold']    = $provider->stock()->get_purchased_inventory( $ticket->ID, array( 'publish' ) );
+			$totals['sold']    = $provider->stock()->get_purchased_inventory( $ticket->ID, [ 'publish' ] );
 			$totals['pending'] = $provider->stock()->count_incomplete_order_items( $ticket->ID );
 		} elseif ( $provider instanceof Tribe__Tickets_Plus__Commerce__WooCommerce__Main ) {
 			$totals['sold']    = get_post_meta( $ticket->ID, 'total_sales', true );
@@ -752,7 +758,7 @@ class Tribe__Tickets__Tickets_Handler {
 	 *
 	 * @since  4.6.2
 	 *
-	 * @param  int|WP_Post  $post  Which ticket
+	 * @param  int|WP_Post $post Which ticket
 	 *
 	 * @return array
 	 */
@@ -762,18 +768,18 @@ class Tribe__Tickets__Tickets_Handler {
 		}
 
 		if ( ! $post instanceof WP_Post ) {
-			return false;
+			return [];
 		}
 
 		$tickets = Tribe__Tickets__Tickets::get_all_event_tickets( $post->ID );
-		$totals  = array(
+		$totals  = [
 			'has_unlimited' => false,
 			'tickets' => count( $tickets ),
 			'capacity' => $this->get_total_event_capacity( $post ),
 			'sold' => 0,
 			'pending' => 0,
 			'stock' => 0,
-		);
+		];
 
 		foreach ( $tickets as $ticket ) {
 			$ticket_totals = $this->get_ticket_totals( $ticket->ID );
@@ -860,7 +866,7 @@ class Tribe__Tickets__Tickets_Handler {
 	 *
 	 * @since   4.6.2
 	 *
-	 * @param   int|WP_Post  $ticket
+	 * @param   int|WP_Post  $post
 	 * @param   mixed        $provider
 	 *
 	 * @return  bool
@@ -913,6 +919,7 @@ class Tribe__Tickets__Tickets_Handler {
 		$post_id = Tribe__Main::post_id_helper( $post );
 		$tickets = Tribe__Tickets__Tickets::get_event_tickets( $post_id );
 
+		/** @var Tribe__Tickets__Ticket_Object $ticket */
 		foreach ( $tickets as $index => $ticket ) {
 			// Eliminate tickets by stock mode
 			if ( ! is_null( $stock_mode ) && $ticket->global_stock_mode() !== $stock_mode ) {
@@ -941,12 +948,17 @@ class Tribe__Tickets__Tickets_Handler {
 	 *
 	 * @param  int|object (null) $post Post or Post ID tickets are attached to
 	 *
-	 * @return int|null
+	 * @return int
 	 */
 	public function get_total_event_capacity( $post = null ) {
-		$post_id            = Tribe__Main::post_id_helper( $post );
+		$post_id = Tribe__Main::post_id_helper( $post );
+		$total   = 0;
+
+		if ( 0 === $post_id ) {
+			return $total;
+		}
+
 		$has_shared_tickets = 0 !== count( $this->get_event_shared_tickets( $post_id ) );
-		$total              = 0;
 
 		if ( $has_shared_tickets ) {
 			$total = tribe_tickets_get_capacity( $post_id );
@@ -964,6 +976,7 @@ class Tribe__Tickets__Tickets_Handler {
 			return $total;
 		}
 
+		/** @var Tribe__Tickets__Ticket_Object $ticket */
 		foreach ( $tickets as $ticket ) {
 			// Skip shared cap Tickets as it's added when we fetch the total
 			if (
@@ -985,7 +998,7 @@ class Tribe__Tickets__Tickets_Handler {
 			$total += $capacity;
 		}
 
-		return apply_filters( 'tribe_tickets_total_event_capacity', $total, $post_id );
+		return (int) apply_filters( 'tribe_tickets_total_event_capacity', $total, $post_id );
 	}
 
 	/**
@@ -995,12 +1008,17 @@ class Tribe__Tickets__Tickets_Handler {
 	 *
 	 * @param int|object (null) $post Post or Post ID tickets are attached to
 	 *
-	 * @return array list of tickets
+	 * @return array List of unlimited tickets for an event.
 	 */
 	public function get_event_unlimited_tickets( $post = null ) {
 		$post_id     = Tribe__Main::post_id_helper( $post );
-		$tickets     = Tribe__Tickets__Tickets::get_event_tickets( $post_id );
-		$ticket_list = array();
+		$ticket_list = [];
+
+		if ( 0 === $post_id ) {
+			return $ticket_list;
+		}
+
+		$tickets = Tribe__Tickets__Tickets::get_event_tickets( $post_id );
 
 		if ( empty( $tickets ) ) {
 			return $ticket_list;
@@ -1024,12 +1042,17 @@ class Tribe__Tickets__Tickets_Handler {
 	 *
 	 * @param int|object (null) $post Post or Post ID tickets are attached to
 	 *
-	 * @return array list of tickets
+	 * @return array List of independent tickets for an event.
 	 */
 	public function get_event_independent_tickets( $post = null ) {
 		$post_id     = Tribe__Main::post_id_helper( $post );
-		$tickets     = Tribe__Tickets__Tickets::get_event_tickets( $post_id );
-		$ticket_list = array();
+		$ticket_list = [];
+
+		if ( 0 === $post_id ) {
+			return $ticket_list;
+		}
+
+		$tickets = Tribe__Tickets__Tickets::get_event_tickets( $post_id );
 
 		if ( empty( $tickets ) ) {
 			return $ticket_list;
@@ -1056,14 +1079,19 @@ class Tribe__Tickets__Tickets_Handler {
 	 *
 	 * @since 4.6
 	 *
-	 * @param int|object (null) $post Post or Post ID tickets are attached to
+	 * @param int|object (null) $post Post or Post ID tickets are attached to.
 	 *
-	 * @return string list of tickets
+	 * @return array List of RSVPs for an event.
 	 */
 	public function get_event_rsvp_tickets( $post = null ) {
 		$post_id     = Tribe__Main::post_id_helper( $post );
-		$tickets     = Tribe__Tickets__Tickets::get_event_tickets( $post_id );
-		$ticket_list = array();
+		$ticket_list = [];
+
+		if ( 0 === $post_id ) {
+			return $ticket_list;
+		}
+
+		$tickets = Tribe__Tickets__Tickets::get_event_tickets( $post_id );
 
 		if ( empty( $tickets ) ) {
 			return $ticket_list;
@@ -1081,33 +1109,45 @@ class Tribe__Tickets__Tickets_Handler {
 	}
 
 	/**
-	 * Gets the Maximum Purchase number for a given ticket
+	 * Gets the Maximum Purchase number for a given ticket.
 	 *
 	 * @since  4.8.1
 	 *
-	 * @param  int|string  $ticket_id  Ticket to fetch purchase max from
+	 * @param  int|string $ticket_id Ticket from which to fetch purchase max.
 	 *
 	 * @return int
 	 */
 	public function get_ticket_max_purchase( $ticket_id ) {
-		$event_id = tribe_events_get_ticket_event( $ticket_id );
+		$event = tribe_events_get_ticket_event( $ticket_id );
+
+		if ( ! $event instanceof WP_Post ) {
+			return 0;
+		}
+
 		$provider = tribe_tickets_get_ticket_provider( $ticket_id );
-		$ticket = $provider->get_ticket( $event_id, $ticket_id );
+		if ( empty( $provider ) ) {
+			return 0;
+		}
+
+		/** @var Tribe__Tickets__Ticket_Object $ticket */
+		$ticket = $provider->get_ticket( $event, $ticket_id );
 
 		$available = $ticket->available();
 
 		/**
-		 * Allows filtering of the max input for purchase of this one ticket
+		 * Allows filtering the quantity available displayed below the ticket
+		 * quantity input for purchase of this one ticket.
+		 *
+		 * If less than the maximum quantity available, will restrict that as well.
 		 *
 		 * @since 4.8.1
 		 *
-		 * @param int                           $available Max Purchase number
-		 * @param Tribe__Tickets__Ticket_Object $ticket    Ticket Object
-		 * @param int                           $event_id  Event ID
-		 * @param int                           $ticket_id Ticket Raw ID
-		 *
+		 * @param int                           $available Max purchase quantity.
+		 * @param Tribe__Tickets__Ticket_Object $ticket    Ticket object.
+		 * @param WP_Post                       $event     Event post.
+		 * @param int                           $ticket_id Raw ticket ID.
 		 */
-		return apply_filters( 'tribe_tickets_get_ticket_max_purchase', $available, $ticket, $event_id, $ticket_id );
+		return (int) apply_filters( 'tribe_tickets_get_ticket_max_purchase', $available, $ticket, $event, $ticket_id );
 	}
 
 	/**
@@ -1117,12 +1157,17 @@ class Tribe__Tickets__Tickets_Handler {
 	 *
 	 * @param int|object (null) $post Post or Post ID tickets are attached to
 	 *
-	 * @return array list of tickets
+	 * @return array List of shared capacity tickets for an event.
 	 */
 	public function get_event_shared_tickets( $post = null ) {
 		$post_id     = Tribe__Main::post_id_helper( $post );
-		$tickets     = Tribe__Tickets__Tickets::get_event_tickets( $post_id );
-		$ticket_list = array();
+		$ticket_list = [];
+
+		if ( 0 === $post_id ) {
+			return $ticket_list;
+		}
+
+		$tickets = Tribe__Tickets__Tickets::get_event_tickets( $post_id );
 
 		if ( empty( $tickets ) ) {
 			return $ticket_list;
@@ -1358,6 +1403,54 @@ class Tribe__Tickets__Tickets_Handler {
 		usort( $tickets, array( $this, 'sort_by_menu_order' ) );
 
 		return $tickets;
+	}
+
+	/**
+	 * Determine whether the ticket is accessible to the current user.
+	 *
+	 * @since 4.11.0
+	 *
+	 * @param int $ticket_id Ticket ID.
+	 *
+	 * @return true|WP_Error True if the ticket is accessible or a `WP_Error` if the user cannot access
+	 *                       the current ticket at all.
+	 */
+	public function is_ticket_readable( $ticket_id ) {
+		$ticket_post = get_post( $ticket_id );
+
+		if ( ! $ticket_post instanceof WP_Post ) {
+			return new WP_Error( 'ticket-not-found', 'ticket-not-found', array( 'status' => 404 ) );
+		}
+
+		$ticket_post_type_object = get_post_type_object( $ticket_post->post_type );
+
+		if ( null === $ticket_post_type_object ) {
+			return new WP_Error( 'ticket-provider-not-found', 'ticket-provider-not-found', array( 'status' => 500 ) );
+		}
+
+		$read_cap = $ticket_post_type_object->cap->read_post;
+
+		if ( ! ( 'publish' === $ticket_post->post_status || current_user_can( $read_cap, $ticket_id ) ) ) {
+			return new WP_Error( 'ticket-not-accessible', 'ticket-not-accessible', array( 'status' => 401 ) );
+		}
+
+		/**
+		 * Not only the ticket should be accessible by the user but the event too should be.
+		 */
+		$event = tribe_events_get_ticket_event( $ticket_id );
+
+		if ( ! $event instanceof WP_Post ) {
+			return new WP_Error( 'ticket-not-accessible', 'ticket-not-accessible', array( 'status' => 401 ) );
+		}
+
+		$event_post_type_object = get_post_type_object( $event->post_type );
+		$read_cap               = $event_post_type_object->cap->read_post;
+
+		if ( ! ( 'publish' === $event->post_status || current_user_can( $read_cap, $event->ID ) ) ) {
+			return new WP_Error( 'ticket-not-accessible', 'ticket-not-accessible', array( 'status' => 401 ) );
+		}
+
+		return true;
 	}
 
 	/**

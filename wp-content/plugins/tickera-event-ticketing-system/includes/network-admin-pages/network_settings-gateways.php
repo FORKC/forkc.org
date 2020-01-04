@@ -29,7 +29,7 @@ if ( isset( $_POST[ 'gateway_network_settings' ] ) ) {
 		<p class="description"><?php _e( 'Check payment gateways you want to allow on the subsites.', 'tc' ); ?></p>
 
         <div id="tc_gateways" class="postbox">
-            <h3 class='hndle'><span><?php _e( 'Select Payment Gateway(s)', 'tc' ) ?></span></h3>
+            <h3><span><?php _e( 'Select Payment Gateway(s)', 'tc' ) ?></span></h3>
             <div class="inside">
                 <table class="form-table">
                     <tr>                            

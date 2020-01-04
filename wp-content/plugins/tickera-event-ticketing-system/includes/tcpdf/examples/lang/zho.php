@@ -1,5 +1,4 @@
 <?php
-
 //============================================================+
 // File name   : zho.php
 // Begin       : 2010-10-26
@@ -25,6 +24,7 @@
  * @author Nicola Asuni
  * @since 2010-10-26
  */
+
 // Chinese
 
 global $l;
@@ -32,12 +32,12 @@ $l = Array();
 
 // PAGE META DESCRIPTORS --------------------------------------
 
-$l[ 'a_meta_charset' ]	 = 'UTF-8';
-$l[ 'a_meta_dir' ]		 = 'ltr';
-$l[ 'a_meta_language' ]	 = 'zh';
+$l['a_meta_charset'] = 'UTF-8';
+$l['a_meta_dir'] = 'ltr';
+$l['a_meta_language'] = 'zh';
 
 // TRANSLATIONS --------------------------------------
-$l[ 'w_page' ] = '頁面';
+$l['w_page'] = '頁面';
 
 //============================================================+
 // END OF FILE

@@ -41,6 +41,11 @@ export const getRSVPIsSettingsLoading = createSelector(
 	( rsvp ) => rsvp.isSettingsLoading,
 );
 
+export const getRSVPIsModalOpen = createSelector(
+	[ getRSVPBlock ],
+	( rsvp ) => rsvp.isModalOpen,
+);
+
 export const getRSVPGoingCount = createSelector(
 	[ getRSVPBlock ],
 	( rsvp ) => rsvp.goingCount,
@@ -49,6 +54,16 @@ export const getRSVPGoingCount = createSelector(
 export const getRSVPNotGoingCount = createSelector(
 	[ getRSVPBlock ],
 	( rsvp ) => rsvp.notGoingCount,
+);
+
+export const getRSVPHasAttendeeInfoFields = createSelector(
+	[ getRSVPBlock ],
+	( rsvp ) => rsvp.hasAttendeeInfoFields,
+);
+
+export const getRSVPHasDurationError = createSelector(
+	[ getRSVPBlock ],
+	( rsvp ) => rsvp.hasDurationError,
 );
 
 /**

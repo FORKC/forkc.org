@@ -45,7 +45,7 @@ if (!class_exists('TC_tc_gutentick')) {
                     'attributes' => array(
                         'ticket_type_id' => array('type' => 'string'),
                         'souldout_message' => array('type' => 'string'),
-                        'show_price' => array('type' => 'boolean'),
+                        'show_price' => array('type' => 'string'),
                         'price_position' => array('type' => 'string'),
                         'quantity' => array('type' => 'boolean'),
                         'link_type' => array('type' => 'string'),
@@ -126,7 +126,7 @@ if (!class_exists('TC_tc_gutentick')) {
                     'render_callback' => array($this, 'render_woo_add_to_cart_shortcode'),
                     'attributes' => array(
                         'id' => array('type' => 'string'),
-                        'show_price' => array('type' => 'string'),
+                        'show_price' => array('type' => 'boolean'),
                         'className' => array('type' => 'string')
                     )
                 ));
@@ -250,7 +250,7 @@ if (!class_exists('TC_tc_gutentick')) {
             if (apply_filters('tc_bridge_for_woocommerce_is_active', false) == false) {
                 //Ticket add to cart block
                 wp_register_script(
-                        'tc_add_to_cart_block_editor', plugins_url('blocks-assets/add_to_cart/tc_add_to_cart_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_add_to_cart_block_editor', plugins_url('blocks-assets/add_to_cart/tc_add_to_cart_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_localize_script('tc_add_to_cart_block_editor', 'tc_add_to_cart_block_editor_ticket_types', array(
@@ -266,7 +266,7 @@ if (!class_exists('TC_tc_gutentick')) {
 
                 //Event tickets cart block
                 wp_register_script(
-                        'tc_event_add_to_cart_block_editor', plugins_url('blocks-assets/event_add_to_cart/tc_event_add_to_cart_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_event_add_to_cart_block_editor', plugins_url('blocks-assets/event_add_to_cart/tc_event_add_to_cart_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_localize_script('tc_event_add_to_cart_block_editor', 'tc_event_add_to_cart_block_editor_events', array(
@@ -283,7 +283,7 @@ if (!class_exists('TC_tc_gutentick')) {
                 //Event Tickets Sold block
 
                 wp_register_script(
-                        'tc_event_tickets_sold_block_editor', plugins_url('blocks-assets/event_tickets_sold/tc_event_tickets_sold_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_event_tickets_sold_block_editor', plugins_url('blocks-assets/event_tickets_sold/tc_event_tickets_sold_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_localize_script('tc_event_tickets_sold_block_editor', 'tc_event_tickets_sold_block_editor_events', array(
@@ -300,7 +300,7 @@ if (!class_exists('TC_tc_gutentick')) {
                 //Event Tickets Left block
 
                 wp_register_script(
-                        'tc_event_tickets_left_block_editor', plugins_url('blocks-assets/event_tickets_left/tc_event_tickets_left_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_event_tickets_left_block_editor', plugins_url('blocks-assets/event_tickets_left/tc_event_tickets_left_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_localize_script('tc_event_tickets_left_block_editor', 'tc_event_tickets_left_block_editor_events', array(
@@ -317,7 +317,7 @@ if (!class_exists('TC_tc_gutentick')) {
                 //Tickets Sold block
 
                 wp_register_script(
-                        'tc_tickets_sold_block_editor', plugins_url('blocks-assets/tickets_sold/tc_tickets_sold_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_tickets_sold_block_editor', plugins_url('blocks-assets/tickets_sold/tc_tickets_sold_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_localize_script('tc_tickets_sold_block_editor', 'tc_tickets_sold_block_editor_events', array(
@@ -334,7 +334,7 @@ if (!class_exists('TC_tc_gutentick')) {
                 //Tickets Left block
 
                 wp_register_script(
-                        'tc_tickets_left_block_editor', plugins_url('blocks-assets/tickets_left/tc_tickets_left_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_tickets_left_block_editor', plugins_url('blocks-assets/tickets_left/tc_tickets_left_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_localize_script('tc_tickets_left_block_editor', 'tc_tickets_left_block_editor_events', array(
@@ -351,7 +351,7 @@ if (!class_exists('TC_tc_gutentick')) {
                 //Order History block
 
                 wp_register_script(
-                        'tc_order_history_block_editor', plugins_url('blocks-assets/order_history/tc_order_history_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_order_history_block_editor', plugins_url('blocks-assets/order_history/tc_order_history_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_enqueue_script('tc_order_history_block_editor');
@@ -386,7 +386,7 @@ if (!class_exists('TC_tc_gutentick')) {
                 }
 
                 wp_register_script(
-                        'tc_woo_add_to_cart_block_editor', plugins_url('blocks-assets/woo_add_to_cart/tc_woo_add_to_cart_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_woo_add_to_cart_block_editor', plugins_url('blocks-assets/woo_add_to_cart/tc_woo_add_to_cart_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_localize_script('tc_woo_add_to_cart_block_editor', 'tc_woo_add_to_cart_block_editor_ticket_types', array(
@@ -402,7 +402,7 @@ if (!class_exists('TC_tc_gutentick')) {
 
                 //Event tickets cart block
                 wp_register_script(
-                        'tc_woo_event_add_to_cart_block_editor', plugins_url('blocks-assets/woo_event_add_to_cart/tc_woo_event_add_to_cart_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_woo_event_add_to_cart_block_editor', plugins_url('blocks-assets/woo_event_add_to_cart/tc_woo_event_add_to_cart_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_localize_script('tc_woo_event_add_to_cart_block_editor', 'tc_woo_event_add_to_cart_block_editor_events', array(
@@ -420,7 +420,7 @@ if (!class_exists('TC_tc_gutentick')) {
             //Event Date block
 
             wp_register_script(
-                    'tc_event_date_block_editor', plugins_url('blocks-assets/event_date/tc_event_date_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                    'tc_event_date_block_editor', plugins_url('blocks-assets/event_date/tc_event_date_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
             );
 
             wp_localize_script('tc_event_date_block_editor', 'tc_event_date_block_editor_events', array(
@@ -437,7 +437,7 @@ if (!class_exists('TC_tc_gutentick')) {
             //Event Location block
 
             wp_register_script(
-                    'tc_event_location_block_editor', plugins_url('blocks-assets/event_location/tc_event_location_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                    'tc_event_location_block_editor', plugins_url('blocks-assets/event_location/tc_event_location_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
             );
 
             wp_localize_script('tc_event_location_block_editor', 'tc_event_location_block_editor_events', array(
@@ -454,7 +454,7 @@ if (!class_exists('TC_tc_gutentick')) {
             //Event Terms & Conditions block
 
             wp_register_script(
-                    'tc_event_terms_block_editor', plugins_url('blocks-assets/event_terms/tc_event_terms_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                    'tc_event_terms_block_editor', plugins_url('blocks-assets/event_terms/tc_event_terms_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
             );
 
             wp_localize_script('tc_event_terms_block_editor', 'tc_event_terms_block_editor_events', array(
@@ -471,7 +471,7 @@ if (!class_exists('TC_tc_gutentick')) {
             //Event Logo block
 
             wp_register_script(
-                    'tc_event_logo_block_editor', plugins_url('blocks-assets/event_logo/tc_event_logo_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                    'tc_event_logo_block_editor', plugins_url('blocks-assets/event_logo/tc_event_logo_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
             );
 
             wp_localize_script('tc_event_logo_block_editor', 'tc_event_logo_block_editor_events', array(
@@ -488,7 +488,7 @@ if (!class_exists('TC_tc_gutentick')) {
             //Event Sponsors Logo block
 
             wp_register_script(
-                    'tc_event_sponsors_logo_block_editor', plugins_url('blocks-assets/event_sponsors_logo/tc_event_sponsors_logo_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                    'tc_event_sponsors_logo_block_editor', plugins_url('blocks-assets/event_sponsors_logo/tc_event_sponsors_logo_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
             );
 
             wp_localize_script('tc_event_sponsors_logo_block_editor', 'tc_event_sponsors_logo_block_editor_events', array(
@@ -522,7 +522,7 @@ if (!class_exists('TC_tc_gutentick')) {
                 }
 
                 wp_register_script(
-                        'tc_seating_charts_block_editor', plugins_url('blocks-assets/seating_charts/tc_seating_charts_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+                        'tc_seating_charts_block_editor', plugins_url('blocks-assets/seating_charts/tc_seating_charts_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
                 );
 
                 wp_localize_script('tc_seating_charts_block_editor', 'tc_seating_charts_block_editor', array(
@@ -603,7 +603,7 @@ if (!class_exists('TC_tc_gutentick')) {
               );
 
               wp_register_script(
-              'tc_event_calendar_block_editor', plugins_url('blocks-assets/event_calendar/tc_event_calendar_block_editor.js', __FILE__), array('wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
+              'tc_event_calendar_block_editor', plugins_url('blocks-assets/event_calendar/tc_event_calendar_block_editor.js', __FILE__), array('wp-editor', 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery'), $this->version
               );
 
               wp_localize_script('tc_event_calendar_block_editor', 'tc_event_calendar_block_editor', array(
@@ -625,7 +625,7 @@ if (!class_exists('TC_tc_gutentick')) {
             $show_price = ($attributes['show_price'] == true || $attributes['show_price'] == 1) ? 'show_price="true"' : '';
             $quantity = ($attributes['quantity'] == true || $attributes['quantity'] == 1) ? 'quantity="true"' : '';
             $price_position = ($attributes['price_position'] == 'after') ? 'price_position="after"' : 'price_position="before"';
-
+            
             if (empty($attributes['ticket_type_id']) || $attributes['ticket_type_id'] == '0') {
                 return __('Please select a ticket type in the block settings box', 'tc');
             }
@@ -666,7 +666,7 @@ if (!class_exists('TC_tc_gutentick')) {
                 $soldout_message = 'soldout_message="' . $attributes['soldout_message'] . '"';
             }
 
-            if (empty($attributes['link_type'])) {
+            if (!empty($attributes['link_type'])) {
                 $type = 'type="' . $attributes['link_type'] . '"';
             }
 
@@ -884,7 +884,7 @@ if (!class_exists('TC_tc_gutentick')) {
         //Bridge shortcodes
         function render_woo_add_to_cart_shortcode($attributes) {
             ob_start();
-            $show_price = ($attributes['show_price'] == true || $attributes['show_price'] == 1) ? 'show_price="true"' : '';
+            $show_price = ($attributes['show_price'] == true || $attributes['show_price'] == 1) ? 'show_price="true"' : 'show_price=" false"';
 
             if (empty($attributes['id']) || $attributes['id'] == '0') {
                 return __('Please select a ticket type (product) in the block settings box', 'tc');
@@ -992,8 +992,4 @@ if (!class_exists('TC_tc_gutentick')) {
 }
 
 $TC_tc_gutentick = new TC_tc_gutentick();
-
-if (function_exists('tc_plugin_updater')) {
-    tc_plugin_updater('tc-gutentick', __FILE__);
-}
 ?>

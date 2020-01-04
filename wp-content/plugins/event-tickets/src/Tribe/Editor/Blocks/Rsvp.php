@@ -54,10 +54,14 @@ extends Tribe__Editor__Blocks__Abstract {
 	 */
 	public function render( $attributes = array() ) {
 		/** @var Tribe__Tickets__Editor__Template $template */
-		$template           = tribe( 'tickets.editor.template' );
-		$args['post_id']    = $post_id = $template->get( 'post_id', null, false );
-		$args['attributes'] = $this->attributes( $attributes );
-		$args['rsvp']    = $this->get_tickets( $post_id );
+		$template                 = tribe( 'tickets.editor.template' );
+		$args['post_id']          = $post_id = $template->get( 'post_id', null, false );
+		$rsvps                    = $this->get_tickets( $post_id );
+		$args['attributes']       = $this->attributes( $attributes );
+		$args['active_rsvps']     = $this->get_active_tickets( $rsvps );
+		$args['has_active_rsvps'] = ! empty( $args['active_rsvps'] );
+		$args['has_rsvps']        = ! empty( $rsvps );
+		$args['all_past']         = $this->get_all_tickets_past( $rsvps );
 
 		// Add the rendering attributes into global context
 		$template->add_template_globals( $args );
@@ -70,7 +74,7 @@ extends Tribe__Editor__Blocks__Abstract {
 	}
 
 	/**
-	 * Method to get the RSVP tickets
+	 * Method to get all RSVP tickets
 	 *
 	 * @since 4.9
 	 *
@@ -101,15 +105,55 @@ extends Tribe__Editor__Blocks__Abstract {
 				continue;
 			}
 
+			$tickets[] = $ticket;
+		}
+
+		return $tickets;
+	}
+
+	/**
+	 * Method to get the active RSVP tickets
+	 *
+	 * @since 4.9
+	 *
+	 * @return array
+	 */
+	protected function get_active_tickets( $tickets ) {
+		$active_tickets = array();
+
+		foreach ( $tickets as $ticket ) {
 			// continue if it's not in date range
 			if ( ! $ticket->date_in_range() ) {
 				continue;
 			}
 
-			$tickets[] = $ticket;
+			$active_tickets[] = $ticket;
 		}
 
-		return $tickets;
+		return $active_tickets;
+	}
+
+	/**
+	 * Method to get the all RSVPs past flag
+	 * All RSVPs past flag is true if all RSVPs end date is earlier than current date
+	 * If there are no RSVPs, false is returned
+	 *
+	 * @since 4.9
+	 *
+	 * @return bool
+	 */
+	protected function get_all_tickets_past( $tickets ) {
+		if ( empty( $tickets ) ) {
+			return false;
+		}
+
+		$all_past = true;
+
+		foreach ( $tickets as $ticket ) {
+			$all_past = $all_past && $ticket->date_is_later();
+		}
+
+		return $all_past;
 	}
 
 	/**
@@ -127,7 +171,7 @@ extends Tribe__Editor__Blocks__Abstract {
 		tribe_asset(
 			$plugin,
 			'tribe-tickets-gutenberg-rsvp',
-			'views/rsvp.js',
+			'rsvp-block.js',
 			array( 'jquery', 'jquery-ui-datepicker' ),
 			null,
 			array(
@@ -197,9 +241,12 @@ extends Tribe__Editor__Blocks__Abstract {
 			wp_send_json_error( $response );
 		}
 
+		/** @var Tribe__Tickets__RSVP $rsvp */
+		$rsvp        = tribe( 'tickets.rsvp' );
 		$has_tickets = false;
-		$post_id     = get_the_id();
-		$ticket      = tribe( 'tickets.rsvp' )->get_ticket( $post_id, $ticket_id );
+		$event       = $rsvp->get_event_for_ticket( $ticket_id );
+		$post_id     = $event->ID;
+		$ticket      = $rsvp->get_ticket( $post_id, $ticket_id );
 
 		/**
 		 * RSVP specific action fired just before a RSVP-driven attendee tickets for an order are generated
@@ -208,7 +255,7 @@ extends Tribe__Editor__Blocks__Abstract {
 		 */
 		do_action( 'tribe_tickets_rsvp_before_order_processing' );
 
-		$attendee_details = tribe( 'tickets.rsvp' )->parse_attendee_details();
+		$attendee_details = $rsvp->parse_attendee_details();
 
 		if ( false === $attendee_details ) {
 			wp_send_json_error( $response );
@@ -218,12 +265,12 @@ extends Tribe__Editor__Blocks__Abstract {
 
 		// Iterate over each product
 		foreach ( $products as $product_id ) {
-			if ( ! $ticket_qty = tribe( 'tickets.rsvp' )->parse_ticket_quantity( $product_id ) ) {
+			if ( ! $ticket_qty = $rsvp->parse_ticket_quantity( $product_id ) ) {
 				// if there were no RSVP tickets for the product added to the cart, continue
 				continue;
 			}
 
-			$has_tickets |= tribe( 'tickets.rsvp' )->generate_tickets_for( $product_id, $ticket_qty, $attendee_details );
+			$has_tickets |= $rsvp->generate_tickets_for( $product_id, $ticket_qty, $attendee_details );
 		}
 
 		$order_id              = $attendee_details['order_id'];
@@ -249,7 +296,7 @@ extends Tribe__Editor__Blocks__Abstract {
 		 */
 		$send_mail = apply_filters( 'tribe_tickets_rsvp_send_mail', true );
 
-		if ( $send_mail ) {
+		if ( $send_mail && $has_tickets ) {
 			/**
 			 * Filters the attendee order stati that should trigger an attendance confirmation.
 			 *
@@ -269,10 +316,10 @@ extends Tribe__Editor__Blocks__Abstract {
 			);
 
 			// No point sending tickets if their current intention is not to attend
-			if ( $has_tickets && in_array( $attendee_order_status, $send_mail_stati ) ) {
-				tribe( 'tickets.rsvp' )->send_tickets_email( $order_id, $post_id );
-			} elseif ( $has_tickets ) {
-				tribe( 'tickets.rsvp' )->send_non_attendance_confirmation( $order_id, $post_id );
+			if ( in_array( $attendee_order_status, $send_mail_stati, true ) ) {
+				$rsvp->send_tickets_email( $order_id, $post_id );
+			} else {
+				$rsvp->send_non_attendance_confirmation( $order_id, $post_id );
 			}
 		}
 

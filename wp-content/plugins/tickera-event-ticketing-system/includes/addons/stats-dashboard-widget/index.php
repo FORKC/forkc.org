@@ -47,77 +47,32 @@ if (!class_exists('TC_Stats_Dashboard_Widget')) {
             }
         }
 
-        function create_date_range_array($strDateFrom, $strDateTo) {
-
-            $aryRange = array();
-
-            $iDateFrom = mktime(1, 0, 0, substr($strDateFrom, 5, 2), substr($strDateFrom, 8, 2), substr($strDateFrom, 0, 4));
-            $iDateTo = mktime(1, 0, 0, substr($strDateTo, 5, 2), substr($strDateTo, 8, 2), substr($strDateTo, 0, 4));
-
-            if ($iDateTo >= $iDateFrom) {
-                //array_push( $aryRange, date( 'Y-m-d', $iDateFrom ) ); // first entry
-                $aryRange[date('Y-m-d', $iDateFrom)] = 0;
-                while ($iDateFrom < $iDateTo) {
-                    $iDateFrom+=86400; // add 24 hours
-                    //array_push( $aryRange, date( 'Y-m-d', $iDateFrom ) );
-                    $aryRange[date('Y-m-d', $iDateFrom)] = 0;
-                }
-            }
-            return $aryRange;
-        }
-
         function tc_store_report_display() {
-            global $tc;
+            global $tc, $wpdb;
 
-            $days_range = 30;
+            $days_range = apply_filters('ticketing_glance_days', 30);
             $days = $days_range * -1;
-            $paid_orders_count = 0;
             $total_revenue = 0;
             $todays_revenue = 0;
-            $paid_orders_search = new TC_Orders_Search('', '', -1, 'order_paid', $days, '>');
-            $paid_orders = array();
-
-            $range_dates_earnings = $this->create_date_range_array(date("Y-m-d"), date('Y-m-d', strtotime('+' . ($days_range - 1) . ' days')));
-            $count_of_tickets = 0;
-
-            foreach ($paid_orders_search->get_results() as $order) {
-                $order_object = new TC_Order($order->ID);
-
-                $args = array(
-                    'posts_per_page' => -1,
-                    'post_parent' => $order->ID,
-                    'post_type' => 'tc_tickets_instances',
-                    'post_status' => 'publish',
-                );
-
-                $tickets = get_posts($args);
-
-                $count_of_tickets = $count_of_tickets + count($tickets);
-
-                $total_revenue = $total_revenue + (isset($order_object->details->tc_payment_info['total']) ? $order_object->details->tc_payment_info['total'] : 0);
-
-                $paid_orders[] = isset($order_object->details->tc_payment_info['total']) ? $order_object->details->tc_payment_info['total'] : 0;
-
-                $createDate = new DateTime($order_object->details->post_date);
-                $strip_date = $createDate->format('Y-m-d');
-                if (!isset($range_dates_earnings[$strip_date])) {
-                    $range_dates_earnings[$strip_date] = 0;
+            $count_of_paid_tickets = 0;
+            $todays_date = date("Y-m-d");
+            //$date_30_days_before = date('Y-m-d', strtotime('+' . ($days_range - 1) . ' days'));
+            
+            $totals_30 = $wpdb->get_results("SELECT orders.post_date as order_date, order_meta.meta_value FROM ".$wpdb->prefix."posts as orders, ".$wpdb->prefix."postmeta as order_meta WHERE orders.ID = order_meta.post_id AND orders.post_status = 'order_paid' AND order_meta.meta_key = 'tc_payment_info' AND orders.post_date BETWEEN (NOW() - INTERVAL 30 DAY) AND (NOW() + INTERVAL 1 DAY)");
+            foreach ($totals_30 as $total_record_30_init) {
+                $total_record_30 = maybe_unserialize($total_record_30_init->meta_value);
+                $total_record_val = isset($total_record_30['total']) ? $total_record_30['total'] : 0;
+                $total_revenue = $total_revenue + $total_record_val;
+                if (date('Y-m-d', strtotime($total_record_30_init->order_date)) == $todays_date) {
+                    $todays_revenue = $todays_revenue + $total_record_val;
                 }
-                $range_dates_earnings[$strip_date] = ((float) $range_dates_earnings[$strip_date]) + (isset($order_object->details->tc_payment_info['total']) ? (float) $order_object->details->tc_payment_info['total'] : 0);
-
-                $paid_orders_count++;
+                $count_of_paid_tickets++;
             }
 
-            $todays_revenue = $range_dates_earnings[date("Y-m-d")];
             $total_revenue = round($total_revenue, 2);
 
-            $pending_orders_count = 0;
-            $pending_orders_search = new TC_Orders_Search('', '', -1, 'order_received', $days, '>');
-
-            foreach ($pending_orders_search->get_results() as $order) {
-                //$order_object = new TC_Order( $order->ID );
-                $pending_orders_count++;
-            }
+            $pending_orders_count = (int) $wpdb->get_var("SELECT COUNT(ID) FROM $wpdb->posts WHERE post_type = 'tc_orders' AND post_status = 'order_received' AND post_date BETWEEN (NOW() - INTERVAL $days_range DAY) AND (NOW() + INTERVAL 1 DAY)");
+            $paid_orders_count = (int) $wpdb->get_var("SELECT COUNT(ID) FROM $wpdb->posts WHERE post_type = 'tc_orders' AND post_status = 'order_paid' AND post_date BETWEEN (NOW() - INTERVAL $days_range DAY) AND (NOW() + INTERVAL 1 DAY)");
             ?>
             <ul class="tc-status-list">
                 <li class="sales-this-month">
@@ -125,17 +80,8 @@ if (!class_exists('TC_Stats_Dashboard_Widget')) {
                         <i class="fa fa-money tc-icon tc-icon-dashboard-sales"></i> 
                         <strong><span class="amount"><?php echo $tc->get_cart_currency_and_format($total_revenue); ?></span></strong>
                         <span class="tc-dashboard-widget-subtitle"><?php printf(_n('last %d day earnings', 'last %d days earnings', $days_range, 'tc'), $days_range); ?></span>
-                        <span class="tc-bar"><?php
-                            $vals = '';
-                            foreach ($range_dates_earnings as $key => $val) {
-                                $vals = $vals . $val . '|';
-                            } echo rtrim($vals, "|");
-                            ?>
-                        </span>
                     </a>
-
                 </li>
-
 
                 <li class="todays-earnings">
                     <a>
@@ -147,7 +93,7 @@ if (!class_exists('TC_Stats_Dashboard_Widget')) {
                 <li class="sold-tickets">
                     <a>
                         <i class="fa fa-ticket tc-icon tc-icon-dashboard-sold"></i> 
-                        <strong><?php printf(_n('%d ticket sold', '%d tickets sold', $count_of_tickets, 'tc'), $count_of_tickets); ?></strong>
+                        <strong><?php printf(_n('%d ticket sold', '%d tickets sold', $count_of_paid_tickets, 'tc'), $count_of_paid_tickets); ?></strong>
                         <span class="tc-dashboard-widget-subtitle"><?php printf(_n('in the last %d day', 'in the last %d days', $days_range, 'tc'), $days_range); ?></span>
                     </a>
                 </li>

@@ -68,7 +68,7 @@ $templates_add_new_url = add_query_arg(array(
 <div class="wrap tc_wrap">
     <h2><?php _e('Ticket Templates', 'tc'); ?><?php if (isset($_GET['action']) && ($_GET['action'] == 'edit' || $_GET['action'] == 'add_new')) { ?><a href="<?php echo $templates_url; ?>" class="add-new-h2"><?php _e('Back', 'tc'); ?></a><?php
         } else {
-            if (tc_iw_is_pr()) {
+            if (tc_iw_is_pr() && !tets_fs()->is_free_plan()) {
                 ?><a href="<?php echo $templates_add_new_url; ?>" class="add-new-h2"><?php _e('Add New', 'tc'); ?></a><?php
             }
         }
@@ -170,7 +170,7 @@ $templates_add_new_url = add_query_arg(array(
         </table><!--/widefat shadow-table-->
 
         <p>
-            <?php if (!tc_iw_is_pr()) { ?>
+            <?php if (!tc_iw_is_pr() || tets_fs()->is_free_plan()) { ?>
                 <a class="tc_link" target="_blank" href="https://tickera.com/?utm_source=plugin&utm_medium=upsell&utm_campaign=templates"><?php _e('Create unlimited number of ticket templates, get premium support and unlock additional features.'); ?></a>
             <?php }
             ?>
@@ -300,8 +300,9 @@ $templates_add_new_url = add_query_arg(array(
                     $template_elements->get_full_background_image();
                     do_action('tc_template_document_settings', $template_elements);
                     ?>
-                    <br /><br />
+                    <br />
                     <?php submit_button(__('Save', 'tc'), 'primary', 'add_new_template', false); ?>
+                    <div class="clear"></div>
                 </div>
             </div>
             <div class="right-holder right-holder-second">

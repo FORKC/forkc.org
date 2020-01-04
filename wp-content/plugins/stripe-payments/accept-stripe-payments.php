@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Stripe Payments
  * Description: Easily accept credit card payments via Stripe payment gateway in WordPress.
- * Version: 1.9.14.1
+ * Version: 2.0.16
  * Author: Tips and Tricks HQ, wptipsntricks
  * Author URI: https://www.tipsandtricks-hq.com/
  * Plugin URI: https://s-plugins.com
@@ -11,142 +11,81 @@
  * Text Domain: stripe-payments
  * Domain Path: /languages
  */
+
+use stripepayments\convertKit\subscriber;
+
 //Slug - asp
 // If this file is called directly, abort.
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; //Exit if accessed directly
+	exit; //Exit if accessed directly
 }
 
-define( 'WP_ASP_PLUGIN_VERSION', '1.9.14.1' );
+define( 'WP_ASP_PLUGIN_VERSION', '2.0.16' );
 define( 'WP_ASP_MIN_PHP_VERSION', '5.4' );
 define( 'WP_ASP_PLUGIN_URL', plugins_url( '', __FILE__ ) );
 define( 'WP_ASP_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
+define( 'WP_ASP_PLUGIN_FILE', __FILE__ );
 
 class ASPMain {
 
-    static $products_slug;
-    static $posts_processed = array();
 
-    function __construct() {
-	ASPMain::$products_slug = 'asp-products';
-    }
+	public static $products_slug;
+	public static $temp_prod_slug;
+	public static $posts_processed = array();
 
-    static function load_stripe_lib() {
-	if ( ! class_exists( '\Stripe\Stripe' ) ) {
-	    require_once( plugin_dir_path( __FILE__ ) . 'includes/stripe/init.php' );
-	    \Stripe\Stripe::setAppInfo( "Stripe Payments", WP_ASP_PLUGIN_VERSION, "https://wordpress.org/plugins/stripe-payments/" );
+	public function __construct() {
+		self::$products_slug  = 'asp-products';
+		self::$temp_prod_slug = 'asp-products-temp';
+
+		require_once WP_ASP_PLUGIN_PATH . 'includes/class-asp-utils.php';
+		require_once WP_ASP_PLUGIN_PATH . 'includes/class-asp-debug-logger.php';
+		require_once WP_ASP_PLUGIN_PATH . 'public/class-asp.php';
+		require_once WP_ASP_PLUGIN_PATH . 'admin/includes/class-products.php';
+		require_once WP_ASP_PLUGIN_PATH . 'admin/includes/class-coupons.php';
+		require_once WP_ASP_PLUGIN_PATH . 'admin/includes/class-order.php';
+		require_once WP_ASP_PLUGIN_PATH . 'admin/views/blocks.php';
+		require_once WP_ASP_PLUGIN_PATH . 'includes/class-asp-addons-helper.php';
+		require_once WP_ASP_PLUGIN_PATH . 'includes/class-asp-product-item.php';
+		require_once WP_ASP_PLUGIN_PATH . 'includes/class-asp-payment-data.php';
+		require_once WP_ASP_PLUGIN_PATH . 'admin/includes/class-variations.php';
+
+		register_activation_hook( __FILE__, array( 'AcceptStripePayments', 'activate' ) );
+		register_deactivation_hook( __FILE__, array( 'AcceptStripePayments', 'deactivate' ) );
+
+		add_action( 'plugins_loaded', array( 'AcceptStripePayments', 'get_instance' ) );
+
+		if ( is_admin() ) {
+			require_once WP_ASP_PLUGIN_PATH . 'admin/class-asp-admin.php';
+			add_action( 'plugins_loaded', array( 'AcceptStripePayments_Admin', 'get_instance' ) );
+		}
+
+		require_once WP_ASP_PLUGIN_PATH . 'includes/session-handler-class.php';
+		require_once WP_ASP_PLUGIN_PATH . 'public/includes/class-shortcode-asp.php';
+		require_once WP_ASP_PLUGIN_PATH . 'public/includes/class-asp-shortcode-ng.php';
+
+		add_action( 'init', array( $this, 'init_handler' ), 0 );
+
+		// register custom post type
+		$asp_products = ASPProducts::get_instance();
+		add_action( 'init', array( $asp_products, 'register_post_type' ), 0 );
+		$asp_order = ASPOrder::get_instance();
+		add_action( 'init', array( $asp_order, 'register_post_type' ), 0 );
+
+		add_action( 'init', array( 'AcceptStripePaymentsShortcode', 'get_instance' ) );
+		add_action( 'init', array( 'ASP_Shortcode_NG', 'get_instance' ) );
 	}
-    }
 
-}
-
-$ASPMain = new ASPMain();
-
-/* ----------------------------------------------------------------------------*
- * Public-Facing Functionality
- * ---------------------------------------------------------------------------- */
-require_once( WP_ASP_PLUGIN_PATH . 'includes/class-debug-logger.php' );
-require_once( WP_ASP_PLUGIN_PATH . 'public/class-asp.php' );
-require_once( WP_ASP_PLUGIN_PATH . 'admin/includes/class-products.php' );
-require_once( WP_ASP_PLUGIN_PATH . 'admin/includes/class-coupons.php' );
-require_once( WP_ASP_PLUGIN_PATH . 'admin/includes/class-order.php' );
-require_once( WP_ASP_PLUGIN_PATH . 'includes/addons-helper-class.php' );
-
-/*
- * Register hooks that are fired when the plugin is activated or deactivated.
- * When the plugin is deleted, the uninstall.php file is loaded.
- *
- */
-
-register_activation_hook( __FILE__, array( 'AcceptStripePayments', 'activate' ) );
-register_deactivation_hook( __FILE__, array( 'AcceptStripePayments', 'deactivate' ) );
-
-/*
- */
-add_action( 'plugins_loaded', array( 'AcceptStripePayments', 'get_instance' ) );
-
-/* ----------------------------------------------------------------------------*
- * Dashboard and Administrative Functionality
- * ---------------------------------------------------------------------------- */
-
-/*
- * If you want to include Ajax within the dashboard, change the following
- * conditional to:
- *
- * if ( is_admin() ) {
- *   ...
- * }
- *
- * The code below is intended to to give the lightest footprint possible.
- */
-if ( is_admin() ) {
-    //check and redirect old Settings page
-    add_action( 'init', 'asp_init_handler' );
-
-    require_once( plugin_dir_path( __FILE__ ) . 'admin/class-asp-admin.php' );
-    add_action( 'plugins_loaded', array( 'AcceptStripePayments_Admin', 'get_instance' ) );
-    add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'asp_stripe_add_settings_link' );
-} else {
-    require_once( WP_ASP_PLUGIN_PATH . 'public/includes/class-shortcode-asp.php' );
-    add_filter( 'the_content', 'asp_filter_post_type_content' );
-    add_action( 'plugins_loaded', array( 'AcceptStripePaymentsShortcode', 'get_instance' ) );
-}
-
-/* Add a link to the settings page in the plugins listing page */
-
-function asp_stripe_add_settings_link( $links ) {
-    $settings_link = '<a href="edit.php?post_type=stripe_order&page=stripe-payments-settings">' . __( 'Settings', 'stripe-payments' ) . '</a>';
-    array_unshift( $links, $settings_link );
-    return $links;
-}
-
-register_activation_hook( __FILE__, 'asp_activation_hook_handler' );
-
-// register custom post type
-$ASPProducts	 = ASPProducts::get_instance();
-add_action( 'init', array( $ASPProducts, 'register_post_type' ), 0 );
-$ASPOrder	 = ASPOrder::get_instance();
-add_action( 'init', array( $ASPOrder, 'register_post_type' ), 0 );
-
-if ( session_id() == '' && ! wp_doing_ajax() ) {
-    try {
-	ob_start();
-	session_start();
-    } catch ( Exception $e ) {
-	//looks like there were some issues with session. Let's do nothing about it for now.
-    }
-    ob_end_clean();
-}
-
-function asp_activation_hook_handler() {
-    $ASPProducts	 = ASPProducts::get_instance();
-    $ASPProducts->register_post_type();
-    $ASPOrder	 = ASPOrder::get_instance();
-    $ASPOrder->register_post_type();
-    flush_rewrite_rules();
-}
-
-function asp_init_handler() {
-    global $pagenow;
-    if ( is_admin() ) {
-	//check if we need redirect old Settings page
-	if ( ($pagenow == "options-general.php" && isset( $_GET[ 'page' ] ) && $_GET[ 'page' ] == 'accept_stripe_payment') ||
-	($pagenow == "edit.php" && (isset( $_GET[ 'post_type' ] ) && $_GET[ 'post_type' ] == 'stripe_order') && (isset( $_GET[ 'page' ] ) && $_GET[ 'page' ] == 'stripe-payments-settings') ) ) {
-	    //let's redirect old Settings page to new
-	    wp_redirect( get_admin_url() . 'edit.php?post_type=' . ASPMain::$products_slug . '&page=stripe-payments-settings', 301 );
-	    exit;
+	public function init_handler() {
+		// hook to change product slug
+		self::$products_slug = apply_filters( 'asp_change_products_slug', self::$products_slug );
 	}
-	//products meta boxes handler
-	require_once(WP_ASP_PLUGIN_PATH . 'admin/includes/class-products-meta-boxes.php');
-    }
+
+	/**
+	 * Use ASP_Utils::load_stripe_lib() instead
+	 */
+	public static function load_stripe_lib() {
+		ASP_Utils::load_stripe_lib();
+	}
 }
 
-function asp_filter_post_type_content( $content ) {
-    global $post;
-    if ( isset( $post ) ) {
-	if ( $post->post_type == ASPMain::$products_slug ) {//Handle the content for product type post
-	    return do_shortcode( '[asp_product id="' . $post->ID . '" is_post_tpl="1" in_the_loop="' . +in_the_loop() . '"]' );
-	}
-    }
-    return $content;
-}
+new ASPMain();

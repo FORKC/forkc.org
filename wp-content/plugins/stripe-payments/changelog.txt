@@ -1,4 +1,116 @@
-Latest changes are available in readme.txt file.
+Latest changes are available in the readme.txt file.
+
+= 1.9.25 =
+- Fixed improper frontend total amount display in some circumstances.
+- Fixed total amount was displayed instead of item price in some circumstances.
+- Fixed issues that could lead to "button key mismatch" error when [accept_stripe_payment] shortcode is used.
+- Paragraphs are automatically added to product description when needed.
+
+= 1.9.24 =
+- Added {item_url} email tag support.
+- Fixed issue with the_content filter usage in product shortcode output that could cause some content duplication.
+- Added checkout_lang shortcode parameter which sets checkout popup language for a product.
+
+= 1.9.23 =
+- PHP sessions are no longer used for security and better caching purposes.
+- Disabled nonce checking for buttons.
+- Fixed thankyou_page_url parameter was ignored for [asp_product] shortcode and by some addons.
+- Fixed item URL wasn't processed by Secure Downloads addon when some other addons are enabled.
+- Fixed frontend total amount calculation display for products with variations and custom amount enabled.
+- Custom amount validation errors no longer displayed on page load for products with variations and custom amount enabled.
+- Checkout results page no longer displays "Download links" message if there are no downloads set for variations.
+- Checkout error message is now displayed even if no [accept_stripe_payment_checkout_error] shortcode inserted on custom checkout results page.
+- Frontend amount and quantity inputs are disabled on payment form submit to prevent "Token can't be used more than once" error.
+- Fixed zero-cent currencies displaying and handling issues.
+- Product description now supports WP embeds.
+- Tweaks for better compatibility with various page builders.
+- Other minor bugfixes.
+
+= 1.9.22 =
+- Fixed archive pages list could be messed up when plugin is enabled.
+- Fixed the "asp_stripe_payments_checkout_page_result" filter hook not triggering correctly.
+
+= 1.9.21 =
+- Fixed frontend discount amount display when custom quantity is enabled and initial quantity is set to 0 or empty.
+- Fixed adding groups to existing product with variations caused improper variations placement.
+- Fixed tax amount was displayed rounded down on frontend under some circumstances (wasn't affecting actual payment amount).
+- Product variations are now added to payment metadata in Stripe account.
+- Added admin side notice if required PHP modules are not installed on the server.
+
+= 1.9.20 =
+- Added Stripe Payments Product Gutenberg block.
+- Added button_only parameter to [asp_product] shortcode. When set to "1", no product title and info is displayed.
+- Fixed PHP notices when viewing some products with variations.
+
+= 1.9.19 =
+- Fixed issues on Settings page that prevented it from being properly displayed in some versions of Safari browser.
+- Stripe Payments menu icon color changed to white to have better contrast with dark menu background.
+- Fixed minor HTML-related admin interface issues.
+
+= 1.9.18 =
+- Trial subscriptions are now displaying 0 as payment amount on checkout results and email receipts.
+Payment button in Stripe pop-up for those now shows "Start Free Trial" instead of payment amount.
+Requires Subscriptions addon 1.4.5+
+- Added validation for custom filed. You can use your own validation rules via custom JavaScript RegExp.
+- Fixed invalid amount was displayed on Stripe pop-up when variable price and quantity is used.
+- {product_details} merge tag is available for custom checkout results page.
+- Purchase date is now displayed using WP date\time format settings and considers timezone.
+- Added option to display product variations as radio buttons (can be set per product on product edit page).
+
+= 1.9.17 =
+- Fixed frontend stock control. Now customers cannot order more items than available in stock.
+- Added [asp_show_my_transactions] shortcode to display transactions made by user.
+- Added support for addons' email merge tags. They are also displayed in tags hint if available.
+
+= 1.9.16 =
+- Fixed coupon was still applied to the product even if it's not allowed for it.
+
+= 1.9.15.1 =
+- Fixed tax value was displayed rounded down on frontend.
+- Fixed PHP notices displayed on products page.
+
+= 1.9.15 =
+- Updated Stripe PHP SDK to latest version. PHP versions below 5.4 are no longer supported.
+- Some minor admin interface modifications.
+
+= 1.9.14.2 =
+- Fixed price consistency check for payment button shortcodes.
+
+= 1.9.14.1 =
+- Fixed Stripe mode was improperly set during subscriptions payment processing sometimes (requires Subscriptions addon 1.3.5+).
+
+= 1.9.14 =
+- Added product option that lets the customers select payment currency.
+- Added support for variable amount subscriptions (requires Subscriptions addon version 1.3.4+).
+- Added order info link to seller email.
+- Fixed [accept_stripe_payment] shortcode was ignoring shipping_address option.
+- Fixed quantity set for a product was ignored under some circumstances.
+
+= 1.9.13 =
+- Payment buttons are now replaced by a spinner during payment processing for better user experience.
+- Added option to disable Order creation after purchase. Useful if you don't want to save purchase info on your website.
+- Variable amount input is now considers only two digits after decimal separator.
+- Customer shipping address is added to payment metadata if available. You can see it in your Stripe Dashboard.
+- Added dismissible notice if PHP version is older than 5.4.
+- Fixed a couple of issues with variations.
+
+= 1.9.12 =
+- Fixed product price could not be set to zero or empty value (for donation purposes).
+- Added option to send buyer and seller emails in HTML format.
+- Added spinner for settings page to indicate it's being loaded.
+- Added support for upcoming Additional Custom Fields addon.
+- If custom field enabled but its name is not set, it would be called "Custom Field".
+- Made more strings available for translation.
+- Minor bigfixes and imporvements.
+
+= 1.9.11 =
+- Price and shipping cost is being converted to appropriate format on product edit page.
+- Fixed some buttons were not clickable when TOS enabled.
+
+= 1.9.10 =
+- Added {tax}, {tax_amt}, {currency} and {shipping_amt} checkout page customization tags. More tags [can be found here](https://s-plugins.com/customize-the-thank-page-message-of-stripe-payments-plugin/).
+- Added {item_name} and {item_quantity} email tags.
+- Added position settings options for custom field and TOS. You can display those below payment button now.
 
 = 1.9.9 =
 - Fixed incompatability with older PHP versions (prior to 5.4).

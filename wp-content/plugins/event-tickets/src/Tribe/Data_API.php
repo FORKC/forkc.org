@@ -2,13 +2,12 @@
 
 
 /**
- * Class to connect ticketing infomation requests with ticket provider
+ * Class to connect ticketing information requests with ticket provider
  *
  * Class Tribe__Tickets__Data_API
  */
 class Tribe__Tickets__Data_API {
 
-	protected $active_modules;
 	protected $ticket_types = array();
 	protected $ticket_class = array();
 
@@ -16,7 +15,6 @@ class Tribe__Tickets__Data_API {
 	 * Class constructor
 	 */
 	public function __construct() {
-		$this->active_modules = Tribe__Tickets__Tickets::modules();
 		$this->setup_data();
 	}
 
@@ -24,6 +22,9 @@ class Tribe__Tickets__Data_API {
 	 * Setup activate ticket classes and field for data api
 	 */
 	protected function setup_data() {
+		/** @var Tribe__Tickets__Status__Manager $status_mgr */
+		$status_mgr = tribe( 'tickets.status' );
+
 		foreach ( Tribe__Tickets__Tickets::modules() as $module_class => $module_instance ) {
 			$provider = call_user_func( array( $module_class, 'get_instance' ) );
 
@@ -52,6 +53,7 @@ class Tribe__Tickets__Data_API {
 			$this->ticket_class[ $module_class ]['tribe_for_event'] = $provider->event_key;
 			$this->ticket_class[ $module_class ]['event_id_key'] = constant( "$module_class::ATTENDEE_EVENT_KEY" );
 			$this->ticket_class[ $module_class ]['order_id_key'] = constant( "$module_class::ATTENDEE_ORDER_KEY" );
+			$this->ticket_class[ $module_class ]['slug'] = $status_mgr->get_provider_slug( $module_class );
 		}
 
 		$this->ticket_types['events'][] = class_exists( 'Tribe__Events__Main' ) ? Tribe__Events__Main::POSTTYPE : '';
@@ -69,8 +71,8 @@ class Tribe__Tickets__Data_API {
 
 		// only the rsvp order key is non numeric
 		if ( is_object( $post ) && ! empty( $post->ID ) ) {
-			$post = (int) $post->ID;
 			$cpt  = get_post_type( $post->ID );
+			$post = (int) $post->ID;
 		} elseif ( ! is_numeric( $post ) ) {
 			$post = esc_attr( $post );
 			$cpt  = $this->check_rsvp_order_key_exists( $post );
@@ -166,7 +168,7 @@ class Tribe__Tickets__Data_API {
 			'post_type'      => $ticket_cpt,
 			'meta_key'       => $order_id_key,
 			'meta_value'     => $post_id,
-			'posts_per_page' => - 1,
+			'posts_per_page' => -1,
 		) );
 
 		foreach ( $order_tickets as $ticket ) {
@@ -183,7 +185,7 @@ class Tribe__Tickets__Data_API {
 
 
 	/**
-	 * Return Ticket Provider by Order, Product, Attendee, or Ticket ID
+	 * Return Ticket Provider by Order, Product, Attendee, or Ticket ID.
 	 *
 	 * @param $post_id
 	 *
@@ -197,7 +199,32 @@ class Tribe__Tickets__Data_API {
 			return false;
 		}
 
-		return call_user_func( array( $services['class'], 'get_instance' ) );
+		return call_user_func( [ $services['class'], 'get_instance' ] );
+	}
+
+	/**
+	 * Get the Providers for a Post
+	 *
+	 * @since 4.11.0
+	 *
+	 * @param int $post_id the id of the post
+	 *
+	 * @return array an array of providers
+	 */
+	public function get_providers_for_post( $post_id ) {
+		$providers = [];
+		$modules = $this->ticket_class;
+
+		foreach ( $modules as $class => $module ) {
+			$obj              = call_user_func( [ $class, 'get_instance' ] );
+			$provider_tickets = $obj->get_tickets( $post_id );
+
+			if ( ! empty( $provider_tickets ) ) {
+				$providers[ $module['slug'] ] = $class;
+			}
+		}
+
+		return $providers;
 	}
 
 	/**
@@ -244,32 +271,36 @@ class Tribe__Tickets__Data_API {
 		}
 
 		$has_meta_fields = false;
-		$products        = '';
+		$products        = [];
 
 		// if no class then look for tickets by event/post id
 		if ( ! isset( $services['class'] ) ) {
 			$products = $this->get_product_ids_from_tickets( Tribe__Tickets__Tickets::get_all_event_tickets( $post_id ) );
 		}
 
+		$has_products = ! empty( $products );
+
 		// if no product ids and id is not ticket related return false
 		$is_ticket_related = array_intersect( array( 'order', 'ticket', 'attendee', 'product' ), $services );
-		if ( ! $products && ! $is_ticket_related ) {
+		if ( ! $has_products && ! $is_ticket_related ) {
 			return false;
 		}
 
 		// if the id is a product add the id to the array
 		$is_product = array_intersect( array( 'product' ), $services );
-		if ( ! $products && $is_product ) {
+		if ( ! $has_products && $is_product ) {
+			$has_products = true;
+
 			$products[] = absint( $post_id );
 		}
 
 		//elseif handle order id ticket&attendee
 		$is_order_ticket_attendee = array_intersect( array( 'order', 'ticket', 'attendee' ), $services );
-		if ( ! $products && $is_order_ticket_attendee ) {
+		if ( ! $has_products && $is_order_ticket_attendee ) {
 			$products = $this->get_product_ids_from_attendees( $this->get_attendees( $post_id, $context, $services ) );
 		}
 
-		if ( is_array( $products ) ) {
+		if ( ! empty( $products ) ) {
 			$has_meta_fields = $this->check_for_meta_fields_by_product_id( $products );
 		}
 
@@ -393,7 +424,7 @@ class Tribe__Tickets__Data_API {
 	 */
 	protected function check_rsvp_order_key_exists( $order_key ) {
 
-		$attendees_query = $this->query_by_rsvp_order_key( $order_key );
+		$attendees_query = $this->query_by_rsvp_order_key( $order_key, 1 );
 		if ( ! $attendees_query->have_posts() ) {
 			return '';
 		}

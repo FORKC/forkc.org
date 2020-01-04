@@ -30,6 +30,7 @@ export default {
 
 	supports: {
 		html: false,
+		multiple: false,
 	},
 
 	attributes: {
@@ -52,7 +53,7 @@ export default {
 			type: 'array',
 			source: 'meta',
 			meta: KEY_TICKETS_LIST,
-		}
+		},
 	},
 
 	edit: Tickets,

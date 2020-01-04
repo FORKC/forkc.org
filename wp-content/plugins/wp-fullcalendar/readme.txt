@@ -1,9 +1,9 @@
-﻿=== WP FullCalendar ===
+=== WP FullCalendar ===
 Contributors: netweblogic, mikelynn
 Tags: calendar, calendars, jQuery calendar, ajax calendar, event calendars, events calendar
 Text Domain: wp-fullcalendar
 Requires at least: 3.6
-Tested up to: 4.7
+Tested up to: 5.3
 Stable tag: 1.2
 
 Uses the jQuery FullCalendar plugin to create a stunning calendar view of events, posts and other custom post types

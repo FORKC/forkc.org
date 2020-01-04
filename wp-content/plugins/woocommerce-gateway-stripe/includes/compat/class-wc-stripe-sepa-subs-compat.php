@@ -34,15 +34,6 @@ class WC_Stripe_Sepa_Subs_Compat extends WC_Gateway_Stripe_Sepa {
 	}
 
 	/**
-	 * Handles the return from processing the payment for Stripe Checkout.
-	 *
-	 * @since 4.1.0
-	 */
-	public function stripe_checkout_return_handler() {
-		return parent::stripe_checkout_return_handler();
-	}
-
-	/**
 	 * Checks to see if we need to hide the save checkbox field.
 	 * Because when cart contains a subs product, it will save regardless.
 	 *
@@ -83,18 +74,21 @@ class WC_Stripe_Sepa_Subs_Compat extends WC_Gateway_Stripe_Sepa {
 	 * @since 4.1.11
 	 */
 	public function display_update_subs_payment_checkout() {
+		$subs_statuses = apply_filters( 'wc_stripe_update_subs_payment_method_card_statuses', array( 'active' ) );
 		if (
 			apply_filters( 'wc_stripe_display_update_subs_payment_method_card_checkbox', true ) &&
-			wcs_user_has_subscription( get_current_user_id(), '', 'active' ) &&
+			wcs_user_has_subscription( get_current_user_id(), '', $subs_statuses ) &&
 			is_add_payment_method_page()
 		) {
-			printf(
-				'<p class="form-row">
-					<input id="wc-%1$s-update-subs-payment-method-card" name="wc-%1$s-update-subs-payment-method-card" type="checkbox" value="true" style="width:auto;" />
-					<label for="wc-%1$s-update-subs-payment-method-card" style="display:inline;">%2$s</label>
-				</p>',
-				esc_attr( $this->id ),
-				esc_html( apply_filters( 'wc_stripe_save_to_subs_text', __( 'Update the Payment Method used for all of my active subscriptions (optional).', 'woocommerce-gateway-stripe' ) ) )
+			$label = esc_html( apply_filters( 'wc_stripe_save_to_subs_text', __( 'Update the Payment Method used for all of my active subscriptions.', 'woocommerce-gateway-stripe' ) ) );
+			$id    = sprintf( 'wc-%1$s-update-subs-payment-method-card', $this->id );
+			woocommerce_form_field(
+				$id,
+				array(
+					'type'    => 'checkbox',
+					'label'   => $label,
+					'default' => apply_filters( 'wc_stripe_save_to_subs_checked', false ),
+				)
 			);
 		}
 	}
@@ -109,10 +103,11 @@ class WC_Stripe_Sepa_Subs_Compat extends WC_Gateway_Stripe_Sepa {
 	public function handle_add_payment_method_success( $source_id, $source_object ) {
 		if ( isset( $_POST[ 'wc-' . $this->id . '-update-subs-payment-method-card' ] ) ) {
 			$all_subs = wcs_get_users_subscriptions();
+			$subs_statuses = apply_filters( 'wc_stripe_update_subs_payment_method_card_statuses', array( 'active' ) );
 
 			if ( ! empty( $all_subs ) ) {
 				foreach ( $all_subs as $sub ) {
-					if ( 'active' === $sub->get_status() ) {
+					if ( $sub->has_status( $subs_statuses ) ) {
 						update_post_meta( $sub->get_id(), '_stripe_source_id', $source_id );
 						update_post_meta( $sub->get_id(), '_payment_method', $this->id );
 						update_post_meta( $sub->get_id(), '_payment_method_title', $this->method_title );

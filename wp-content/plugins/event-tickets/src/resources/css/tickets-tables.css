@@ -8,24 +8,22 @@
  * @see: http://moderntribe.github.io/products-engineering/css/
  */
 
-:root {
-	--border-radius: 3px;
-	--border-color: #ccc;
+/* fix a z-index issue with postbox and tooltips */
+
+#tribetickets {
+	z-index: 1;
 }
 
 .tribe-tickets-editor-table {
 	border-radius: 3px;
-	border-radius: var(--border-radius);
 	border-spacing: 0;
 	border: 1px solid #ccc;
-	border: 1px solid var(--border-color);
 	margin: 20px 0;
 }
 
 .tribe-tickets-editor-table thead {
 		background-color: #f9f9f9;
 		border-bottom: 1px solid #ccc;
-		border-bottom: 1px solid var(--border-color);
 	}
 
 .tribe-tickets-editor-table tr {
@@ -34,41 +32,32 @@
 
 .tribe-tickets-editor-table tr td {
 		border-bottom: 1px solid #ccc;
-		border-bottom: 1px solid var(--border-color);
 	}
 
 .tribe-tickets-editor-table tr:first-child {
 		border-top-left-radius: 3px;
-		border-top-left-radius: var(--border-radius);
 		border-top-right-radius: 3px;
-		border-top-right-radius: var(--border-radius);
 	}
 
 .tribe-tickets-editor-table tr:first-child td:first-child {
 			border-top-left-radius: 3px;
-			border-top-left-radius: var(--border-radius);
 		}
 
 .tribe-tickets-editor-table tr:first-child td:last-child {
 			border-top-right-radius: 3px;
-			border-top-right-radius: var(--border-radius);
 		}
 
 .tribe-tickets-editor-table tr:last-child {
 		border-bottom-left-radius: 3px;
-		border-bottom-left-radius: var(--border-radius);
 		border-bottom-right-radius: 3px;
-		border-bottom-right-radius: var(--border-radius);
 	}
 
 .tribe-tickets-editor-table tr:last-child td:first-child {
 			border-bottom-left-radius: 3px;
-			border-bottom-left-radius: var(--border-radius);
 		}
 
 .tribe-tickets-editor-table tr:last-child td:last-child {
 			border-bottom-right-radius: 3px;
-			border-bottom-right-radius: var(--border-radius);
 		}
 
 .tribe-tickets-editor-table td.column-primary .tribe-handle {
@@ -134,7 +123,6 @@
 
 #tribe_panel_settings .tribe-tickets-editor-table tbody tr td {
 				border-bottom: 1px solid #ccc;
-				border-bottom: 1px solid var(--border-color);
 			}
 
 #tribe_panel_settings .tribe-tickets-editor-table tbody tr:nth-last-child(2) td,
@@ -144,7 +132,6 @@
 
 #tribe_panel_settings .tribe-tickets-editor-table tbody tr:last-child td {
 			border-top: 1px dashed #ccc;
-			border-top: 1px dashed var(--border-color);
 		}
 
 .tribe-tickets-editor-table .tribe_capacity_table_ticket_list {
@@ -170,7 +157,6 @@
 
 #tribe_panel_settings .tribe-tickets-editor-table tbody tr {
 				border-bottom: 1px solid #ccc;
-				border-bottom: 1px solid var(--border-color);
 				display: block
 		}
 
@@ -204,7 +190,6 @@
 		.tribe-tickets-editor-table tr {
 			position: relative;
 			border-bottom: 1px solid #ccc;
-			border-bottom: 1px solid var(--border-color);
 		}
 
 		.tribe-tickets-editor-table th:not(.column-primary) {

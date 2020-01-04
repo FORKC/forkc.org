@@ -48,6 +48,11 @@ describe( 'RSVP block selectors', () => {
 			.toBe( DEFAULT_STATE.isSettingsLoading );
 	} );
 
+	it( 'should return the is modal open', () => {
+		expect( selectors.getRSVPIsModalOpen( state ) )
+			.toBe( DEFAULT_STATE.isModalOpen );
+	} );
+
 	it( 'should return the going count', () => {
 		expect( selectors.getRSVPGoingCount( state ) )
 			.toBe( DEFAULT_STATE.goingCount );
@@ -56,6 +61,16 @@ describe( 'RSVP block selectors', () => {
 	it( 'should return the not going count', () => {
 		expect( selectors.getRSVPNotGoingCount( state ) )
 			.toBe( DEFAULT_STATE.notGoingCount );
+	} );
+
+	it( 'should return the has attendee info fields', () => {
+		expect( selectors.getRSVPHasAttendeeInfoFields( state ) )
+			.toBe( DEFAULT_STATE.hasAttendeeInfoFields );
+	} );
+
+	it( 'should return the has duration error', () => {
+		expect( selectors.getRSVPHasDurationError( state ) )
+			.toBe( DEFAULT_STATE.hasDurationError );
 	} );
 
 	it( 'should return the details object', () => {

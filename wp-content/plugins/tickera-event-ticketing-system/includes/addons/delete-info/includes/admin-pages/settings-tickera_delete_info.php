@@ -33,7 +33,7 @@ $tickera_plugins_and_addons = apply_filters('tc_delete_info_plugins_list', array
 
         <form id="tc-delete-info" method='post' action='<?php echo esc_attr(admin_url('edit.php?post_type=tc_events&page=tc_settings&tab=tickera_delete_info')); ?>'>
             <div class="postbox">
-                <h3 class='hndle'><span><?php _e('Delete Information stored by the plugin and its add-ons', 'tc'); ?></span></h3>
+                <h3><span><?php _e('Delete Information stored by the plugin and its add-ons', 'tc'); ?></span></h3>
                 <div class="inside">
                     <span class="description"></span>
 
@@ -55,9 +55,9 @@ $tickera_plugins_and_addons = apply_filters('tc_delete_info_plugins_list', array
                             ?>
                         </tbody>
                     </table>
-                    <?php submit_button(__('Delete selected data permanently', 'tc'), 'primary', 'tc_delete_selected_data_permanently', true); ?>
                 </div>
             </div>
+            <?php submit_button(__('Delete selected data permanently', 'tc'), 'primary', 'tc_delete_selected_data_permanently', true); ?>
         </form>
         <?php do_action('tc_after_delete_info');?>
     </div>

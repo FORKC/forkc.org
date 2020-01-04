@@ -224,11 +224,13 @@ class TC_Gateway_2Checkout extends TC_Gateway_API {
         global $tc;
         ?>
         <div id="<?php echo esc_attr($this->plugin_name); ?>" class="postbox" <?php echo (!$visible ? 'style="display:none;"' : ''); ?>>
-            <h3 class='hndle'><span><?php printf(__('%s Settings', 'tc'), $this->admin_name); ?></span></h3>
-            <div class="inside">
+            <h3><span><?php printf(__('%s Settings', 'tc'), $this->admin_name); ?></span>
                 <span class="description">
                     <?php echo sprintf(__('Sell your tickets via <a target="_blank" href="%s">2Checkout.com</a>', 'tc'), "https://www.2checkout.com/referral?r=95d26f72d1"); ?>
                 </span>
+            </h3>
+            <div class="inside">
+
 
                 <?php
                 $fields = array(

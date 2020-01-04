@@ -218,7 +218,7 @@
                 $picker.parent().css( 'top', ( $input.offset().top + input_outer_height ) + 'px' );
             }
             // Move position of a picker - horizontal
-            $picker.parent().css( 'left', $input.offset().left + 'px' );
+            $picker.parent().css( 'left', $input.offset().left-100 + 'px' );
             // Display on most top of the z-index
             $picker.parent().css( 'z-index', 100000 );
         }
@@ -231,7 +231,7 @@
     var ActivePickerId = -1;
 
     var getParentPickerObject = function( obj ) {
-        return $( obj ).closest( '.datepicker' );
+        return $( obj ).closest( '.tc_datepicker' );
     };
 
     var getPickersInputObject = function( $obj ) {
@@ -936,7 +936,7 @@
             window.alert( 'destroy!' );
         };
 
-        $picker.addClass( 'datepicker' );
+        $picker.addClass( 'tc_datepicker' );
         $obj.append( $picker );
 
         /* Set current date */
@@ -1179,7 +1179,7 @@
 
             var $picker_parent = $( $d ).dtpicker( options ); // call dtpicker() method
 
-            var $picker = $picker_parent.children( '.datepicker' );
+            var $picker = $picker_parent.children( '.tc_datepicker' );
 
             /* Link input-field with picker*/
             $( input ).data( 'pickerId', pickerId );

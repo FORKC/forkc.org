@@ -50,7 +50,7 @@ class Tribe__Tickets__Metabox {
 
 		add_meta_box(
 			'tribetickets',
-			esc_html__( 'Tickets', 'event-tickets' ),
+			esc_html( tribe_get_ticket_label_plural( 'meta_box_title' ) ),
 			array( $this, 'render' ),
 			$post_type,
 			'normal',
@@ -118,10 +118,13 @@ class Tribe__Tickets__Metabox {
 
 		$data = Tribe__Utils__Array::get( $data, array( 'tribe-tickets' ), null );
 
+		/** @var Tribe__Tickets__Tickets_Handler $tickets_handler */
+		$tickets_handler = tribe( 'tickets.handler' );
+
 		// Save if the info was passed
 		if ( ! empty( $data ) ) {
-			tribe( 'tickets.handler' )->save_order( $post->ID, isset( $data['list'] ) ? $data['list'] : null );
-			tribe( 'tickets.handler' )->save_form_settings( $post->ID, isset( $data['settings'] ) ? $data['settings'] : null );
+			$tickets_handler->save_order( $post->ID, isset( $data['list'] ) ? $data['list'] : null );
+			$tickets_handler->save_form_settings( $post->ID, isset( $data['settings'] ) ? $data['settings'] : null );
 		}
 
 		$return = $this->get_panels( $post );
@@ -176,10 +179,10 @@ class Tribe__Tickets__Metabox {
 	}
 
 	/**
-	 * Sanitizes the data for the new/edit ticket ajax call,
-	 * and calls the child save_ticket function.
+	 * Sanitizes the data for the new/edit ticket ajax call, and calls the child save_ticket function.
 	 *
-	 * @since  4.6.2
+	 * @since 4.6.2
+	 * @since 4.10.9 Use customizable ticket name functions.
 	 */
 	public function ajax_ticket_add() {
 		$post_id = absint( tribe_get_request_var( 'post_id', 0 ) );
@@ -195,7 +198,7 @@ class Tribe__Tickets__Metabox {
 		$data = wp_parse_args( tribe_get_request_var( array( 'data' ), array() ), array() );
 
 		if ( ! $this->has_permission( $post_id, $_POST, 'add_ticket_nonce' ) ) {
-			wp_send_json_error( esc_html__( 'Failed to Add the Ticket, Refresh the Page to try again.', 'event-tickets' ) );
+			wp_send_json_error( esc_html( sprintf( __( 'Failed to add the %s. Refresh the page to try again.', 'event-tickets' ), tribe_get_ticket_label_singular( 'ajax_ticket_add_error' ) ) ) );
 		}
 
 		if ( ! isset( $data['ticket_provider'] ) || ! $this->module_is_valid( $data['ticket_provider'] ) ) {
@@ -203,7 +206,15 @@ class Tribe__Tickets__Metabox {
 		}
 
 		// Get the Provider
-		$module = call_user_func( array( $data['ticket_provider'], 'get_instance' ) );
+		$module = call_user_func( [ $data['ticket_provider'], 'get_instance' ] );
+
+		if ( ! $module instanceof Tribe__Tickets__Tickets ) {
+			return new WP_Error(
+				'bad_request',
+				__( 'Commerce Module invalid', 'event-tickets' ),
+				[ 'status' => 400 ]
+			);
+		}
 
 		// Do the actual adding
 		$ticket_id = $module->ticket_add( $post_id, $data );
@@ -217,7 +228,7 @@ class Tribe__Tickets__Metabox {
 			 */
 			do_action( 'tribe_tickets_ticket_added', $post_id );
 		} else {
-			wp_send_json_error( esc_html__( 'Failed to Add the Ticket', 'event-tickets' ) );
+			wp_send_json_error( esc_html( sprintf( __( 'Failed to add the %s', 'event-tickets' ), tribe_get_ticket_label_singular( 'ajax_ticket_add_error' ) ) ) );
 		}
 
 		$return = $this->get_panels( $post_id );
@@ -235,12 +246,10 @@ class Tribe__Tickets__Metabox {
 	}
 
 	/**
-	 * Returns the data from a single ticket to populate
-	 * the edit form.
+	 * Returns the data from a single ticket to populate the edit form.
 	 *
-	 * @since  4.6.2
-	 *
-	 * @return array $return array of ticket data
+	 * @since 4.6.2
+	 * @since 4.10.9 Use customizable ticket name functions.
 	 */
 	public function ajax_ticket_edit() {
 		$post_id = absint( tribe_get_request_var( 'post_id', 0 ) );
@@ -252,7 +261,7 @@ class Tribe__Tickets__Metabox {
 		$ticket_id = absint( tribe_get_request_var( 'ticket_id', 0 ) );
 
 		if ( ! $ticket_id ) {
-			wp_send_json_error( esc_html__( 'Invalid Ticket', 'event-tickets' ) );
+			wp_send_json_error( esc_html( sprintf( __( 'Invalid %s', 'event-tickets' ), tribe_get_ticket_label_singular( 'ajax_ticket_edit_error' ) ) ) );
 		}
 
 		/**
@@ -262,7 +271,7 @@ class Tribe__Tickets__Metabox {
 		$data = wp_parse_args( tribe_get_request_var( array( 'data' ), array() ), array() );
 
 		if ( ! $this->has_permission( $post_id, $_POST, 'edit_ticket_nonce' ) ) {
-			wp_send_json_error( esc_html__( 'Failed to Edit the Ticket, Refresh the Page to try again.', 'event-tickets' ) );
+			wp_send_json_error( esc_html( sprintf( __( 'Failed to edit the %s. Refresh the page to try again.', 'event-tickets' ), tribe_get_ticket_label_singular( 'ajax_ticket_edit_error' ) ) ) );
 		}
 
 		$provider = tribe_tickets_get_ticket_provider( $ticket_id );
@@ -304,11 +313,11 @@ class Tribe__Tickets__Metabox {
 		$ticket_id = absint( tribe_get_request_var( 'ticket_id', 0 ) );
 
 		if ( ! $ticket_id ) {
-			wp_send_json_error( esc_html__( 'Invalid Ticket', 'event-tickets' ) );
+			wp_send_json_error( esc_html( sprintf( __( 'Invalid %s', 'event-tickets' ), tribe_get_ticket_label_singular( 'ajax_ticket_delete_error' ) ) ) );
 		}
 
 		if ( ! $this->has_permission( $post_id, $_POST, 'remove_ticket_nonce' ) ) {
-			wp_send_json_error( esc_html__( 'Failed to Delete the Ticket, Refresh the Page to try again.', 'event-tickets' ) );
+			wp_send_json_error( esc_html( sprintf( __( 'Failed to delete the %s. Refresh the page to try again.', 'event-tickets' ), tribe_get_ticket_label_singular( 'ajax_ticket_delete_error' ) ) ) );
 		}
 
 		$provider = tribe_tickets_get_ticket_provider( $ticket_id );
@@ -459,9 +468,9 @@ class Tribe__Tickets__Metabox {
 	 *
 	 * @since  4.6.2
 	 *
-	 * @param  WP_Post  $post
-	 * @param  array   $data
-	 * @param  string  $nonce_action
+	 * @param WP_Post|int $post
+	 * @param array       $data
+	 * @param string      $nonce_action
 	 *
 	 * @return boolean
 	 */
@@ -502,15 +511,20 @@ class Tribe__Tickets__Metabox {
 	 * @return boolean
 	 */
 	public function user_can( $generic_cap, $attendee_id ) {
-		$connections = tribe( 'tickets.handler' )->get_object_connections( $attendee_id );
+		/** @var Tribe__Tickets__Tickets_Handler $tickets_handler */
+		$tickets_handler = tribe( 'tickets.handler' );
+
+		$connections = $tickets_handler->get_object_connections( $attendee_id );
 
 		if ( ! $connections->event ) {
 			return false;
 		}
 
-		return tribe( 'tickets.attendees' )->user_can( $generic_cap, $connections->event );
-	}
+		/** @var Tribe__Tickets__Attendees $tickets_attendees */
+		$tickets_attendees = tribe( 'tickets.attendees' );
 
+		return $tickets_attendees->user_can( $generic_cap, $connections->event );
+	}
 
 	/**
 	 * Returns whether a class name is a valid active module/provider.

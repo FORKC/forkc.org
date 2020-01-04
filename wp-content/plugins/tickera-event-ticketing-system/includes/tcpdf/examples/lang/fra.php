@@ -1,5 +1,4 @@
 <?php
-
 //============================================================+
 // File name   : fra.php
 // Begin       : 2010-10-26
@@ -25,6 +24,7 @@
  * @author Nicola Asuni
  * @since 2010-10-26
  */
+
 // French
 
 global $l;
@@ -32,12 +32,12 @@ $l = Array();
 
 // PAGE META DESCRIPTORS --------------------------------------
 
-$l[ 'a_meta_charset' ]	 = 'UTF-8';
-$l[ 'a_meta_dir' ]		 = 'ltr';
-$l[ 'a_meta_language' ]	 = 'fr';
+$l['a_meta_charset'] = 'UTF-8';
+$l['a_meta_dir'] = 'ltr';
+$l['a_meta_language'] = 'fr';
 
 // TRANSLATIONS --------------------------------------
-$l[ 'w_page' ] = 'page';
+$l['w_page'] = 'page';
 
 //============================================================+
 // END OF FILE

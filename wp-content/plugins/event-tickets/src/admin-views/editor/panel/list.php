@@ -1,6 +1,12 @@
 <?php
-$attendees_url = tribe( 'tickets.attendees' )->get_report_link( get_post( $post_id ) );
-$total_tickets = tribe( 'tickets.handler' )->get_total_event_capacity( $post_id );
+/** @var Tribe__Tickets__Attendees $tickets_attendees */
+$tickets_attendees = tribe( 'tickets.attendees' );
+$attendees_url = $tickets_attendees->get_report_link( get_post( $post_id ) );
+
+/** @var Tribe__Tickets__Tickets_Handler $tickets_handler */
+$tickets_handler = tribe( 'tickets.handler' );
+$total_tickets = $tickets_handler->get_total_event_capacity( $post_id );
+
 $container_class = 'tribe_sectionheader ticket_list_container';
 $container_class .= ( empty( $total_tickets ) ) ? ' tribe_no_capacity' : '';
 $ticket_providing_modules = array_diff_key( Tribe__Tickets__Tickets::modules(), array( 'Tribe__Tickets__RSVP' => true ) );
@@ -46,7 +52,7 @@ $add_new_ticket_label = count( $ticket_providing_modules ) > 0
 			<?php tribe( 'tickets.admin.views' )->template( 'editor/list-table', array( 'tickets' => $tickets ) ); ?>
 		<?php endif; ?>
 	</div>
-	<div>
+	<div class="tribe-ticket-control-wrap">
 		<?php
 		/**
 		 * Allows for the insertion of additional content into the main ticket admin panel after the tickets listing
@@ -63,15 +69,15 @@ $add_new_ticket_label = count( $ticket_providing_modules ) > 0
 			aria-label="<?php echo $add_new_ticket_label ?>"
 			"<?php echo disabled( count( $ticket_providing_modules ) === 0 ) ?>"
 		>
-			<?php esc_html_e( 'New ticket', 'event-tickets' ); ?>
+			<?php echo esc_html( sprintf( _x( 'New %s', 'admin editor panel list button label', 'event-tickets' ), tribe_get_ticket_label_singular_lowercase( 'admin_editor_panel_list_button_label' ) ) ); ?>
 		</button>
 
 		<button
 			id="rsvp_form_toggle"
 			class="button-secondary ticket_form_toggle tribe-button-icon tribe-button-icon-plus"
-			aria-label="<?php esc_attr_e( 'Add a new RSVP', 'event-tickets' ); ?>"
+			aria-label="<?php echo esc_attr( sprintf( _x( 'Add a new %s', 'RSVP form toggle button label', 'event-tickets' ), tribe_get_rsvp_label_singular( 'rsvp_form_toggle_button_label' ) ) ); ?>"
 		>
-			<?php esc_html_e( 'New RSVP', 'event-tickets' ); ?>
+			<?php echo esc_html( sprintf( _x( 'New %s', 'RSVP form toggle button text', 'event-tickets' ), tribe_get_rsvp_label_singular( 'rsvp_form_toggle_button_text' ) ) ); ?>
 		</button>
 
 

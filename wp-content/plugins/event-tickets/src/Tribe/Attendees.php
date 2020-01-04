@@ -301,9 +301,9 @@ class Tribe__Tickets__Attendees {
 
 		$resources_url = plugins_url( 'src/resources', dirname( dirname( __FILE__ ) ) );
 
-		wp_enqueue_style( $this->slug(), $resources_url . '/css/tickets-attendees.css', array(), Tribe__Tickets__Main::instance()->css_version() );
-		wp_enqueue_style( $this->slug() . '-print', $resources_url . '/css/tickets-attendees-print.css', array(), Tribe__Tickets__Main::instance()->css_version(), 'print' );
-		wp_enqueue_script( $this->slug(), $resources_url . '/js/tickets-attendees.js', array( 'jquery' ), Tribe__Tickets__Main::instance()->js_version() );
+		wp_enqueue_style( 'tickets-report-css', $resources_url . '/css/tickets-report.css', array(), Tribe__Tickets__Main::instance()->css_version() );
+		wp_enqueue_style( 'tickets-report-print-css', $resources_url . '/css/tickets-report-print.css', array(), Tribe__Tickets__Main::instance()->css_version(), 'print' );
+		wp_enqueue_script( $this->slug() . '-js', $resources_url . '/js/tickets-attendees.js', array( 'jquery' ), Tribe__Tickets__Main::instance()->js_version() );
 
 		add_thickbox();
 
@@ -322,7 +322,7 @@ class Tribe__Tickets__Attendees {
 			) ),
 		);
 
-		wp_localize_script( $this->slug(), 'Attendees', $mail_data );
+		wp_localize_script( $this->slug() . '-js', 'Attendees', $mail_data );
 	}
 
 	/**
@@ -353,7 +353,7 @@ class Tribe__Tickets__Attendees {
 			wp_enqueue_style( 'wp-pointer' );
 		}
 
-		wp_localize_script( $this->slug(), 'AttendeesPointer', $pointer );
+		wp_localize_script( $this->slug() . '-js', 'AttendeesPointer', $pointer );
 	}
 
 	/**
@@ -448,7 +448,7 @@ class Tribe__Tickets__Attendees {
 
 	/**
 	 * Generates a list of attendees taking into account the Screen Options.
-	 * It's used both for the Email functionality, as for the CSV export.
+	 * It's used both for the Email functionality, as well as the CSV export.
 	 *
 	 * @since 4.6.2
 	 *
@@ -486,6 +486,7 @@ class Tribe__Tickets__Attendees {
 		$hidden = array_merge( get_hidden_columns( $this->page_id ), array(
 			'cb',
 			'meta_details',
+			'primary_info',
 			'provider',
 			'purchaser',
 			'status',
@@ -497,7 +498,7 @@ class Tribe__Tickets__Attendees {
 		// Add additional expected columns
 		$export_columns['order_id']           = esc_html_x( 'Order ID', 'attendee export', 'event-tickets' );
 		$export_columns['order_status_label'] = esc_html_x( 'Order Status', 'attendee export', 'event-tickets' );
-		$export_columns['attendee_id']        = esc_html_x( 'Ticket #', 'attendee export', 'event-tickets' );
+		$export_columns['attendee_id']        = esc_html( sprintf( _x( '%s ID', 'attendee export', 'event-tickets' ), tribe_get_ticket_label_singular( 'attendee_export_ticket_id' ) ) );
 		$export_columns['purchaser_name']     = esc_html_x( 'Customer Name', 'attendee export', 'event-tickets' );
 		$export_columns['purchaser_email']    = esc_html_x( 'Customer Email Address', 'attendee export', 'event-tickets' );
 
@@ -553,6 +554,46 @@ class Tribe__Tickets__Attendees {
 	}
 
 	/**
+	 * Sanitize rows for CSV usage.
+	 *
+	 * @since 4.10.7.2
+	 *
+	 * @param array $rows Rows to be sanitized.
+	 *
+	 * @return array Sanitized rows.
+	 */
+	public function sanitize_csv_rows( array $rows ) {
+		foreach ( $rows as &$row ) {
+			$row = array_map( [ $this, 'sanitize_csv_value' ], $row );
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * Sanitize a value for CSV usage.
+	 *
+	 * @since 4.10.7.2
+	 *
+	 * @param mixed $value Value to be sanitized.
+	 *
+	 * @return string Sanitized value.
+	 */
+	public function sanitize_csv_value( $value ) {
+		if (
+			0 === tribe_strpos( $value, '=' )
+			|| 0 === tribe_strpos( $value, '+' )
+			|| 0 === tribe_strpos( $value, '-' )
+			|| 0 === tribe_strpos( $value, '@' )
+		) {
+			// Prefix the value with a single quote to prevent formula from being processed.
+			$value = '\'' . $value;
+		}
+
+		return $value;
+	}
+
+	/**
 	 * Checks if the user requested a CSV export from the attendees list.
 	 * If so, generates the download and finishes the execution.
 	 *
@@ -564,18 +605,36 @@ class Tribe__Tickets__Attendees {
 			return;
 		}
 
-		if ( ! wp_verify_nonce( $_GET['attendees_csv_nonce'], 'attendees_csv_nonce' ) || ! $this->user_can( 'edit_posts', $_GET['event_id'] ) ) {
+		$event_id = absint( $_GET['event_id'] );
+
+		// Verify event ID is a valid integer and the nonce is accepted.
+		if ( empty( $event_id ) || ! wp_verify_nonce( $_GET['attendees_csv_nonce'], 'attendees_csv_nonce' ) ) {
 			return;
 		}
+
+		$event = get_post( $event_id );
+
+		// Verify event exists and current user has access to it.
+		if (
+			! $event instanceof WP_Post
+			|| ! $this->user_can( 'edit_posts', $event_id )
+		) {
+			return;
+		}
+
+		// Generate filtered list of attendees.
+		$items = $this->generate_filtered_list( $event_id );
+
+		// Sanitize items for CSV usage.
+		$items = $this->sanitize_csv_rows( $items );
 
 		/**
 		 * Allow for filtering and modifying the list of attendees that will be exported via CSV for a given event.
 		 *
-		 * @param array $items The array of attendees that will be exported in this CSV file.
-		 * @param int $event_id The ID of the event these attendees are associated with.
+		 * @param array $items    The array of attendees that will be exported in this CSV file.
+		 * @param int   $event_id The ID of the event these attendees are associated with.
 		 */
-		$items = apply_filters( 'tribe_events_tickets_attendees_csv_items', $this->generate_filtered_list( $_GET['event_id'] ), $_GET['event_id'] );
-		$event = get_post( $_GET['event_id'] );
+		$items = apply_filters( 'tribe_events_tickets_attendees_csv_items', $items, $event_id );
 
 		if ( ! empty( $items ) ) {
 			$charset  = get_option( 'blog_charset' );
@@ -590,18 +649,11 @@ class Tribe__Tickets__Attendees {
 
 			// Get indexes by keys
 			$flip  = array_flip( $items[0] );
-			$prime = $flip['Primary Information'];
 			$name  = $flip['Customer Name'];
 			$email = $flip['Customer Email Address'];
 
 			//And echo the data
 			foreach ( $items as $item ) {
-				if ( empty( $item[ $prime ] ) ) {
-					$string = ! empty( $item[ $name ] ) ? $item[ $name ] : '';
-					$string .= ! empty( $item[ $email ] ) ? ', ' . $item[ $email ] : '';
-					$item[ $prime ] = $string;
-				}
-
 				fputcsv( $output, $item );
 			}
 
@@ -764,11 +816,12 @@ class Tribe__Tickets__Attendees {
 	 *
 	 * @return boolean
 	 */
-	public function user_can_manage_attendees( $user_id = 0 ) {
-
+	public function user_can_manage_attendees( $user_id = 0, $event_id = '' ) {
 		$user_id = 0 === $user_id ? get_current_user_id() : $user_id;
+		$user_can = true;
 
-		if ( ! $user_id ) {
+		// bail quickly here as we don't have a user to check
+		if ( empty( $user_id ) ) {
 			return false;
 		}
 
@@ -781,16 +834,29 @@ class Tribe__Tickets__Attendees {
 		 * @param int $user_id The ID of the user whose capabilities are being checked.
 		 */
 		$required_caps = apply_filters( 'tribe_tickets_caps_can_manage_attendees', array(
-			'edit_others_posts',
+			'edit_others_posts'
 		), $user_id );
 
 		// Next make sure the user has proper caps in their role.
 		foreach ( $required_caps as $cap ) {
 			if ( ! user_can( $user_id, $cap ) ) {
-				return false;
+				$user_can = false;
+				// break on first fail
+				break;
 			}
 		}
 
-		return true;
+		/**
+		 * Filter our return value to let other plugins hook in and alter things
+		 *
+		 * @since 4.10.1
+		 *
+		 * @param bool $user_can return value, user can or can't
+		 * @param int $user_id id of the user we're checking
+		 * @param int $event_id id of the event we're checking (matter for checks on event authorship)
+		 */
+		$user_can = apply_filters( 'tribe_tickets_user_can_manage_attendees', $user_can, $user_id, $event_id );
+
+		return $user_can;
 	}
 }

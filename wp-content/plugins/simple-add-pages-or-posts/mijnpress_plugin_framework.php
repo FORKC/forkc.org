@@ -46,6 +46,9 @@
  * 
  * 1.5.1
  * Added: return functions
+ * 
+ * 2.0.0
+ * Changed: better PHP
  * ------------------------------------------------------------------
  * 
  */
@@ -58,14 +61,14 @@ class mijnpress_plugin_framework
 {
     var $showcredits = true;
     var $showcredits_fordevelopers = true;
-    var $all_plugins = array('Admin renamer extended','Simple add pages or posts','Antispam for all fields','Mass Delete Tags','Auto Prune Posts','Warm cache','See attachments','Automatic Comment Scheduler','Subscribe2 widget','Define Constants','Mass Delete Unused Tags','Prevent core update','WPML flag in menu', 'MP Auto more tag', 'Gettext override translations');
+    var $all_plugins = array( 'Simple add pages or posts','Antispam for all fields','Mass Delete Tags','Auto Prune Posts','Warm cache','See attachments','Automatic Comment Scheduler','Define Constants','Mass Delete Unused Tags','WPML flag in menu', 'MP Auto more tag', 'Gettext override translations');
     
     /**
      * Left menu display in Plugin menu
      * @author     Ramon Fincken
      */
-    function addPluginSubMenu($title,$function, $file, $capability = 10, $where = "plugins.php") {
-    	add_submenu_page($where, $title, $title, $capability, $file, $function);
+    function addPluginSubMenu( $title, $function, $file, $capability = 10, $where = "plugins.php" ) {
+    	add_submenu_page( $where, $title, $title, 'manage_options', $file, $function );
     }
 
     /**
@@ -74,13 +77,15 @@ class mijnpress_plugin_framework
     */
     function addPluginContent($filename,$links, $file, $config_url = NULL)
     {
-        if($file == $filename)    
-        {
-            if($config_url) $links[] = '<a href="'.$config_url.'">' . __('Settings') . '</a>';
-            $links[] = '<a href="http://donate.ramonfincken.com">' . __('Donate') . '</a>';
-            $links[] = '<a href="http://pluginsupport.mijnpress.nl">' . __('Support') . '</a>';
-            $links[] = '<a href="http://www.mijnpress.nl">' . __('Custom WordPress coding nodig?') . '</a>';
-        }
+	if( $file == $filename ) {
+		if( $config_url ) {
+			$links[] = '<a href="'.$config_url.'">' . __('Settings') . '</a>';
+		}
+	
+		$links[] = '<a href="http://donate.ramonfincken.com">' . __('Donate') . '</a>';
+		$links[] = '<a href="http://pluginsupport.mijnpress.nl">' . __('Support') . '</a>';
+		$links[] = '<a href="http://www.mijnpress.nl">' . __('Custom WordPress coding nodig?') . '</a>';
+	}
         return $links;
     }
     
@@ -111,18 +116,8 @@ class mijnpress_plugin_framework
      */
 	public static function is_admin()
 	{
-		if(is_multisite())
-		{
-			// TODO fix this, for now rely on WP roles ( I have tested this 07062011 )
-			return true;
-		}		
-		
 		require_once(ABSPATH . WPINC . '/pluggable.php');
-		$current_user = wp_get_current_user();
-		$current_user_id = ! empty($current_user) ? $current_user->ID : 0;
-		$current_user = new WP_User($current_user_id);
-		if($current_user->has_cap('delete_users')) return true;
-		return false;
+		return current_user_can( 'manage_options' );
 	}	
 
     /**
@@ -233,52 +228,51 @@ function mijnpress_plugin_framework_showcredits_framework()
         <div class="inside">
             Feel free to use the framework file included in this plugin.<br>
             It is open source and free to use.<br/>
-            For more info visit <a href="http://www.mijnpress.nl/blog/plugin-framework/">MijnPress.nl/blog/plugin-framework</a>
+            For more info visit <a href="https://www.mijnpress.nl/blog/plugin-framework/">MijnPress.nl/blog/plugin-framework</a>
         </div>
     </div>
 <?php    
 } // end mijnpress_plugin_framework_showcredits_framework()
 
 
-function mijnpress_plugin_framework_showcredits($plugin_title,$all_plugins)
+function mijnpress_plugin_framework_showcredits( $plugin_title,$all_plugins )
 {
-?>
-    <div class="postbox">
-        <h3 class="hndle"><span>About <?php echo $plugin_title; ?></span></h3>
-        <div class="inside">
-            This plugin was created by Ramon Fincken.<br>
-He likes to create WordPress websites and plugins and he is co-admin at the <a href="http://www.linkedin.com/groups?about=&gid=1644947&trk=anet_ug_grppro">Dutch LinkedIn WordPress group</a>.<br/><br/>Visit his WordPress websites at: <a href="http://www.MijnPress.nl" title="Custom WordPress development">MijnPress.nl</a>, <a href="http://www.ManagedWPHosting.nl" title="High end WordPress hosting">ManagedWPHosting.nl</a><br/>
-If you are a coder, you might like to visit <a href="http://www.ramonfincken.com/tag/wordpress.html">his WordPress blogposts</a>.
-<br/><br/><a href="http://donate.ramonfincken.com/">Like this plugin? Donate me a coffee :)</a>
-<br/><br/><a href="http://pluginsupport.mijnpress.nl">Is this plugin broken? Report it here</a>            
-        </div>
-    </div>
-<?php 
-if(is_array($all_plugins) && count($all_plugins) > 0)
-{
-?>
+	?>
+	    <div class="postbox">
+		<h3 class="hndle"><span>About <?php echo $plugin_title; ?></span></h3>
+		<div class="inside">
+		    This plugin was created by Ramon Fincken.<br>
+	He likes to create WordPress websites and plugins and he is co-admin at the <a href="https://www.linkedin.com/groups?about=&gid=1644947&trk=anet_ug_grppro">Dutch LinkedIn WordPress group</a>.<br/><br/>Visit his WordPress websites at: <a href="https://www.MijnPress.nl" title="Custom WordPress development">MijnPress.nl</a>, <a href="https://www.ManagedWPHosting.nl" title="High end WordPress hosting">ManagedWPHosting.nl</a><br/>
+	If you are a coder, you might like to visit <a href="https://www.ramonfincken.com/tag/wordpress.html">his WordPress blogposts</a>.
+	<br/><br/><a href="http://donate.ramonfincken.com/">Like this plugin? Donate me a coffee :)</a>
+	<br/><br/><a href="http://pluginsupport.mijnpress.nl">Is this plugin broken? Report it here</a>            
+		</div>
+	    </div>
+	<?php 
+	if(is_array($all_plugins) && count($all_plugins) > 0)
+	{
+		?>
 
-    <div class="postbox">
-        <h3 class="hndle"><span>More Plugins</span></h3>
-        <div class="inside">
-            If you like this plugin, you may also like:<br/>
-<ul>
+		    <div class="postbox">
+			<h3 class="hndle"><span>More Plugins</span></h3>
+			<div class="inside">
+			    If you like this plugin, you may also like:<br/>
+		<ul>
 
-<?php
-sort($all_plugins);
-foreach($all_plugins as $plugin)
-{
-    if($plugin != $plugin_title)
-    {
-        $url = 'http://wordpress.org/extend/plugins/'.str_replace(' ','-',$plugin);
-        echo '<li><a href="'.strtolower($url).'/">'.$plugin.'</a></li>';
-    }
-}
-?>
-</ul>
-        </div>
-    </div>
-<?php    
-} // end if(is_array($all_plugins) && count($all_plugins) > 0)
+		<?php
+		sort($all_plugins);
+		foreach($all_plugins as $plugin)
+		{
+		    if($plugin != $plugin_title)
+		    {
+			$url = 'http://wordpress.org/extend/plugins/'.str_replace(' ','-',$plugin);
+			echo '<li><a href="'.strtolower($url).'/">'.$plugin.'</a></li>';
+		    }
+		}
+		?>
+		</ul>
+			</div>
+		    </div>
+		<?php    
+	} // end if(is_array($all_plugins) && count($all_plugins) > 0)
 } // end mijnpress_plugin_framework_showcredits($plugin_title,$all_plugins)
-?>

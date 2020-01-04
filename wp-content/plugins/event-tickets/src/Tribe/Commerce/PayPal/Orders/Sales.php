@@ -88,9 +88,10 @@ class Tribe__Tickets__Commerce__PayPal__Orders__Sales {
 	 * @return array
 	 */
 	protected function get_revenue_generating_order_statuses() {
-		$revenue_generating_order_statuses = array(
-			Tribe__Tickets__Commerce__PayPal__Stati::$completed
-		);
+		/** @var Tribe__Tickets__Status__Manager $status_mgr */
+		$status_mgr = tribe( 'tickets.status' );
+
+		$revenue_generating_order_statuses = $status_mgr->get_statuses_by_action( 'count_completed', 'tpp' );
 
 		/**
 		 * Filters the list of ticket statuses that should be taken into account when calculating revenue.
@@ -291,7 +292,7 @@ class Tribe__Tickets__Commerce__PayPal__Orders__Sales {
 		/** @var Tribe__Tickets__Commerce__PayPal__Main $paypal */
 		$paypal = tribe( 'tickets.commerce.paypal' );
 
-		$orders = $paypal->get_orders_by_post_id( $post_id, $ticket_ids, array( 'posts_per_page' => - 1 ) );
+		$orders = $paypal->get_orders_by_post_id( $post_id, $ticket_ids, array( 'posts_per_page' => -1 ) );
 
 		$this->cache[ $cache_key ] = $orders;
 
@@ -355,18 +356,79 @@ class Tribe__Tickets__Commerce__PayPal__Orders__Sales {
 	 *
 	 * @since 4.7
 	 *
+	 * @since 4.10.5 - add check for Global Stock
+	 *
 	 * @param int                            $available
 	 * @param \Tribe__Tickets__Ticket_Object $ticket
-	 * @param   int                          $sold
-	 * @param      int                       $stock
+	 * @param int                            $sold
+	 * @param int                            $stock
 	 *
 	 * @return int
 	 */
 	public function filter_available( $available, Tribe__Tickets__Ticket_Object $ticket, $sold, $stock ) {
-		if ( 'Tribe__Tickets__Commerce__PayPal__Main' !== $ticket->provider_class ) {
+		if (
+			'Tribe__Tickets__Commerce__PayPal__Main' !== $ticket->provider_class
+			|| -1 === $available
+			|| $ticket::UNLIMITED_STOCK === $available
+		) {
+			return $available;
+		}
+
+		// if using global stock then return available
+		$event        = Tribe__Tickets__Tickets::find_matching_event( $ticket );
+		$global_stock = new Tribe__Tickets__Global_Stock( $event->ID );
+		if ( Tribe__Tickets__Global_Stock::GLOBAL_STOCK_MODE === $ticket->global_stock_mode() && $global_stock->is_enabled() ) {
 			return $available;
 		}
 
 		return $stock - $sold;
+	}
+
+	/**
+	 * Get all orders for a product id and return array of order objects
+	 *
+	 * @since 4.10
+	 *
+	 * @param $ID int an ID for a tpp product
+	 *
+	 * @return array an array of order objects
+	 */
+	public function get_all_orders_by_product_id( $ID ) {
+		/** @var Tribe__Tickets__Status__Manager $status_mgr */
+		$status_mgr = tribe( 'tickets.status' );
+
+		$all_statuses = (array) $status_mgr->get_statuses_by_action( 'all', 'tpp' );
+		$args = [
+			'post_type'      => 'tribe_tpp_orders',
+			'posts_per_page' => -1,
+			'post_status'    => $all_statuses,
+			'meta_query'     => [
+				[
+					'key'   => '_tribe_paypal_ticket',
+					'value' => $ID,
+				],
+			],
+			'fields'         => 'ids',
+		];
+
+		$all_order_ids_for_ticket  = new WP_Query( $args );
+		$order_ids = $all_order_ids_for_ticket->posts;
+		if ( empty ( $order_ids ) ) {
+			return array();
+		}
+
+		$orders = array();
+		foreach ( $order_ids as $id ) {
+
+			$order = new Tribe__Tickets__Commerce__PayPal__Order();
+			$order = $order->hydrate_from_post( $id );
+
+			//prevent fatal error if no orders
+			if ( ! is_wp_error( $order ) ) {
+				$orders[ $id ] = $order;
+			}
+		}
+
+		return $orders;
 	}
 }

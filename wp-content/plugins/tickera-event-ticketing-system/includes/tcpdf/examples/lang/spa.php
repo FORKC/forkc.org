@@ -1,5 +1,4 @@
 <?php
-
 //============================================================+
 // File name   : spa.php
 // Begin       : 2004-03-03
@@ -25,6 +24,7 @@
  * @author Nicola Asuni
  * @since 2004-03-03
  */
+
 // Spanish; Castilian
 
 global $l;
@@ -32,12 +32,12 @@ $l = Array();
 
 // PAGE META DESCRIPTORS --------------------------------------
 
-$l[ 'a_meta_charset' ]	 = 'UTF-8';
-$l[ 'a_meta_dir' ]		 = 'ltr';
-$l[ 'a_meta_language' ]	 = 'es';
+$l['a_meta_charset'] = 'UTF-8';
+$l['a_meta_dir'] = 'ltr';
+$l['a_meta_language'] = 'es';
 
 // TRANSLATIONS --------------------------------------
-$l[ 'w_page' ] = 'página';
+$l['w_page'] = 'página';
 
 //============================================================+
 // END OF FILE

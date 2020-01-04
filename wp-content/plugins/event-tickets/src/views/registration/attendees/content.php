@@ -2,7 +2,12 @@
 /**
  * This template renders the registration/purchase attendee fields
  *
- * @version 4.9
+ * Override this template in your own theme by creating a file at:
+ * [your-theme]/tribe/tickets/registration/attendees/content.php
+ *
+ * @since 4.9
+ * @since 4.10.1 Update template paths to add the "registration/" prefix
+ * @version 4.11.0
  *
  */
 if (
@@ -28,7 +33,7 @@ $meta    = tribe( 'tickets-plus.main' )->meta();
 	$attendee_count = 0;
 	$post           = get_post( $ticket['id'] );
 	?>
-	<h3 class="tribe-ticket__heading"><?php echo get_the_title( $post->ID ); ?></h3>
+	<h3 class="tribe-common-h5 tribe-common-h5--min-medium tribe-common-h--alt tribe-ticket__heading"><?php echo get_the_title( $post->ID ); ?></h3>
 	<?php // go through each attendee ?>
 	<?php while ( $attendee_count < $ticket['qty'] ) : ?>
 		<?php
@@ -47,7 +52,7 @@ $meta    = tribe( 'tickets-plus.main' )->meta();
 			);
 
 
-			$this->template( 'attendees/fields', $args );
+			$this->template( 'registration/attendees/fields', $args );
 			$attendee_count++;
 		?>
 	<?php endwhile; ?>

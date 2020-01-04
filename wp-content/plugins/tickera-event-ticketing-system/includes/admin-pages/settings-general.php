@@ -48,7 +48,7 @@ $tc_general_settings = get_option( 'tc_general_setting', false );
 			<?php foreach ( $sections as $section ) {
 				?>
 				<div id="<?php echo esc_attr( $section[ 'name' ] ); ?>" class="postbox">
-					<h3 class='hndle'><span><?php echo esc_attr( $section[ 'title' ] ); ?></span></h3>
+					<h3><span><?php echo esc_attr( $section[ 'title' ] ); ?></span></h3>
 					<div class="inside">
 						<span class="description"><?php echo $section[ 'description' ]; ?></span>
 						<table class="form-table">

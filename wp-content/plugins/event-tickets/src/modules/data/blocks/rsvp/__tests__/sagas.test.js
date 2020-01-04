@@ -2,7 +2,6 @@
  * External dependencies
  */
 import { takeEvery, put, call, select, all, fork, take } from 'redux-saga/effects';
-import { cloneableGenerator, createMockTask } from 'redux-saga/utils';
 import { noop } from 'lodash';
 
 /**
@@ -19,10 +18,22 @@ import {
 import * as types from '../types';
 import * as actions from '../actions';
 import * as selectors from '../selectors';
-import { updateRSVP } from '../thunks';
 import watchers, * as sagas from '../sagas';
+import {
+	DEFAULT_STATE as RSVP_HEADER_IMAGE_DEFAULT_STATE
+} from '../reducers/header-image';
+import * as ticketActions from '@moderntribe/tickets/data/blocks/ticket/actions';
+import {
+	DEFAULT_STATE as TICKET_HEADER_IMAGE_DEFAULT_STATE
+} from '@moderntribe/tickets/data/blocks/ticket/reducers/header-image';
+import * as utils from '@moderntribe/tickets/data/utils';
 import { MOVE_TICKET_SUCCESS } from '@moderntribe/tickets/data/shared/move/types';
-import { moment as momentUtil, time as timeUtil, globals } from '@moderntribe/common/utils';
+import {
+	api,
+	globals,
+	moment as momentUtil,
+	time as timeUtil,
+} from '@moderntribe/common/utils';
 import * as moveSelectors from '@moderntribe/tickets/data/shared/move/selectors';
 import { isTribeEventPostType, createWPEditorSavingChannel, createDates } from '@moderntribe/tickets/data/shared/sagas';
 
@@ -36,6 +47,7 @@ function mock() {
 							return 'January 1, 2018';
 						}
 					},
+					getCurrentPostId: () => 10,
 				};
 			}
 		},
@@ -60,6 +72,9 @@ describe( 'RSVP block sagas', () => {
 					types.HANDLE_RSVP_END_DATE,
 					types.HANDLE_RSVP_START_TIME,
 					types.HANDLE_RSVP_END_TIME,
+					types.FETCH_RSVP_HEADER_IMAGE,
+					types.UPDATE_RSVP_HEADER_IMAGE,
+					types.DELETE_RSVP_HEADER_IMAGE,
 					MOVE_TICKET_SUCCESS,
 				], sagas.handler )
 			);
@@ -114,6 +129,9 @@ describe( 'RSVP block sagas', () => {
 				call( sagas.handleRSVPStartDate, action )
 			);
 			expect( gen.next().value ).toEqual(
+				call( sagas.handleRSVPDurationError )
+			);
+			expect( gen.next().value ).toEqual(
 				put( actions.setRSVPHasChanges( true ) )
 			);
 			expect( gen.next().done ).toEqual( true );
@@ -124,6 +142,9 @@ describe( 'RSVP block sagas', () => {
 			const gen = sagas.handler( action );
 			expect( gen.next().value ).toEqual(
 				call( sagas.handleRSVPEndDate, action )
+			);
+			expect( gen.next().value ).toEqual(
+				call( sagas.handleRSVPDurationError )
 			);
 			expect( gen.next().value ).toEqual(
 				put( actions.setRSVPHasChanges( true ) )
@@ -141,6 +162,9 @@ describe( 'RSVP block sagas', () => {
 				call( sagas.handleRSVPStartTimeInput, action )
 			);
 			expect( gen.next().value ).toEqual(
+				call( sagas.handleRSVPDurationError )
+			);
+			expect( gen.next().value ).toEqual(
 				put( actions.setRSVPHasChanges( true ) )
 			);
 			expect( gen.next().done ).toEqual( true );
@@ -156,7 +180,37 @@ describe( 'RSVP block sagas', () => {
 				call( sagas.handleRSVPEndTimeInput, action )
 			);
 			expect( gen.next().value ).toEqual(
+				call( sagas.handleRSVPDurationError )
+			);
+			expect( gen.next().value ).toEqual(
 				put( actions.setRSVPHasChanges( true ) )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+
+		it( 'should fetch rsvp header image', () => {
+			action.type = types.FETCH_RSVP_HEADER_IMAGE;
+			const gen = sagas.handler( action );
+			expect( gen.next().value ).toEqual(
+				call( sagas.fetchRSVPHeaderImage, action )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+
+		it( 'should update rsvp header image', () => {
+			action.type = types.UPDATE_RSVP_HEADER_IMAGE;
+			const gen = sagas.handler( action );
+			expect( gen.next().value ).toEqual(
+				call( sagas.updateRSVPHeaderImage, action )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+
+		it( 'should delete rsvp header image', () => {
+			action.type = types.DELETE_RSVP_HEADER_IMAGE;
+			const gen = sagas.handler( action );
+			expect( gen.next().value ).toEqual(
+				call( sagas.deleteRSVPHeaderImage )
 			);
 			expect( gen.next().done ).toEqual( true );
 		} );
@@ -342,6 +396,9 @@ describe( 'RSVP block sagas', () => {
 					put( actions.setRSVPTempEndTimeInput( state.endTime ) ),
 				] )
 			);
+			expect( gen.next().value ).toEqual(
+				call( sagas.handleRSVPDurationError )
+			);
 			expect( gen.next().done ).toEqual( true );
 		} );
 	} );
@@ -430,6 +487,116 @@ describe( 'RSVP block sagas', () => {
 			expect( gen.next().value ).toEqual(
 				fork( sagas.saveRSVPWithPostSave )
 			);
+		} );
+	} );
+
+	describe( 'handleRSVPDurationError', () => {
+		it( 'should set has duration error to true if start or end moment is invalid', () => {
+			const gen = sagas.handleRSVPDurationError();
+			expect( gen.next().value ).toEqual(
+				select( selectors.getRSVPTempStartDateMoment )
+			);
+			expect( gen.next( undefined ).value ).toEqual(
+				select( selectors.getRSVPTempEndDateMoment )
+			);
+			expect( gen.next( undefined ).value ).toEqual(
+				put( actions.setRSVPHasDurationError( true ) )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+
+		it( 'should set thas duration error to true if start date time is after end date time', () => {
+			const START_DATE_MOMENT = {
+				clone: () => {},
+				isSameOrAfter: () => {},
+			};
+			const END_DATE_MOMENT = {
+				clone: () => {},
+				isSameOrAfter: () => {},
+			};
+			const START_TIME = '12:00:00';
+			const END_TIME = '13:00:00';
+			const START_TIME_SECONDS = 43200;
+			const END_TIME_SECONDS = 46800;
+			const gen = sagas.handleRSVPDurationError();
+			expect( gen.next().value ).toEqual(
+				select( selectors.getRSVPTempStartDateMoment )
+			);
+			expect( gen.next( START_DATE_MOMENT ).value ).toEqual(
+				select( selectors.getRSVPTempEndDateMoment )
+			);
+			expect( gen.next( END_DATE_MOMENT ).value ).toEqual(
+				select( selectors.getRSVPTempStartTime )
+			);
+			expect( gen.next( START_TIME ).value ).toEqual(
+				select( selectors.getRSVPTempEndTime )
+			);
+			expect( gen.next( END_TIME ).value ).toEqual(
+				call( timeUtil.toSeconds, START_TIME, timeUtil.TIME_FORMAT_HH_MM_SS )
+			);
+			expect( gen.next( START_TIME_SECONDS ).value ).toEqual(
+				call( timeUtil.toSeconds, END_TIME, timeUtil.TIME_FORMAT_HH_MM_SS )
+			);
+			expect( gen.next( END_TIME_SECONDS ).value ).toEqual(
+				call( momentUtil.setTimeInSeconds, START_DATE_MOMENT.clone(), START_TIME_SECONDS )
+			);
+			expect( gen.next( START_DATE_MOMENT ).value ).toEqual(
+				call( momentUtil.setTimeInSeconds, END_DATE_MOMENT.clone(), END_TIME_SECONDS )
+			);
+			expect( gen.next( END_DATE_MOMENT ).value ).toEqual(
+				call( [ START_DATE_MOMENT, 'isSameOrAfter' ], END_DATE_MOMENT )
+			);
+			expect( gen.next( true ).value ).toEqual(
+				put( actions.setRSVPHasDurationError( true ) )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+
+		it( 'should set thas duration error to false if start date time is before end date time', () => {
+			const START_DATE_MOMENT = {
+				clone: () => {},
+				isSameOrAfter: () => {},
+			};
+			const END_DATE_MOMENT = {
+				clone: () => {},
+				isSameOrAfter: () => {},
+			};
+			const START_TIME = '12:00:00';
+			const END_TIME = '13:00:00';
+			const START_TIME_SECONDS = 43200;
+			const END_TIME_SECONDS = 46800;
+			const gen = sagas.handleRSVPDurationError();
+			expect( gen.next().value ).toEqual(
+				select( selectors.getRSVPTempStartDateMoment )
+			);
+			expect( gen.next( START_DATE_MOMENT ).value ).toEqual(
+				select( selectors.getRSVPTempEndDateMoment )
+			);
+			expect( gen.next( END_DATE_MOMENT ).value ).toEqual(
+				select( selectors.getRSVPTempStartTime )
+			);
+			expect( gen.next( START_TIME ).value ).toEqual(
+				select( selectors.getRSVPTempEndTime )
+			);
+			expect( gen.next( END_TIME ).value ).toEqual(
+				call( timeUtil.toSeconds, START_TIME, timeUtil.TIME_FORMAT_HH_MM_SS )
+			);
+			expect( gen.next( START_TIME_SECONDS ).value ).toEqual(
+				call( timeUtil.toSeconds, END_TIME, timeUtil.TIME_FORMAT_HH_MM_SS )
+			);
+			expect( gen.next( END_TIME_SECONDS ).value ).toEqual(
+				call( momentUtil.setTimeInSeconds, START_DATE_MOMENT.clone(), START_TIME_SECONDS )
+			);
+			expect( gen.next( START_DATE_MOMENT ).value ).toEqual(
+				call( momentUtil.setTimeInSeconds, END_DATE_MOMENT.clone(), END_TIME_SECONDS )
+			);
+			expect( gen.next( END_DATE_MOMENT ).value ).toEqual(
+				call( [ START_DATE_MOMENT, 'isSameOrAfter' ], END_DATE_MOMENT )
+			);
+			expect( gen.next( false ).value ).toEqual(
+				put( actions.setRSVPHasDurationError( false ) )
+			);
+			expect( gen.next().done ).toEqual( true );
 		} );
 	} );
 
@@ -724,6 +891,313 @@ describe( 'RSVP block sagas', () => {
 		} );
 	} );
 
+	describe( 'fetchRSVPHeaderImage', () => {
+		it( 'should fetch rsvp header image', () => {
+			const id = 10;
+			const action = {
+				payload: {
+					id,
+				}
+			};
+			const gen = sagas.fetchRSVPHeaderImage( action );
+			expect( gen.next().value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				call( api.wpREST, { path: `media/${ id }` } )
+			);
+
+			const apiResponse = {
+				response: {
+					ok: true,
+				},
+				data: {
+					id: 99,
+					alt_text: 'tribe',
+					media_details: {
+						sizes: {
+							medium: {
+								source_url: '#',
+							},
+						},
+					},
+				},
+			};
+			expect( gen.next( apiResponse ).value ).toEqual(
+				put( actions.setRSVPHeaderImage( {
+					id: apiResponse.data.id,
+					alt: apiResponse.data.alt_text,
+					src: apiResponse.data.media_details.sizes.medium.source_url,
+				} ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( false ) )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+
+		it( 'should not fetch rsvp header image', () => {
+			const id = null;
+			const action = {
+				payload: {
+					id,
+				}
+			};
+			const gen = sagas.fetchRSVPHeaderImage( action );
+			expect( gen.next().value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				call( api.wpREST, { path: `media/${ id }` } )
+			);
+
+			const apiResponse = {
+				response: {
+					ok: false,
+				},
+				data: {},
+			};
+			expect( gen.next( apiResponse ).value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( false ) )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+	} );
+
+	describe( 'updateRSVPHeaderImage', () => {
+		it( 'should update rsvp header image', () => {
+			const postId = 10;
+			const action = {
+				payload: {
+					image: {
+						id: 99,
+						alt: 'tribe',
+						sizes: {
+							medium: {
+								url: '#',
+							},
+						},
+					},
+				},
+			};
+			const gen = sagas.updateRSVPHeaderImage( action );
+			expect( gen.next().value ).toMatchSnapshot();
+			expect( gen.next( postId ).value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				call( api.wpREST, {
+					path: `tribe_events/${ postId }`,
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					initParams: {
+						method: 'PUT',
+						body: JSON.stringify( {
+							meta: {
+								[ utils.KEY_TICKET_HEADER ]: `${ action.payload.image.id }`,
+							},
+						} ),
+					},
+				} )
+			);
+
+			const apiResponse = {
+				response: {
+					ok: true,
+				},
+			};
+			const headerImage = {
+				id: action.payload.image.id,
+				alt: action.payload.image.alt,
+				src: action.payload.image.sizes.medium.url,
+			};
+			expect( gen.next( apiResponse ).value ).toEqual(
+				put( actions.setRSVPHeaderImage( headerImage ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsHeaderImage( headerImage ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( false ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsIsSettingsLoading( false ) )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+
+		it( 'should not update rsvp header image', () => {
+			const postId = 10;
+			const action = {
+				payload: {
+					image: {
+						id: 99,
+						alt: 'tribe',
+						sizes: {
+							medium: {
+								url: '#',
+							},
+						},
+					},
+				},
+			};
+			const gen = sagas.updateRSVPHeaderImage( action );
+			expect( gen.next().value ).toMatchSnapshot();
+			expect( gen.next( postId ).value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				call( api.wpREST, {
+					path: `tribe_events/${ postId }`,
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					initParams: {
+						method: 'PUT',
+						body: JSON.stringify( {
+							meta: {
+								[ utils.KEY_TICKET_HEADER ]: `${ action.payload.image.id }`,
+							},
+						} ),
+					},
+				} )
+			);
+
+			const apiResponse = {
+				response: {
+					ok: false,
+				},
+			};
+			expect( gen.next( apiResponse ).value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( false ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsIsSettingsLoading( false ) )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+	} );
+
+	describe( 'deleteRSVPHeaderImage', () => {
+		it( 'should delete rsvp header image', () => {
+			const postId = 10;
+			const gen = sagas.deleteRSVPHeaderImage();
+			expect( gen.next().value ).toMatchSnapshot();
+			expect( gen.next( postId ).value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				call( api.wpREST, {
+					path: `tribe_events/${ postId }`,
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					initParams: {
+						method: 'PUT',
+						body: JSON.stringify( {
+							meta: {
+								[ utils.KEY_TICKET_HEADER ]: null,
+							},
+						} ),
+					},
+				} )
+			);
+
+			const apiResponse = {
+				response: {
+					ok: true,
+				},
+			};
+			expect( gen.next( apiResponse ).value ).toEqual(
+				put( actions.setRSVPHeaderImage( RSVP_HEADER_IMAGE_DEFAULT_STATE ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsHeaderImage( TICKET_HEADER_IMAGE_DEFAULT_STATE ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( false ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsIsSettingsLoading( false ) )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+
+		it( 'should not delete rsvp header image', () => {
+			const postId = 10;
+			const gen = sagas.deleteRSVPHeaderImage();
+			expect( gen.next().value ).toMatchSnapshot();
+			expect( gen.next( postId ).value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsIsSettingsLoading( true ) )
+			);
+			expect( gen.next().value ).toEqual(
+				call( api.wpREST, {
+					path: `tribe_events/${ postId }`,
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					initParams: {
+						method: 'PUT',
+						body: JSON.stringify( {
+							meta: {
+								[ utils.KEY_TICKET_HEADER ]: null,
+							},
+						} ),
+					},
+				} )
+			);
+
+			const apiResponse = {
+				response: {
+					ok: false,
+				},
+			};
+			expect( gen.next( apiResponse ).value ).toEqual(
+				put( actions.setRSVPIsSettingsLoading( false ) )
+			);
+			expect( gen.next().value ).toEqual(
+				put( ticketActions.setTicketsIsSettingsLoading( false ) )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+	} );
+
+	describe( 'handleRSVPMove', () => {
+		it( 'should handle move', () => {
+			const gen = sagas.handleRSVPMove();
+
+			expect( gen.next().value ).toEqual(
+				select( selectors.getRSVPId )
+			);
+			expect( gen.next( 1 ).value ).toEqual(
+				select( moveSelectors.getModalTicketId )
+			);
+			expect( gen.next( 1 ).value ).toEqual(
+				select( moveSelectors.getModalClientId )
+			);
+			expect( gen.next( '111111' ).value ).toEqual(
+				put( actions.deleteRSVP() )
+			);
+			expect( gen.next().value ).toEqual(
+				call( [ wpDispatch( 'core/editor' ), 'removeBlocks' ], [ '111111' ] )
+			);
+			expect( gen.next().done ).toEqual( true );
+		} );
+	} );
+
 	describe( 'setNonEventPostTypeEndDate', () => {
 		it( 'shoud exit on non-events', () => {
 			const gen = sagas.setNonEventPostTypeEndDate();
@@ -772,29 +1246,6 @@ describe( 'RSVP block sagas', () => {
 				time: '12:00:00',
 			} ).value ).toMatchSnapshot();
 
-			expect( gen.next().done ).toEqual( true );
-		} );
-	} );
-
-	describe( 'handleRSVPMove', () => {
-		it( 'should handle move', () => {
-			const gen = sagas.handleRSVPMove();
-
-			expect( gen.next().value ).toEqual(
-				select( selectors.getRSVPId )
-			);
-			expect( gen.next( 1 ).value ).toEqual(
-				select( moveSelectors.getModalTicketId )
-			);
-			expect( gen.next( 1 ).value ).toEqual(
-				select( moveSelectors.getModalBlockId )
-			);
-			expect( gen.next( '111111' ).value ).toEqual(
-				put( actions.deleteRSVP() )
-			);
-			expect( gen.next().value ).toEqual(
-				call( [ wpDispatch( 'core/editor' ), 'removeBlocks' ], [ '111111' ] )
-			);
 			expect( gen.next().done ).toEqual( true );
 		} );
 	} );

@@ -210,12 +210,10 @@ function wpcf7_load_contact_form_admin() {
 			? $_POST['wpcf7-form'] : '';
 
 		$args['mail'] = isset( $_POST['wpcf7-mail'] )
-			? wpcf7_sanitize_mail( $_POST['wpcf7-mail'] )
-			: array();
+			? $_POST['wpcf7-mail'] : array();
 
 		$args['mail_2'] = isset( $_POST['wpcf7-mail-2'] )
-			? wpcf7_sanitize_mail( $_POST['wpcf7-mail-2'] )
-			: array();
+			? $_POST['wpcf7-mail-2'] : array();
 
 		$args['messages'] = isset( $_POST['wpcf7-messages'] )
 			? $_POST['wpcf7-messages'] : array();
@@ -322,8 +320,6 @@ function wpcf7_load_contact_form_admin() {
 		exit();
 	}
 
-	$_GET['post'] = isset( $_GET['post'] ) ? $_GET['post'] : '';
-
 	$post = null;
 
 	if ( 'wpcf7-new' == $plugin_page ) {
@@ -397,7 +393,8 @@ function wpcf7_admin_management_page() {
 		echo sprintf( '<span class="subtitle">'
 			/* translators: %s: search keywords */
 			. __( 'Search results for &#8220;%s&#8221;', 'contact-form-7' )
-			. '</span>', esc_html( $_REQUEST['s'] ) );
+			. '</span>', esc_html( $_REQUEST['s'] )
+		);
 	}
 ?>
 
@@ -491,6 +488,10 @@ function wpcf7_admin_integration_page() {
 add_action( 'wpcf7_admin_notices', 'wpcf7_admin_updated_message', 10, 3 );
 
 function wpcf7_admin_updated_message( $page, $action, $object ) {
+	if ( ! in_array( $page, array( 'wpcf7', 'wpcf7-new' ) ) ) {
+		return;
+	}
+
 	if ( empty( $_REQUEST['message'] ) ) {
 		return;
 	}
@@ -523,12 +524,14 @@ function wpcf7_admin_updated_message( $page, $action, $object ) {
 
 		if ( $count_invalid ) {
 			$updated_message = sprintf(
-				/* translators: %s: number of contact forms */
 				_n(
+					/* translators: %s: number of contact forms */
 					"Configuration validation completed. %s invalid contact form was found.",
 					"Configuration validation completed. %s invalid contact forms were found.",
-					$count_invalid, 'contact-form-7' ),
-				number_format_i18n( $count_invalid ) );
+					$count_invalid, 'contact-form-7'
+				),
+				number_format_i18n( $count_invalid )
+			);
 
 			echo sprintf( '<div id="message" class="notice notice-warning is-dismissible"><p>%s</p></div>', esc_html( $updated_message ) );
 		} else {
@@ -574,8 +577,13 @@ function wpcf7_old_wp_version_error( $page, $action, $object ) {
 ?>
 <div class="notice notice-warning">
 <p><?php
-	/* translators: 1: version of Contact Form 7, 2: version of WordPress, 3: URL */
-	echo sprintf( __( '<strong>Contact Form 7 %1$s requires WordPress %2$s or higher.</strong> Please <a href="%3$s">update WordPress</a> first.', 'contact-form-7' ), WPCF7_VERSION, WPCF7_REQUIRED_WP_VERSION, admin_url( 'update-core.php' ) );
+	echo sprintf(
+		/* translators: 1: version of Contact Form 7, 2: version of WordPress, 3: URL */
+		__( '<strong>Contact Form 7 %1$s requires WordPress %2$s or higher.</strong> Please <a href="%3$s">update WordPress</a> first.', 'contact-form-7' ),
+		WPCF7_VERSION,
+		WPCF7_REQUIRED_WP_VERSION,
+		admin_url( 'update-core.php' )
+	);
 ?></p>
 </div>
 <?php

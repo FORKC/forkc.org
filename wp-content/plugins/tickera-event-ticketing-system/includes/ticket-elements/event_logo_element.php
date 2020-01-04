@@ -24,8 +24,9 @@ class tc_event_logo_element extends TC_Ticket_Template_Elements {
 
 			$event_logo = apply_filters( 'tc_event_logo_element', get_post_meta( $event_id, 'event_logo_file_url', true ) );
 
-			if ( $event_logo ) {
-				return '<img src="' . $event_logo . '" />';
+                        if ( $event_logo ) {
+
+                            return '<img src="' . tc_ticket_template_image_url($event_logo) . '" />';
 			} else {
 				return '';
 			}
@@ -34,6 +35,7 @@ class tc_event_logo_element extends TC_Ticket_Template_Elements {
 				$ticket_type = new TC_Ticket( (int) $ticket_type_id );
 				$event_id	 = $ticket_type->get_ticket_event( $ticket_type_id );
 				$event		 = new TC_Event( $event_id );
+                     
 				return apply_filters( 'tc_event_logo_element', '<img src="' . $event->details->event_logo_file_url . '" />' );
 			} else {
 				return apply_filters( 'tc_event_logo_element_default', '<img src="' . $tc->plugin_dir . 'images/tickera_logo.png' . '" />' );

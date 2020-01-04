@@ -12,38 +12,50 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { LabelWithLink } from '@moderntribe/common/elements';
+import { AttendeesRegistration as ARElement } from '@moderntribe/tickets/elements';
 import './style.pcss';
 
-const helperText = __( 'Save your ticket to enable attendee registration fields', 'event-tickets' );
-const label = __( 'Attendee Registration', 'event-tickets' );
-const linkText = __( '+ Add', 'event-tickets' );
+const linkTextAdd = __( '+ Add', 'event-tickets' );
+const linkTextEdit = __( 'Edit', 'event-tickets' );
 
 const AttendeesRegistration = ( {
 	attendeeRegistrationURL,
+	hasAttendeeInfoFields,
 	isCreated,
 	isDisabled,
-}) => (
-	<div className="tribe-editor__ticket__attendee-registration">
-		<LabelWithLink
-			className="tribe-editor__ticket__attendee-registration-label-with-link"
-			label={ label }
-			linkDisabled={ isDisabled }
-			linkHref={ attendeeRegistrationURL }
+	isModalOpen,
+	onClick,
+	onClose,
+	onIframeLoad,
+} ) => {
+	const linkText = hasAttendeeInfoFields ? linkTextEdit : linkTextAdd;
+
+	return (
+		<ARElement
+			helperText={ __( 'Save your ticket to enable attendee information fields', 'event-tickets' ) }
+			iframeURL={ attendeeRegistrationURL }
+			isDisabled={ isDisabled }
+			isModalOpen={ isModalOpen }
+			label={ __( 'Attendee Information', 'event-tickets' ) }
 			linkText={ linkText }
+			modalTitle={ __( 'Attendee Information', 'event-tickets' ) }
+			onClick={ onClick }
+			onClose={ onClose }
+			onIframeLoad={ onIframeLoad }
+			showHelperText={ ! isCreated }
 		/>
-		{ ! isCreated && (
-			<span className="tribe-editor__ticket__attendee-registration-helper-text">
-				{ helperText }
-			</span>
-		) }
-	</div>
-);
+	);
+};
 
 AttendeesRegistration.propTypes = {
-	attendeeRegistrationURL: PropTypes.string,
-	isCreated: PropTypes.bool,
-	isDisabled: PropTypes.bool,
+	attendeeRegistrationURL: PropTypes.string.isRequired,
+	hasAttendeeInfoFields: PropTypes.bool.isRequired,
+	isCreated: PropTypes.bool.isRequired,
+	isDisabled: PropTypes.bool.isRequired,
+	isModalOpen: PropTypes.bool.isRequired,
+	onClick: PropTypes.func.isRequired,
+	onClose: PropTypes.func.isRequired,
+	onIframeLoad: PropTypes.func.isRequired,
 };
 
 export default AttendeesRegistration;

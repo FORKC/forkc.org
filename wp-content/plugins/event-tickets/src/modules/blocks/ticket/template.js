@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import React, { PureComponent } from 'react';
+import React, { PureComponent, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
@@ -20,7 +20,7 @@ import MoveModal from '@moderntribe/tickets/elements/move-modal';
 
 class Ticket extends PureComponent {
 	static propTypes = {
-		blockId: PropTypes.string.isRequired,
+		clientId: PropTypes.string.isRequired,
 		hasTicketsPlus: PropTypes.bool,
 		isDisabled: PropTypes.bool,
 		isLoading: PropTypes.bool,
@@ -28,6 +28,7 @@ class Ticket extends PureComponent {
 		isSelected: PropTypes.bool,
 		onBlockUpdate: PropTypes.func,
 		removeTicketBlock: PropTypes.func,
+		showTicket: PropTypes.bool,
 	};
 
 	componentDidMount() {
@@ -42,30 +43,35 @@ class Ticket extends PureComponent {
 
 	render() {
 		const {
-			blockId,
+			clientId,
 			hasTicketsPlus,
 			isDisabled,
 			isLoading,
 			isSelected,
 			isModalShowing,
+			showTicket,
 		} = this.props;
 
-		return [
-			(
-				<article className={ classNames(
-					'tribe-editor__ticket',
-					{ 'tribe-editor__ticket--disabled': isDisabled },
-					{ 'tribe-editor__ticket--selected': isSelected },
-					{ 'tribe-editor__ticket--has-tickets-plus': hasTicketsPlus },
-				) }
-				>
-					<TicketContainer blockId={ blockId } isSelected={ isSelected } />
-					<TicketDashboard blockId={ blockId } isSelected={ isSelected } />
-					{ isLoading && <Spinner /> }
-				</article>
-			),
-			isModalShowing && <MoveModal />,
-		];
+		return (
+			showTicket
+				? (
+					<Fragment>
+						<article className={ classNames(
+							'tribe-editor__ticket',
+							{ 'tribe-editor__ticket--disabled': isDisabled },
+							{ 'tribe-editor__ticket--selected': isSelected },
+							{ 'tribe-editor__ticket--has-tickets-plus': hasTicketsPlus },
+						) }
+						>
+							<TicketContainer clientId={ clientId } isSelected={ isSelected } />
+							<TicketDashboard clientId={ clientId } isSelected={ isSelected } />
+							{ isLoading && <Spinner /> }
+						</article>
+						{ isModalShowing && <MoveModal /> }
+					</Fragment>
+				)
+				: null
+		);
 	}
 }
 

@@ -22,13 +22,6 @@ class WC_Stripe_Payment_Request {
 	public $stripe_settings;
 
 	/**
-	 * Stripe Checkout enabled.
-	 *
-	 * @var
-	 */
-	public $stripe_checkout_enabled;
-
-	/**
 	 * Total label
 	 *
 	 * @var
@@ -70,13 +63,12 @@ class WC_Stripe_Payment_Request {
 	 * @version 4.0.0
 	 */
 	public function __construct() {
-		self::$_this                   = $this;
-		$this->stripe_settings         = get_option( 'woocommerce_stripe_settings', array() );
-		$this->testmode                = ( ! empty( $this->stripe_settings['testmode'] ) && 'yes' === $this->stripe_settings['testmode'] ) ? true : false;
-		$this->publishable_key         = ! empty( $this->stripe_settings['publishable_key'] ) ? $this->stripe_settings['publishable_key'] : '';
-		$this->secret_key              = ! empty( $this->stripe_settings['secret_key'] ) ? $this->stripe_settings['secret_key'] : '';
-		$this->stripe_checkout_enabled = isset( $this->stripe_settings['stripe_checkout'] ) && 'yes' === $this->stripe_settings['stripe_checkout'];
-		$this->total_label             = ! empty( $this->stripe_settings['statement_descriptor'] ) ? WC_Stripe_Helper::clean_statement_descriptor( $this->stripe_settings['statement_descriptor'] ) : '';
+		self::$_this            = $this;
+		$this->stripe_settings  = get_option( 'woocommerce_stripe_settings', array() );
+		$this->testmode         = ( ! empty( $this->stripe_settings['testmode'] ) && 'yes' === $this->stripe_settings['testmode'] ) ? true : false;
+		$this->publishable_key  = ! empty( $this->stripe_settings['publishable_key'] ) ? $this->stripe_settings['publishable_key'] : '';
+		$this->secret_key       = ! empty( $this->stripe_settings['secret_key'] ) ? $this->stripe_settings['secret_key'] : '';
+		$this->total_label      = ! empty( $this->stripe_settings['statement_descriptor'] ) ? WC_Stripe_Helper::clean_statement_descriptor( $this->stripe_settings['statement_descriptor'] ) : '';
 
 		if ( $this->testmode ) {
 			$this->publishable_key = ! empty( $this->stripe_settings['test_publishable_key'] ) ? $this->stripe_settings['test_publishable_key'] : '';
@@ -117,7 +109,7 @@ class WC_Stripe_Payment_Request {
 	 * @return array The list of countries.
 	 */
 	public function get_stripe_supported_countries() {
-		return apply_filters( 'wc_stripe_supported_countries', array( 'AT', 'AU', 'BE', 'BR', 'CA', 'CH', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'HK', 'IE', 'IN', 'IT', 'JP', 'LT', 'LU', 'LV', 'MX', 'NL', 'NZ', 'NO', 'PH', 'PL', 'PT', 'RO', 'SE', 'SG', 'SK', 'US' ) );
+		return apply_filters( 'wc_stripe_supported_countries', array( 'AT', 'AU', 'BE', 'BR', 'CA', 'CH', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'HK', 'IE', 'IN', 'IT', 'JP', 'LT', 'LU', 'LV', 'MX', 'NL', 'NZ', 'NO', 'PH', 'PL', 'PR', 'PT', 'RO', 'SE', 'SG', 'SK', 'US' ) );
 	}
 
 	/**
@@ -413,6 +405,8 @@ class WC_Stripe_Payment_Request {
 				'variable',
 				'variation',
 				'subscription',
+				'variable-subscription',
+				'subscription_variation',
 				'booking',
 				'bundle',
 				'composite',
@@ -433,6 +427,11 @@ class WC_Stripe_Payment_Request {
 			$_product = apply_filters( 'woocommerce_cart_item_product', $cart_item['data'], $cart_item, $cart_item_key );
 
 			if ( ! in_array( ( WC_Stripe_Helper::is_wc_lt( '3.0' ) ? $_product->product_type : $_product->get_type() ), $this->supported_product_types() ) ) {
+				return false;
+			}
+
+			// Trial subscriptions with shipping are not supported
+			if ( class_exists( 'WC_Subscriptions_Order' ) && WC_Subscriptions_Cart::cart_contains_subscription() && $_product->needs_shipping() && WC_Subscriptions_Product::get_trial_length( $_product ) > 0 ) {
 				return false;
 			}
 
@@ -527,6 +526,11 @@ class WC_Stripe_Payment_Request {
 		wp_localize_script( 'wc_stripe_payment_request', 'wc_stripe_payment_request_params', apply_filters( 'wc_stripe_payment_request_params', $stripe_params ) );
 
 		wp_enqueue_script( 'wc_stripe_payment_request' );
+
+		$gateways = WC()->payment_gateways->get_available_payment_gateways();
+		if ( isset( $gateways['stripe'] ) ) {
+			$gateways['stripe']->payment_scripts();
+		}
 	}
 
 	/**
@@ -563,6 +567,11 @@ class WC_Stripe_Payment_Request {
 				return;
 			}
 
+			// Trial subscriptions with shipping are not supported
+			if ( class_exists( 'WC_Subscriptions_Order' ) && $product->needs_shipping() && WC_Subscriptions_Product::get_trial_length( $product ) > 0 ) {
+				return;
+			}
+
 			// Pre Orders charge upon release not supported.
 			if ( class_exists( 'WC_Pre_Orders_Order' ) && WC_Pre_Orders_Product::product_is_charged_upon_release( $product ) ) {
 				WC_Stripe_Logger::log( 'Pre Order charge upon release is not supported. ( Payment Request button disabled )' );
@@ -575,7 +584,7 @@ class WC_Stripe_Payment_Request {
 			}
 		}
 		?>
-		<div id="wc-stripe-payment-request-wrapper" style="clear:both;padding-top:1.5em;">
+		<div id="wc-stripe-payment-request-wrapper" style="clear:both;padding-top:1.5em;display:none;">
 			<div id="wc-stripe-payment-request-button">
 				<!-- A Stripe Element will be inserted here. -->
 			</div>
@@ -614,6 +623,11 @@ class WC_Stripe_Payment_Request {
 			$product = wc_get_product( $post->ID );
 
 			if ( ! is_object( $product ) || ! in_array( ( WC_Stripe_Helper::is_wc_lt( '3.0' ) ? $product->product_type : $product->get_type() ), $this->supported_product_types() ) ) {
+				return;
+			}
+
+			// Trial subscriptions with shipping are not supported
+			if ( class_exists( 'WC_Subscriptions_Order' ) && $product->needs_shipping() && WC_Subscriptions_Product::get_trial_length( $product ) > 0 ) {
 				return;
 			}
 
@@ -804,6 +818,10 @@ class WC_Stripe_Payment_Request {
 			$product      = wc_get_product( $product_id );
 			$variation_id = null;
 
+			if ( ! is_a( $product, 'WC_Product' ) ) {
+				throw new Exception( sprintf( __( 'Product with the ID (%d) cannot be found.', 'woocommerce-gateway-stripe' ), $product_id ) );
+			}
+
 			if ( 'variable' === ( WC_Stripe_Helper::is_wc_lt( '3.0' ) ? $product->product_type : $product->get_type() ) && isset( $_POST['attributes'] ) ) {
 				$attributes = array_map( 'wc_clean', $_POST['attributes'] );
 
@@ -899,14 +917,15 @@ class WC_Stripe_Payment_Request {
 
 		WC()->shipping->reset_shipping();
 
-		$product_id = absint( $_POST['product_id'] );
-		$qty        = ! isset( $_POST['qty'] ) ? 1 : absint( $_POST['qty'] );
-		$product    = wc_get_product( $product_id );
+		$product_id   = absint( $_POST['product_id'] );
+		$qty          = ! isset( $_POST['qty'] ) ? 1 : absint( $_POST['qty'] );
+		$product      = wc_get_product( $product_id );
+		$product_type = WC_Stripe_Helper::is_wc_lt( '3.0' ) ? $product->product_type : $product->get_type();
 
 		// First empty the cart to prevent wrong calculation.
 		WC()->cart->empty_cart();
 
-		if ( 'variable' === ( WC_Stripe_Helper::is_wc_lt( '3.0' ) ? $product->product_type : $product->get_type() ) && isset( $_POST['attributes'] ) ) {
+		if ( ( 'variable' === $product_type || 'variable-subscription' === $product_type ) && isset( $_POST['attributes'] ) ) {
 			$attributes = array_map( 'wc_clean', $_POST['attributes'] );
 
 			if ( WC_Stripe_Helper::is_wc_lt( '3.0' ) ) {
@@ -919,7 +938,7 @@ class WC_Stripe_Payment_Request {
 			WC()->cart->add_to_cart( $product->get_id(), $qty, $variation_id, $attributes );
 		}
 
-		if ( 'simple' === ( WC_Stripe_Helper::is_wc_lt( '3.0' ) ? $product->product_type : $product->get_type() ) ) {
+		if ( 'simple' === $product_type || 'subscription' === $product_type ) {
 			WC()->cart->add_to_cart( $product->get_id(), $qty );
 		}
 

@@ -72,40 +72,42 @@ class TC_Shortcodes extends TC {
                 ?>
 
                 <div class="tickera">
-                    <table class="<?php echo $event_table_class; ?>">
-                        <tr>
-                            <?php do_action('tc_event_col_title_before_ticket_title'); ?>
-                            <th><?php echo $ticket_type_title; ?></th>
-                            <?php do_action('tc_event_col_title_before_ticket_price'); ?>
-                            <th><?php echo $price_title; ?></th>
-                            <?php if ($quantity) { ?>
-                                <th><?php echo $quantity_title; ?></th>
-                            <?php }
-                            ?>
-                            <?php do_action('tc_event_col_title_before_cart_title'); ?>
-                            <th><?php echo $cart_title; ?></th>
-                        </tr>
-                        <?php
-                        foreach ($event_tickets as $event_ticket_id) {
-                            $event_ticket = new TC_Ticket($event_ticket_id);
-                            if (TC_Ticket::is_sales_available($event_ticket_id)) {
+                    <div class="tc-event-table-wrap">
+                        <table class="<?php echo $event_table_class; ?>">
+                            <tr>
+                                <?php do_action('tc_event_col_title_before_ticket_title'); ?>
+                                <th><?php echo $ticket_type_title; ?></th>
+                                <?php do_action('tc_event_col_title_before_ticket_price'); ?>
+                                <th><?php echo $price_title; ?></th>
+                                <?php if ($quantity) { ?>
+                                    <th><?php echo $quantity_title; ?></th>
+                                <?php }
                                 ?>
-                                <tr>
-                                    <?php do_action('tc_event_col_value_before_ticket_type', $event_ticket_id); ?>
-                                    <td><?php echo $event_ticket->details->post_title; ?></td>
-                                    <?php do_action('tc_event_col_value_before_ticket_price', $event_ticket_id); ?>
-                                    <td><?php echo do_shortcode('[ticket_price id="' . $event_ticket->details->ID . '"]'); ?></td>
-                                    <?php do_action('tc_event_col_value_before_cart_title', $event_ticket_id); ?>
-                                    <?php if ($quantity) { ?>
-                                        <td><?php tc_quantity_selector($event_ticket->details->ID); ?></td>
-                                    <?php } ?>
-                                    <td><?php echo do_shortcode('[ticket id="' . $event_ticket->details->ID . '" type="' . $type . '" title="' . $title . '" soldout_message="' . $soldout_message . '" open_method="' . $open_method . '"]'); ?></td>
-                                </tr>
-                                <?php
+                                <?php do_action('tc_event_col_title_before_cart_title'); ?>
+                                <th><?php echo $cart_title; ?></th>
+                            </tr>
+                            <?php
+                            foreach ($event_tickets as $event_ticket_id) {
+                                $event_ticket = new TC_Ticket($event_ticket_id);
+                                if (TC_Ticket::is_sales_available($event_ticket_id)) {
+                                    ?>
+                                    <tr>
+                                        <?php do_action('tc_event_col_value_before_ticket_type', $event_ticket_id); ?>
+                                        <td><?php echo apply_filters('tc_tickets_table_title', $event_ticket->details->post_title, $event_ticket_id); ?></td>
+                                        <?php do_action('tc_event_col_value_before_ticket_price', $event_ticket_id); ?>
+                                        <td><?php echo do_shortcode('[ticket_price id="' . $event_ticket->details->ID . '"]'); ?></td>
+                                        <?php do_action('tc_event_col_value_before_cart_title', $event_ticket_id); ?>
+                                        <?php if ($quantity) { ?>
+                                            <td><?php tc_quantity_selector($event_ticket->details->ID); ?></td>
+                                        <?php } ?>
+                                        <td><?php echo do_shortcode('[ticket id="' . $event_ticket->details->ID . '" type="' . $type . '" title="' . $title . '" soldout_message="' . $soldout_message . '" open_method="' . $open_method . '"]'); ?></td>
+                                    </tr>
+                                    <?php
+                                }
                             }
-                        }
-                        ?>
-                    </table>
+                            ?>
+                        </table>
+                    </div><!-- .tc-event-table-wrap -->
                 </div><!-- tickera -->
 
                 <?php
@@ -141,7 +143,7 @@ class TC_Shortcodes extends TC {
         } else {
             $id = -1;
         }
-        
+
         if (isset($id) && TC_Ticket::is_sales_available($id)) {
             $ticket_type = new TC_Ticket($id, 'publish');
         }
@@ -223,7 +225,7 @@ class TC_Shortcodes extends TC {
 
         if (!empty($event_id)) {
             $id = $event_id;
-        } elseif(!empty($id)) {
+        } elseif (!empty($id)) {
             $id = $id;
         }
 
@@ -338,7 +340,13 @@ class TC_Shortcodes extends TC {
     function tc_cart_page($atts) {
         global $tc;
         ob_start();
-        include( $tc->plugin_dir . 'includes/templates/shortcode-cart-contents.php' );
+        $theme_file = locate_template(array('shortcode-cart-contents.php'));
+
+        if ($theme_file != '') {
+            include($theme_file);
+        } else {
+            include( $tc->plugin_dir . 'includes/templates/shortcode-cart-contents.php' );
+        }
         $content = wpautop(ob_get_clean(), true);
         return $content;
     }
@@ -346,7 +354,12 @@ class TC_Shortcodes extends TC {
     function tc_additional_fields($atts) {
         global $tc;
         ob_start();
-        include( $tc->plugin_dir . 'includes/templates/shortcode-cart-additional-info-fields.php' );
+        $theme_file = locate_template(array('shortcode-cart-additional-info-fields.php'));
+        if ($theme_file != '') {
+            include($theme_file);
+        } else {
+            include( $tc->plugin_dir . 'includes/templates/shortcode-cart-additional-info-fields.php' );
+        }
         $content = wpautop(ob_get_clean(), true);
         return $content;
     }
@@ -386,7 +399,7 @@ class TC_Shortcodes extends TC {
     function tc_payment_page($atts) {
         global $tc;
         ob_start();
-        include_once( $tc->plugin_dir . 'includes/templates/page-payment.php' );
+        include( $tc->plugin_dir . 'includes/templates/page-payment.php' );
         $content = wpautop(ob_get_clean(), true);
         return $content;
     }
@@ -394,7 +407,7 @@ class TC_Shortcodes extends TC {
     function tc_order_confirmation_page($atts) {
         global $tc;
         ob_start();
-        include_once( $tc->plugin_dir . 'includes/templates/page-confirmation.php' );
+        include( $tc->plugin_dir . 'includes/templates/page-confirmation.php' );
         $content = wpautop(ob_get_clean(), true);
         return $content;
     }
@@ -402,7 +415,7 @@ class TC_Shortcodes extends TC {
     function tc_order_details_page($atts) {
         global $tc, $wp;
         ob_start();
-        include_once( $tc->plugin_dir . 'includes/templates/page-order.php' );
+        include( $tc->plugin_dir . 'includes/templates/page-order.php' );
         $content = wpautop(ob_get_clean(), true);
         return $content;
     }

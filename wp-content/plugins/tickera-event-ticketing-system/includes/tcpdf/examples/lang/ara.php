@@ -1,5 +1,4 @@
 <?php
-
 //============================================================+
 // File name   : ara.php
 // Begin       : 2010-10-26
@@ -25,6 +24,7 @@
  * @author Nicola Asuni
  * @since 2010-10-26
  */
+
 // Arabic
 
 global $l;
@@ -32,12 +32,12 @@ $l = Array();
 
 // PAGE META DESCRIPTORS --------------------------------------
 
-$l[ 'a_meta_charset' ]	 = 'UTF-8';
-$l[ 'a_meta_dir' ]		 = 'rtl';
-$l[ 'a_meta_language' ]	 = 'ar';
+$l['a_meta_charset'] = 'UTF-8';
+$l['a_meta_dir'] = 'rtl';
+$l['a_meta_language'] = 'ar';
 
 // TRANSLATIONS --------------------------------------
-$l[ 'w_page' ] = 'صفحة';
+$l['w_page'] = 'صفحة';
 
 //============================================================+
 // END OF FILE

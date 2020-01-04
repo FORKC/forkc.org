@@ -21,10 +21,12 @@ if (!class_exists('TC_Cancel_Pending_Orders')) {
         var $plugin_url = '';
 
         function __construct() {
-            $this->title = __('Cancel Pending Orders', 'tc');
-            add_filter('tc_general_settings_miscellaneous_fields', array(&$this, 'cancel_pending_orders_misc_settings_field'));
-            add_action('tc_save_tc_general_settings', array(&$this, 'schedule_cancel_pending_orders_event'));
-            add_action('tc_maybe_delete_pending_posts_hook', array(&$this, 'tc_maybe_cancel_pending_posts'));
+            if (apply_filters('tc_bridge_for_woocommerce_is_active', false) == false) {
+                $this->title = __('Cancel Pending Orders', 'tc');
+                add_filter('tc_general_settings_miscellaneous_fields', array(&$this, 'cancel_pending_orders_misc_settings_field'));
+                add_action('tc_save_tc_general_settings', array(&$this, 'schedule_cancel_pending_orders_event'));
+                add_action('tc_maybe_delete_pending_posts_hook', array(&$this, 'tc_maybe_cancel_pending_posts'));
+            }
         }
 
         function cancel_pending_orders_misc_settings_field($settings_fields) {
@@ -56,6 +58,16 @@ if (!class_exists('TC_Cancel_Pending_Orders')) {
                 ),
                 'required' => false,
                 'number' => true
+            );
+
+            $new_default_fields[] = array(
+                'field_name' => 'removed_cancelled_orders_from_stock',
+                'field_title' => __('Remove Cancelled Orders From Stock', 'tc'),
+                'field_type' => 'function',
+                'function' => 'tc_yes_no',
+                'default_value' => 'yes',
+                'tooltip' => __('Set to "Yes" to reduce stock for items in cancelled orders.', 'tc'),
+                'section' => 'miscellaneous_settings'
             );
 
             $default_fields = array_merge($settings_fields, $new_default_fields);

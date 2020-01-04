@@ -1,0 +1,29 @@
+{
+    "name": "forkc/forkc.org",
+    "description": "The public website for Friends of the River Kansas City",
+    "type": "project",
+    "repositories":[
+        {
+            "type":"composer",
+            "url":"https://wpackagist.org"
+        }
+    ],
+    "require": {
+        "wpackagist-plugin/contact-form-7": "^5.1",
+        "wpackagist-plugin/events-manager": "5.9.7.1",
+        "wpackagist-plugin/event-tickets": "^4.11",
+        "wpackagist-plugin/cornerstone": "^0.7.5",
+        "wpackagist-plugin/export-database-littlebizzy": "^1.1",
+        "wpackagist-plugin/post-smtp": "^2.0",
+        "wpackagist-plugin/simple-add-pages-or-posts": "^2.0",
+        "wpackagist-plugin/stripe-gateway-for-events-manager-pro": "^1.3",
+        "wpackagist-plugin/stripe-payments": "^2.0",
+        "wpackagist-plugin/the-events-calendar": "^4.9",
+        "wpackagist-plugin/tickera-event-ticketing-system": "3.4.6.6",
+        "wpackagist-plugin/woocommerce": "^3.8",
+        "wpackagist-plugin/woocommerce-gateway-stripe": "^4.3",
+        "wpackagist-plugin/wordpress-seo": "^12.7",
+        "wpackagist-plugin/wp-fullcalendar": "^1.2",
+        "wpackagist-plugin/wp-super-cache": "^1.7"
+    }
+}

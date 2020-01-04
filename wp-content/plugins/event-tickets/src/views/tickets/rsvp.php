@@ -6,18 +6,57 @@
  *
  *     [your-theme]/tribe-events/tickets/rsvp.php
  *
- * @version 4.9
+ * @since 4.0
+ * @since 4.10.8 More similar display format to that of other ticket types, including better checking of max quantity available.
+ * @since 4.10.9 Use customizable ticket name functions.
+ * @since 4.11.0 Added RSVP/ticket view link to template.
+ * @since 4.11.1    Corrected amount of available/remaining tickets when threshold is empty.
  *
- * @var bool $must_login
+ * @version 4.11.1
+ *
+ * @var Tribe__Tickets__RSVP $this
+ * @var bool                 $must_login
  */
 
-$is_there_any_product         = false;
 $is_there_any_product_to_sell = false;
-$are_products_available       = false;
 
 ob_start();
 $messages = Tribe__Tickets__RSVP::get_instance()->get_messages();
 $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
+
+/** @var Tribe__Settings_Manager $settings_manager */
+$settings_manager = tribe( 'settings.manager' );
+
+$threshold = $settings_manager::get_option( 'ticket-display-tickets-left-threshold', 0 );
+
+/**
+ * Overwrites the threshold to display "# tickets left".
+ *
+ * @param int   $threshold Stock threshold to trigger display of "# tickets left"
+ * @param array $data      Ticket data.
+ * @param int   $post_id   WP_Post/Event ID.
+ *
+ * @since 4.11.1
+ */
+$threshold = absint( apply_filters( 'tribe_display_rsvp_block_tickets_left_threshold', $threshold, tribe_events_get_ticket_event( $ticket ) ) );
+
+/**
+ * A flag we can set via filter, e.g. at the end of this method, to ensure this template only shows once.
+ *
+ * @since 4.5.6
+ *
+ * @param boolean $already_rendered Whether the order link template has already been rendered.
+ *
+ * @see Tribe__Tickets__Tickets_View::inject_link_template()
+ */
+$already_rendered = apply_filters( 'tribe_tickets_order_link_template_already_rendered', false );
+
+// Output order links / view link if we haven't already (for RSVPs).
+if ( ! $already_rendered ) {
+	include $this->getTemplateHierarchy( 'tickets/view-link' );
+
+	add_filter( 'tribe_tickets_order_link_template_already_rendered', '__return_true' );
+}
 ?>
 
 <form
@@ -28,9 +67,8 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 	enctype='multipart/form-data'
 >
 	<h2 class="tribe-events-tickets-title tribe--rsvp">
-		<?php echo esc_html_x( 'RSVP', 'form heading', 'event-tickets' ) ?>
+		<?php echo esc_html( tribe_get_rsvp_label_singular( 'form_heading' ) ); ?>
 	</h2>
-
 
 	<div class="tribe-rsvp-messages">
 		<?php
@@ -54,8 +92,15 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 	<table class="tribe-events-tickets tribe-events-tickets-rsvp">
 		<?php
 		foreach ( $tickets as $ticket ) {
+			if ( ! $ticket instanceof Tribe__Tickets__Ticket_Object ) {
+				continue;
+			}
+
 			// if the ticket isn't an RSVP ticket, then let's skip it
-			if ( 'Tribe__Tickets__RSVP' !== $ticket->provider_class ) {
+			if (
+				! $ticket instanceof Tribe__Tickets__Ticket_Object
+				|| 'Tribe__Tickets__RSVP' !== $ticket->provider_class
+			) {
 				continue;
 			}
 
@@ -63,37 +108,51 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 				continue;
 			}
 
-			$is_there_any_product = true;
-			$is_there_any_product_to_sell = $ticket->is_in_stock();
-			$remaining = $ticket->remaining();
+			$ticket_id = $ticket->ID;
 
-			if ( $is_there_any_product_to_sell ) {
-				$are_products_available = true;
-			}
+			/** @var Tribe__Tickets__Tickets_Handler $handler */
+			$handler = tribe( 'tickets.handler' );
 
+			$available = $handler->get_ticket_max_purchase( $ticket_id );
+			$readable_amount = tribe_tickets_get_readable_amount( $available, null, false );
+
+			/**
+			 * Allows hiding of "unlimited" to be toggled on/off conditionally.
+			 *
+			 * @param int   $show_unlimited allow showing of "unlimited".
+			 *
+			 * @since 4.11.1
+			 */
+			$show_unlimited = apply_filters( 'tribe_rsvp_block_show_unlimited_availability', false, $available );
+
+			$is_there_any_product_to_sell = 0 !== $available;
 			?>
 			<tr>
-				<td class="tribe-ticket quantity" data-product-id="<?php echo esc_attr( $ticket->ID ); ?>">
-					<input type="hidden" name="product_id[]" value="<?php echo absint( $ticket->ID ); ?>">
+				<td class="tribe-ticket quantity" data-product-id="<?php echo esc_attr( $ticket_id ); ?>">
+					<input type="hidden" name="product_id[]" value="<?php echo absint( $ticket_id ); ?>">
 					<?php if ( $is_there_any_product_to_sell ) : ?>
 						<input
 							type="number"
-							class="tribe-ticket-quantity"
-						        step="1"
+							class="tribe-tickets-quantity"
+							step="1"
 							min="0"
-							<?php if ( -1 !== $remaining ) : ?>
-								max="<?php echo esc_attr( $remaining ); ?>"
+							<?php if ( -1 !== $available ) : ?>
+								max="<?php echo esc_attr( $available ); ?>"
 							<?php endif; ?>
-							name="quantity_<?php echo absint( $ticket->ID ); ?>"
+							name="quantity_<?php echo absint( $ticket_id ); ?>"
 							value="0"
 							<?php disabled( $must_login ); ?>
 						>
-						<?php if ( $ticket->managing_stock() ) : ?>
+						<?php if ( -1 !== $available && ( 0 === $threshold || $available <= $threshold ) ) : ?>
 							<span class="tribe-tickets-remaining">
-					<?php echo sprintf( esc_html__( '%1$s out of %2$s available', 'event-tickets' ), $ticket->available(), $ticket->capacity() ); ?>
-				</span>
+								<span class="available-stock" data-product-id="<?php echo esc_attr( $ticket_id ); ?>">
+									<?php echo sprintf( esc_html__( '%1$s available', 'event-tickets' ), esc_html( $readable_amount ) ); ?>
+								</span>
+							</span>
+						<?php elseif ( $show_unlimited ): ?>
+							<span class="available-stock" data-product-id="<?php echo esc_attr( $ticket_id ); ?>"><?php echo esc_html( $handler->unlimited_term ); ?></span>
 						<?php endif; ?>
-					<?php else: ?>
+					<?php elseif ( ! $ticket->is_in_stock() ) : ?>
 						<span class="tickets_nostock"><?php esc_html_e( 'Out of stock!', 'event-tickets' ); ?></span>
 					<?php endif; ?>
 				</td>
@@ -108,17 +167,17 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 			<?php
 
 			/**
-			 * Allows injection of HTML after an RSVP ticket table row
+			 * Allows injection of HTML after an RSVP ticket table row.
 			 *
-			 * @var Event ID
+			 * @var bool|WP_Post                  Event ID
 			 * @var Tribe__Tickets__Ticket_Object
 			 */
-			do_action( 'event_tickets_rsvp_after_ticket_row', tribe_events_get_ticket_event( $ticket->id ), $ticket );
+			do_action( 'event_tickets_rsvp_after_ticket_row', tribe_events_get_ticket_event( $ticket_id ), $ticket );
 
 		}
 		?>
 
-		<?php if ( $are_products_available ) : ?>
+		<?php if ( $is_there_any_product_to_sell ) : ?>
 			<tr class="tribe-tickets-meta-row">
 				<td colspan="4" class="tribe-tickets-attendees">
 					<header><?php esc_html_e( 'Send RSVP confirmation to:', 'event-tickets' ); ?></header>
@@ -168,7 +227,7 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 
 						<tr class="tribe-tickets-order_status-row">
 							<td>
-								<label for="tribe-tickets-order_status"><?php echo esc_html_x( 'RSVP', 'order status label', 'event-tickets' ); ?>:</label>
+								<label for="tribe-tickets-order_status"><?php echo esc_html( tribe_get_rsvp_label_singular( 'order_status_label' ) ); ?>:</label>
 							</td>
 							<td colspan="3">
 								<?php Tribe__Tickets__Tickets_View::instance()->render_rsvp_selector( 'attendee[order_status]', '' ); ?>
@@ -218,7 +277,7 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 							value="1"
 							class="tribe-button tribe-button--rsvp"
 						>
-							<?php esc_html_e( 'Confirm RSVP', 'event-tickets' );?>
+							<?php echo esc_html( sprintf( _x( 'Confirm %s', 'tickets process button text', 'event-tickets' ), tribe_get_rsvp_label_singular( 'tickets_process_button_text' ) ) );?>
 						</button>
 					<?php endif; ?>
 				</td>
@@ -238,7 +297,7 @@ $messages_class = $messages ? 'tribe-rsvp-message-display' : '';
 $content = ob_get_clean();
 echo $content;
 
-if ( $is_there_any_product ) {
+if ( $is_there_any_product_to_sell ) {
 	// If we have available tickets there is generally no need to display a 'tickets unavailable' message
 	// for this post
 	$this->do_not_show_tickets_unavailable_message();

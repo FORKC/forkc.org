@@ -8,16 +8,29 @@
  *
  * See more documentation about our Blocks Editor templating system.
  *
- * @link {INSERT_ARTCILE_LINK_HERE}
+ * @link {INSERT_ARTICLE_LINK_HERE}
  *
- * @version 4.9.3
+ * @since 4.9.3
+ *
+ * @version 4.11.0
  *
  */
-
+/**
+ * Allow filtering of the button name for the tickets block.
+ *
+ * @since 4.11.0
+ *
+ * @param string $button_name The button name. Set to cart-button to send to cart on submit, or set to checkout-button to send to checkout on submit.
+ */
+$button_name = apply_filters( 'tribe_tickets_ticket_block_submit', 'cart-button' );
 ?>
 <button
-	class="tribe-block__tickets__buy"
+	class="tribe-common-c-btn tribe-common-c-btn--small tribe-tickets__buy"
 	type="submit"
+	<?php if ( $button_name ) : ?>
+		name="<?php echo esc_html( $button_name ); ?>"
+	<?php endif; ?>
+
 >
-	<?php esc_html_e( 'Add to cart', 'event-tickets' ); ?>
+	<?php echo esc_html_x( 'Get Tickets', 'Add tickets to cart.', 'event-tickets' ); ?>
 </button>

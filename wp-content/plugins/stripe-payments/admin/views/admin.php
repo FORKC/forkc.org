@@ -66,13 +66,20 @@ if ( $_GET[ 'page' ] == 'stripe-payments-settings' ) {
     		<div class="postbox" style="min-width: inherit;">
     		    <h3 class="hndle"><label for="title"><?php echo __( 'Add-ons', 'stripe-payments' ); ?></label></h3>
     		    <div class="inside">
-			    <?php echo sprintf( __( 'Want additional functionality like subscriptions, Apple Pay support or MailChimp integration? Check out our %s', 'stripe-payments' ), '<a target="_blank" href="edit.php?post_type=asp-products&page=stripe-payments-addons">Add-Ons!</a>' ); ?>
+			    <?php echo sprintf( __( 'Want additional functionality like subscriptions, Apple Pay support or MailChimp integration? Check out our %s', 'stripe-payments' ), '<a target="_blank" href="edit.php?post_type='.ASPMain::$products_slug.'&page=stripe-payments-addons">Add-Ons!</a>' ); ?>
+    		    </div>
+    		</div>
+    		<div class="postbox yellowish" style="min-width: inherit;">
+    		    <h3 class="hndle"><label for="title"><?php echo __( 'Need Something Bigger?', 'stripe-payments' ); ?></label></h3>
+    		    <div class="inside">
+			    <?php _ex( 'If you need a feature rich plugin (with good support) for selling your products and services then check out our', 'Followed by a link to eStore plugin', 'stripe-payments' ); ?>
+    			<a target="_blank" href="https://www.tipsandtricks-hq.com/wordpress-estore-plugin-complete-solution-to-sell-digital-products-from-your-wordpress-blog-securely-1059">WP eStore Plugin</a>.
     		    </div>
     		</div>
     		<div class="postbox" style="min-width: inherit;">
     		    <h3 class="hndle"><label for="title"><?php echo __( 'Rate Us', 'stripe-payments' ); ?></label></h3>
     		    <div class="inside">
-			    <?php echo sprintf( _x( 'Like the plugin? Please give us a %s', '%s is replaced by "rating" link', 'stripe-payments' ), sprintf( '<a href="https://wordpress.org/support/plugin/stripe-payments/reviews/?filter=5" target="_blank">%s</a>', __( 'rating!', 'stripe-payments' ) ) ); ?>
+			    <?php echo sprintf( _x( 'Like the plugin? Please give us a good %s', '%s is replaced by "rating" link', 'stripe-payments' ), sprintf( '<a href="https://wordpress.org/support/plugin/stripe-payments/reviews/?filter=5" target="_blank">%s</a>', __( 'rating!', 'stripe-payments' ) ) ); ?>
     			<div class="wp-asp-stars-container">
     			    <a href="https://wordpress.org/support/plugin/stripe-payments/reviews/?filter=5" target="_blank">
     				<span class="dashicons dashicons-star-filled"></span>
@@ -82,6 +89,12 @@ if ( $_GET[ 'page' ] == 'stripe-payments-settings' ) {
     				<span class="dashicons dashicons-star-filled"></span>
     			    </a>
     			</div>
+    		    </div>
+    		</div>
+    		<div class="postbox" style="min-width: inherit;">
+    		    <h3 class="hndle"><label for="title"><?php echo __( 'Testing Version', 'stripe-payments' ); ?></label></h3>
+    		    <div class="inside">
+			    <?php echo sprintf( _x( "Want to see or test upcoming features, bugfixes or changes before they're released? Install %s of the plugin.", '%s is replaced by "Testing Version" link for testing version', 'stripe-payments' ), sprintf( '<a href="https://s-plugins.com/testing-version/" target="_blank">%s</a>', _x( 'Testing Version', 'Link for testing version of the plugin', 'stripe-payments' ) ) ); ?>
     		    </div>
     		</div>
     	    </div>
@@ -100,8 +113,10 @@ if ( $_GET[ 'page' ] == 'stripe-payments-settings' ) {
 	    'str'		 => array(
 		'logClearConfirm'	 => __( 'Are you sure you want to clear log?', 'stripe-payments' ),
 		'logCleared'		 => __( 'Log cleared.', 'stripe-payments' ),
-		'errorOccurred'		 => __( 'Error occured:', 'stripe-payments' ),
+		'errorOccurred'		 => __( 'Error occurred:', 'stripe-payments' ),
 	    ),
 	) );
 	wp_enqueue_script( 'asp-admin-settings-js' );
     }
+    ?>
+</div>

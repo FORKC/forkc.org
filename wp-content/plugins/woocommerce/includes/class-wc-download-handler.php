@@ -283,15 +283,18 @@ class WC_Download_Handler {
 
 		if ( function_exists( 'apache_get_modules' ) && in_array( 'mod_xsendfile', apache_get_modules(), true ) ) {
 			self::download_headers( $parsed_file_path['file_path'], $filename );
-			header( 'X-Sendfile: ' . $parsed_file_path['file_path'] );
+			$filepath = apply_filters( 'woocommerce_download_file_xsendfile_file_path', $parsed_file_path['file_path'], $file_path, $filename, $parsed_file_path );
+			header( 'X-Sendfile: ' . $filepath );
 			exit;
 		} elseif ( stristr( getenv( 'SERVER_SOFTWARE' ), 'lighttpd' ) ) {
 			self::download_headers( $parsed_file_path['file_path'], $filename );
-			header( 'X-Lighttpd-Sendfile: ' . $parsed_file_path['file_path'] );
+			$filepath = apply_filters( 'woocommerce_download_file_xsendfile_lighttpd_file_path', $parsed_file_path['file_path'], $file_path, $filename, $parsed_file_path );
+			header( 'X-Lighttpd-Sendfile: ' . $filepath );
 			exit;
 		} elseif ( stristr( getenv( 'SERVER_SOFTWARE' ), 'nginx' ) || stristr( getenv( 'SERVER_SOFTWARE' ), 'cherokee' ) ) {
 			self::download_headers( $parsed_file_path['file_path'], $filename );
 			$xsendfile_path = trim( preg_replace( '`^' . str_replace( '\\', '/', getcwd() ) . '`', '', $parsed_file_path['file_path'] ), '/' );
+			$xsendfile_path = apply_filters( 'woocommerce_download_file_xsendfile_x_accel_redirect_file_path', $xsendfile_path, $file_path, $filename, $parsed_file_path );
 			header( "X-Accel-Redirect: /$xsendfile_path" );
 			exit;
 		}
@@ -471,9 +474,6 @@ class WC_Download_Handler {
 	 */
 	private static function check_server_config() {
 		wc_set_time_limit( 0 );
-		if ( function_exists( 'get_magic_quotes_runtime' ) && get_magic_quotes_runtime() && version_compare( phpversion(), '5.4', '<' ) ) {
-			set_magic_quotes_runtime( 0 ); // @codingStandardsIgnoreLine
-		}
 		if ( function_exists( 'apache_setenv' ) ) {
 			@apache_setenv( 'no-gzip', 1 ); // phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged, WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_apache_setenv
 		}

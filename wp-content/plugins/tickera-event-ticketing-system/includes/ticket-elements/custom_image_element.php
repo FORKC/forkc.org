@@ -32,7 +32,8 @@ class tc_custom_image_element extends TC_Ticket_Template_Elements {
 	function ticket_content( $ticket_instance_id = false, $ticket_type_id = false ) {
 		global $tc;
 		$image_url = isset( $this->template_metas[ $this->element_name . '_custom_image_url' ] ) ? $this->template_metas[ $this->element_name . '_custom_image_url' ] : '';
-		return apply_filters( 'tc_custom_image_element', '<img src="' . esc_attr( $image_url ) . '" />' );
+		
+                return apply_filters( 'tc_custom_image_element', '<img src="' . esc_attr( tc_ticket_template_image_url($image_url) ) . '" />' );
 	}
 
 }

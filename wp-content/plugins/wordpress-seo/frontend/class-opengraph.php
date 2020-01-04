@@ -10,41 +10,42 @@
  */
 class WPSEO_OpenGraph {
 
-	/** @var WPSEO_Frontend_Page_Type */
-	protected $frontend_page_type;
+	/**
+	 * The date helper.
+	 *
+	 * @var WPSEO_Date_Helper
+	 */
+	protected $date;
 
 	/**
 	 * Class constructor.
 	 */
 	public function __construct() {
+		$this->date = new WPSEO_Date_Helper();
+
 		if ( isset( $GLOBALS['fb_ver'] ) || class_exists( 'Facebook_Loader', false ) ) {
-			add_filter( 'fb_meta_tags', array( $this, 'facebook_filter' ), 10, 1 );
+			add_filter( 'fb_meta_tags', [ $this, 'facebook_filter' ], 10, 1 );
 		}
 		else {
-			add_filter( 'language_attributes', array( $this, 'add_opengraph_namespace' ), 15 );
-
-			add_action( 'wpseo_opengraph', array( $this, 'locale' ), 1 );
-			add_action( 'wpseo_opengraph', array( $this, 'type' ), 5 );
-			add_action( 'wpseo_opengraph', array( $this, 'og_title' ), 10 );
-			add_action( 'wpseo_opengraph', array( $this, 'app_id' ), 20 );
-			add_action( 'wpseo_opengraph', array( $this, 'description' ), 11 );
-			add_action( 'wpseo_opengraph', array( $this, 'url' ), 12 );
-			add_action( 'wpseo_opengraph', array( $this, 'site_name' ), 13 );
-			add_action( 'wpseo_opengraph', array( $this, 'website_facebook' ), 14 );
+			add_action( 'wpseo_opengraph', [ $this, 'locale' ], 1 );
+			add_action( 'wpseo_opengraph', [ $this, 'type' ], 5 );
+			add_action( 'wpseo_opengraph', [ $this, 'og_title' ], 10 );
+			add_action( 'wpseo_opengraph', [ $this, 'app_id' ], 20 );
+			add_action( 'wpseo_opengraph', [ $this, 'description' ], 11 );
+			add_action( 'wpseo_opengraph', [ $this, 'url' ], 12 );
+			add_action( 'wpseo_opengraph', [ $this, 'site_name' ], 13 );
+			add_action( 'wpseo_opengraph', [ $this, 'website_facebook' ], 14 );
 			if ( is_singular() && ! is_front_page() ) {
-				add_action( 'wpseo_opengraph', array( $this, 'article_author_facebook' ), 15 );
-				add_action( 'wpseo_opengraph', array( $this, 'tags' ), 16 );
-				add_action( 'wpseo_opengraph', array( $this, 'category' ), 17 );
-				add_action( 'wpseo_opengraph', array( $this, 'publish_date' ), 19 );
+				add_action( 'wpseo_opengraph', [ $this, 'article_author_facebook' ], 15 );
+				add_action( 'wpseo_opengraph', [ $this, 'tags' ], 16 );
+				add_action( 'wpseo_opengraph', [ $this, 'category' ], 17 );
+				add_action( 'wpseo_opengraph', [ $this, 'publish_date' ], 19 );
 			}
 
-			add_action( 'wpseo_opengraph', array( $this, 'image' ), 30 );
+			add_action( 'wpseo_opengraph', [ $this, 'image' ], 30 );
 		}
 		add_filter( 'jetpack_enable_open_graph', '__return_false' );
-		add_action( 'wpseo_head', array( $this, 'opengraph' ), 30 );
-
-		// Class for determine the current page type.
-		$this->frontend_page_type = new WPSEO_Frontend_Page_Type();
+		add_action( 'wpseo_head', [ $this, 'opengraph' ], 30 );
 	}
 
 	/**
@@ -106,45 +107,6 @@ class WPSEO_OpenGraph {
 	}
 
 	/**
-	 * Filter for the namespace, adding the OpenGraph namespace.
-	 *
-	 * @link https://developers.facebook.com/docs/web/tutorials/scrumptious/open-graph-object/
-	 *
-	 * @param string $input The input namespace string.
-	 *
-	 * @return string
-	 */
-	public function add_opengraph_namespace( $input ) {
-		$namespaces = array(
-			'og: http://ogp.me/ns#',
-		);
-
-		/**
-		 * Allow for adding additional namespaces to the <html> prefix attributes.
-		 *
-		 * @since 3.9.0
-		 *
-		 * @param array $namespaces Currently registered namespaces which are to be
-		 *                          added to the prefix attribute.
-		 *                          Namespaces are strings and have the following syntax:
-		 *                          ns: http://url.to.namespace/definition
-		 */
-		$namespaces       = apply_filters( 'wpseo_html_namespaces', $namespaces );
-		$namespace_string = implode( ' ', array_unique( $namespaces ) );
-
-		if ( strpos( $input, ' prefix=' ) !== false ) {
-			$regex   = '`prefix=([\'"])(.+?)\1`';
-			$replace = 'prefix="$2 ' . $namespace_string . '"';
-			$input   = preg_replace( $regex, $replace, $input );
-		}
-		else {
-			$input .= ' prefix="' . $namespace_string . '"';
-		}
-
-		return $input;
-	}
-
-	/**
 	 * Outputs the authors FB page.
 	 *
 	 * @link https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/
@@ -178,6 +140,7 @@ class WPSEO_OpenGraph {
 	 *
 	 * @link https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/
 	 * @link https://developers.facebook.com/docs/reference/opengraph/object-type/article/
+	 *
 	 * @return boolean
 	 */
 	public function website_facebook() {
@@ -204,8 +167,8 @@ class WPSEO_OpenGraph {
 
 		$frontend = WPSEO_Frontend::get_instance();
 
-		if ( $this->frontend_page_type->is_simple_page() ) {
-			$post_id = $this->frontend_page_type->get_simple_page_id();
+		if ( WPSEO_Frontend_Page_Type::is_simple_page() ) {
+			$post_id = WPSEO_Frontend_Page_Type::get_simple_page_id();
 			$post    = get_post( $post_id );
 			$title   = WPSEO_Meta::get_value( 'opengraph-title', $post_id );
 
@@ -260,6 +223,7 @@ class WPSEO_OpenGraph {
 	 * Outputs the canonical URL as OpenGraph URL, which consolidates likes and shares.
 	 *
 	 * @link https://developers.facebook.com/docs/reference/opengraph/object-type/article/
+	 *
 	 * @return boolean
 	 */
 	public function url() {
@@ -270,7 +234,7 @@ class WPSEO_OpenGraph {
 		 * If the unpaged URL is the same as the normal URL but just with pagination added, use that.
 		 * This makes sure we always use the unpaged URL when we can, but doesn't break for overridden canonicals.
 		 */
-		if ( is_string( $unpaged_url ) && strpos( $url, $unpaged_url ) === 0 ) {
+		if ( ! empty( $unpaged_url ) && is_string( $unpaged_url ) && strpos( $url, $unpaged_url ) === 0 ) {
 			$url = $unpaged_url;
 		}
 
@@ -293,10 +257,9 @@ class WPSEO_OpenGraph {
 	/**
 	 * Output the locale, doing some conversions to make sure the proper Facebook locale is outputted.
 	 *
-	 * Last update/compare with FB list done on 2015-03-16 by Rarst
+	 * Last update/compare with FB list done on 2015-03-16 by Rarst.
 	 *
-	 * @see  http://www.facebook.com/translations/FacebookLocales.xml for the list of supported locales
-	 *
+	 * @link http://www.facebook.com/translations/FacebookLocales.xml for the list of supported locales.
 	 * @link https://developers.facebook.com/docs/reference/opengraph/object-type/article/
 	 *
 	 * @param bool $echo Whether to echo or return the locale.
@@ -312,7 +275,7 @@ class WPSEO_OpenGraph {
 		$locale = apply_filters( 'wpseo_locale', get_locale() );
 
 		// Catch some weird locales served out by WP that are not easily doubled up.
-		$fix_locales = array(
+		$fix_locales = [
 			'ca' => 'ca_ES',
 			'en' => 'en_US',
 			'el' => 'el_GR',
@@ -322,7 +285,7 @@ class WPSEO_OpenGraph {
 			'uk' => 'uk_UA',
 			'vi' => 'vi_VN',
 			'zh' => 'zh_CN',
-		);
+		];
 
 		if ( isset( $fix_locales[ $locale ] ) ) {
 			$locale = $fix_locales[ $locale ];
@@ -334,7 +297,7 @@ class WPSEO_OpenGraph {
 		}
 
 		// These are the locales FB supports.
-		$fb_valid_fb_locales = array(
+		$fb_valid_fb_locales = [
 			'af_ZA', // Afrikaans.
 			'ak_GH', // Akan.
 			'am_ET', // Amharic.
@@ -489,7 +452,7 @@ class WPSEO_OpenGraph {
 			'zh_TW', // Traditional Chinese (Taiwan).
 			'zu_ZA', // Zulu.
 			'zz_TR', // Zazaki.
-		);
+		];
 
 		// Check to see if the locale is a valid FB one, if not, use en_US as a fallback.
 		if ( ! in_array( $locale, $fb_valid_fb_locales, true ) ) {
@@ -585,8 +548,8 @@ class WPSEO_OpenGraph {
 			}
 		}
 
-		if ( $this->frontend_page_type->is_simple_page() ) {
-			$post_id = $this->frontend_page_type->get_simple_page_id();
+		if ( WPSEO_Frontend_Page_Type::is_simple_page() ) {
+			$post_id = WPSEO_Frontend_Page_Type::get_simple_page_id();
 			$post    = get_post( $post_id );
 			$ogdesc  = WPSEO_Meta::get_value( 'opengraph-description', $post_id );
 
@@ -662,6 +625,7 @@ class WPSEO_OpenGraph {
 	 * Output the article tags as article:tag tags.
 	 *
 	 * @link https://developers.facebook.com/docs/reference/opengraph/object-type/article/
+	 *
 	 * @return boolean
 	 */
 	public function tags() {
@@ -670,7 +634,7 @@ class WPSEO_OpenGraph {
 		}
 
 		$tags = get_the_tags();
-		if ( ! is_wp_error( $tags ) && ( is_array( $tags ) && $tags !== array() ) ) {
+		if ( ! is_wp_error( $tags ) && ( is_array( $tags ) && $tags !== [] ) ) {
 
 			foreach ( $tags as $tag ) {
 				$this->og_tag( 'article:tag', $tag->name );
@@ -686,6 +650,7 @@ class WPSEO_OpenGraph {
 	 * Output the article category as an article:section tag.
 	 *
 	 * @link https://developers.facebook.com/docs/reference/opengraph/object-type/article/
+	 *
 	 * @return boolean;
 	 */
 	public function category() {
@@ -725,6 +690,7 @@ class WPSEO_OpenGraph {
 	 * Output the article publish and last modification date.
 	 *
 	 * @link https://developers.facebook.com/docs/reference/opengraph/object-type/article/
+	 *
 	 * @return boolean;
 	 */
 	public function publish_date() {
@@ -744,10 +710,10 @@ class WPSEO_OpenGraph {
 
 		$post = get_post();
 
-		$pub = mysql2date( DATE_W3C, $post->post_date_gmt, false );
+		$pub = $this->date->format( $post->post_date_gmt );
 		$this->og_tag( 'article:published_time', $pub );
 
-		$mod = mysql2date( DATE_W3C, $post->post_modified_gmt, false );
+		$mod = $this->date->format( $post->post_modified_gmt );
 		if ( $mod !== $pub ) {
 			$this->og_tag( 'article:modified_time', $mod );
 			$this->og_tag( 'og:updated_time', $mod );
@@ -776,6 +742,7 @@ class WPSEO_OpenGraph {
 	 * Outputs the site owner.
 	 *
 	 * @link https://developers.facebook.com/docs/reference/opengraph/object-type/article/
+	 *
 	 * @return void
 	 *
 	 * @deprecated 7.1

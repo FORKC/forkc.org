@@ -25,10 +25,11 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             global $post;
 
             if (!isset($post)) {
-                $post = isset($_GET['post']) ? $_GET['post'] : '';
+                $post_id = isset($_GET['post']) ? $_GET['post'] : '';
+                $post_type = get_post_type($post_id);
+            }else{
+                $post_type = get_post_type($post);
             }
-
-            $post_type = get_post_type($post);
 
             if (empty($post_type)) {
                 $post_type = isset($_GET['post_type']) ? $_GET['post_type'] : '';
@@ -75,14 +76,17 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
             return $query;
         }
 
+
         function pre_get_posts_events_filter($query) {
             global $post_type, $pagenow;
-            if ($pagenow == 'edit.php' && $post_type == 'tc_tickets_instances') {
+            if ($pagenow == 'edit.php' && ($post_type == 'tc_tickets_instances' || $post_type == 'tc_tickets')) {
 
-                if (isset($_REQUEST['tc_event_filter']) && $query->query['post_type'] == 'tc_tickets_instances') {
-
-                    if ((int) $_REQUEST['tc_event_filter'] !== 0) {
+                if (isset($_REQUEST['tc_event_filter']) && ($query->query['post_type'] == 'tc_tickets_instances' || $query->query['post_type'] == 'tc_tickets')) {
+                    if ((int) $_REQUEST['tc_event_filter'] !== 0 && $post_type == 'tc_tickets_instances') {
                         $query->set('meta_key', 'event_id');
+                        $query->set('meta_value', (int) $_REQUEST['tc_event_filter']);
+                    } elseif ((int) $_REQUEST['tc_event_filter'] !== 0 ) {
+                        $query->set('meta_key', 'event_name');
                         $query->set('meta_value', (int) $_REQUEST['tc_event_filter']);
                     }
                 }
@@ -114,7 +118,7 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
 
         function add_events_filter() {
             global $post_type;
-            if ($post_type == 'tc_tickets_instances') {
+            if ($post_type == 'tc_tickets_instances' || $post_type == 'tc_tickets') {
 
                 $wp_events_search = new TC_Events_Search('', '', '-1');
 
@@ -173,6 +177,7 @@ if (!class_exists('TC_Better_Attendees_and_Tickets')) {
                 $api_key = new TC_API_Key(sanitize_text_field($_POST['api_key']));
                 $checkin = new TC_Checkin_API($api_key->details->api_key, apply_filters('tc_checkin_request_name', 'tickera_scan'), 'return', $ticket_instance->details->ticket_code, false);
                 $checkin_result = $checkin->ticket_checkin(false);
+           
                 if (isset($checkin_result['status']) && $checkin_result['status'] == 1) {
                     $message_type = 'updated';
                     $message = __('Ticket checked in successfully.', 'tc');

@@ -525,6 +525,11 @@ html[xmlns] .tc-clearfix {
     color: red;
 }
 
+.tc-event-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
 /* RESPONSIVE */
 
 @media only screen and (max-width: 1270px){

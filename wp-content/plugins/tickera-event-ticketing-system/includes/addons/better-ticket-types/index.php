@@ -25,10 +25,11 @@ if (!class_exists('TC_Better_Ticket_Types')) {
             global $post;
 
             if (!isset($post)) {
-                $post = isset($_GET['post']) ? $_GET['post'] : '';
+                $post_id = isset($_GET['post']) ? $_GET['post'] : '';
+                $post_type = get_post_type($post_id);
+            }else{
+                $post_type = get_post_type($post);
             }
-
-            $post_type = get_post_type($post);
 
             if (empty($post_type)) {
                 $post_type = isset($_GET['post_type']) ? $_GET['post_type'] : '';

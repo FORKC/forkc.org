@@ -3,7 +3,7 @@
 Plugin Name: Simple add pages or posts
 Plugin URI: https://www.mijnpress.nl
 Description: Lets you add multiple pages or posts
-Version: 1.8.2
+Version: 2.0.0
 Text Domain: mp-simpleaddpagesorposts
 Author: Simon Dirlik, Ramon Fincken
 Author URI: https://www.mijnpress.nl
@@ -12,9 +12,9 @@ Based on: https://www.mijnpress.nl/blog/plugin-framework/
 
 if (!defined('ABSPATH')) die("Aren't you supposed to come here via WP-Admin?");
 
-if(!class_exists('mijnpress_plugin_framework'))
+if( !class_exists('mijnpress_plugin_framework' ) )
 {
-	include('mijnpress_plugin_framework.php');
+	include( 'mijnpress_plugin_framework.php' );
 }
 
 function mp_plugin_simpleaddpagesorposts_load_plugin_textdomain() {
@@ -34,35 +34,25 @@ class plugin_simple_add_pages_or_posts extends mijnpress_plugin_framework
 		$this->plugin_config_url = 'plugins.php?page='.$this->plugin_filename;
 	}
 
-	function plugin_simple_add_pages_or_posts()
-	{
-		$args= func_get_args();
-		call_user_func_array
-		(
-		    array(&$this, '__construct'),
-		    $args
-		);
-	}
-
-	function addPluginSubMenu_($title)
+	static function addPluginSubMenu_($title)
 	{
 		$plugin = new plugin_simple_add_pages_or_posts();
-		parent::addPluginSubMenu($plugin->plugin_title, array($plugin->plugin_class, 'admin_menu'), __FILE__);
+		$plugin->addPluginSubMenu( $plugin->plugin_title, array($plugin->plugin_class, 'admin_menu'), __FILE__);
 	}
 
 	/**
 	 * Additional links on the plugin page
 	 */
-	function addPluginContent_($links, $file) {
+	static function addPluginContent_($links, $file) {
 		$plugin = new plugin_simple_add_pages_or_posts();
-		$links = parent::addPluginContent($plugin->plugin_filename, $links, $file, $plugin->plugin_config_url);
+		$links = $plugin->addPluginContent( $plugin->plugin_filename, $links, $file, $plugin->plugin_config_url);
 		return $links;
 	}
 
 	/**
 	 * Shows the admin plugin page
 	 */
-	public function admin_menu()
+	public static function admin_menu()
 	{
 		$plugin = new plugin_simple_add_pages_or_posts();		
 		$plugin->content_start();		
@@ -76,7 +66,6 @@ class plugin_simple_add_pages_or_posts extends mijnpress_plugin_framework
 // Admin only
 if(mijnpress_plugin_framework::is_admin())
 {
-	add_action('admin_menu',  array('plugin_simple_add_pages_or_posts', 'addPluginSubMenu_'));
-	add_filter('plugin_row_meta',array('plugin_simple_add_pages_or_posts', 'addPluginContent_'), 10, 2);
+	add_action('admin_menu',  array( 'plugin_simple_add_pages_or_posts', 'addPluginSubMenu_') );
+	add_filter('plugin_row_meta', array( 'plugin_simple_add_pages_or_posts', 'addPluginContent_'), 10, 2);
 }
-?>

@@ -3,7 +3,7 @@
 		<form action="" method="post" enctype = "multipart/form-data">
 
 			<div id="store_settings" class="postbox">
-				<h3 class="hndle"><span><?php _e( 'Attendee List (PDF Export)', 'tc' ); ?></span></h3>
+				<h3><span><?php _e( 'Attendee List (PDF Export)', 'tc' ); ?></span></h3>
 				<div class="inside">
 					<table class="form-table">
 
@@ -67,6 +67,18 @@
 											<input type="checkbox" name="col_buyer_email" id="col_buyer_email" checked="checked">                                                                                
 											<?php _e( 'Buyer Email', 'tc' ); ?>                                                                                
 										</label>
+                                                                            
+                                                                            
+                                                                                <label for="col_checked_in" class="tc_checkboxes_label">
+											<input type="checkbox" name="col_checked_in" id="col_checked_in" checked="checked">                                                                                
+											<?php _e( 'Checked-in', 'tc' ); ?>                                                                                
+										</label>
+                                                                            
+                                                                                <label for="col_checkins" class="tc_checkboxes_label">
+											<input type="checkbox" name="col_checkins" id="col_checkins" checked="checked">                                                                                
+											<?php _e( 'Check-ins', 'tc' ); ?>                                                                                
+										</label>
+                                                                            
 
 <!--<input type="checkbox" name="col_barcode"><?php _e( 'Barcode', 'tc' ); ?><br />-->
 <!--<input type="checkbox" name="col_qrcode"><?php _e( 'QR code', 'tc' ); ?><br />-->

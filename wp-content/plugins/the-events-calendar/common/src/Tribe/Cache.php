@@ -157,23 +157,31 @@ class Tribe__Cache implements ArrayAccess {
 	}
 
 	/**
-	 * @param string $action
+	 * Returns the time of an action last occurrence.
 	 *
-	 * @return int
+	 * @param string $action The action to return the time for.
+	 *
+	 * @since 4.9.14 Changed the return value type from `int` to `float`.
+	 *
+	 * @return float The time (microtime) an action last occurred, or the current microtime if it never occurred.
 	 */
 	public function get_last_occurrence( $action ) {
-		return (int) get_option( 'tribe_last_' . $action, time() );
+		return (float) get_option( 'tribe_last_' . $action, microtime( true ) );
 	}
 
 	/**
-	 * @param string $action
-	 * @param int    $timestamp
+	 * Sets the time (microtime) for an action last occurrence.
+	 *
+	 * @since 4.9.14 Changed the type of the time stored from an `int` to a `float`.
+	 *
+	 * @param string $action The action to record the last occurrence of.
+	 * @param int    $timestamp The timestamp to assign to the action last occurrence or the current time (microtime).
 	 */
 	public function set_last_occurrence( $action, $timestamp = 0 ) {
 		if ( empty( $timestamp ) ) {
-			$timestamp = time();
+			$timestamp = microtime( true );
 		}
-		update_option( 'tribe_last_' . $action, (int) $timestamp );
+		update_option( 'tribe_last_' . $action, (float) $timestamp );
 	}
 
 	/**
@@ -264,5 +272,84 @@ class Tribe__Cache implements ArrayAccess {
 	public function offsetUnset( $offset ) {
 		$this->delete( $offset );
 	}
-}
 
+	/**
+	 * Warms up the caches for a collection of posts.
+	 *
+	 * @since 4.10.2
+	 *
+	 * @param array|int $post_ids               A post ID, or a collection of post IDs.
+	 * @param bool      $update_post_meta_cache Whether to warm-up the post meta cache for the posts or not.
+	 */
+	public function warmup_post_caches( $post_ids, $update_post_meta_cache = false ) {
+		if ( empty( $post_ids ) ) {
+			return;
+		}
+
+		$post_ids = (array) $post_ids;
+
+		global $wpdb;
+
+		$already_cached_ids = [];
+		foreach ( $post_ids as $post_id ) {
+			if ( wp_cache_get( $post_id, 'posts' ) instanceof \WP_Post ) {
+				$already_cached_ids[] = $post_id;
+			}
+		}
+
+		$required = array_diff( $post_ids, $already_cached_ids );
+
+		if ( empty( $required ) ) {
+			return;
+		}
+
+		/** @var Tribe__Feature_Detection $feature_detection */
+		$feature_detection = tribe('feature-detection');
+		$limit = $feature_detection->mysql_limit_for_example( 'post_result' );
+
+		/**
+		 * Filters the LIMIT that should be used to warm-up post caches and postmeta caches (if the
+		 * `$update_post_meta_cache` parameter is `true`).
+		 *
+		 * Lower this value on less powerful hosts. Return `0` to disable the warm-up completely, and `-1` to remove the
+		 * limit (not recommended).
+		 *
+		 * @since 4.10.2
+		 *
+		 * @param int $limit The number of posts whose caches will be warmed up, per query.
+		 */
+		$limit = (int) apply_filters( 'tribe_cache_warmup_post_cache_limit', min( $limit, count( $post_ids ) ) );
+
+		if ( 0 === $limit ) {
+			// Warmup disabled.
+			return;
+		}
+
+		$buffer = $post_ids;
+		$page   = 0;
+
+		do {
+			$limit_clause = $limit < 0 ? sprintf( 'LIMIT %d,%d', $limit * $page, $limit ) : '';
+			$page ++;
+			$these_ids    = array_splice( $buffer, 0, $limit );
+			$interval     = implode( ',', array_map( 'absint', $these_ids ) );
+			$posts_query  = "SELECT * FROM {$wpdb->posts} WHERE ID IN ({$interval}) {$limit_clause}";
+			$post_objects = $wpdb->get_results( $posts_query );
+			if ( is_array( $post_objects ) && ! empty( $post_objects ) ) {
+				foreach ( $post_objects as $post_object ) {
+					$post = new \WP_Post( $post_object );
+					wp_cache_set( $post_object->ID, $post, 'posts' );
+				}
+
+				if ( $update_post_meta_cache ) {
+					update_meta_cache( 'post', $these_ids );
+				}
+			}
+		} while (
+			! empty( $post_objects )
+			&& is_array( $post_objects )
+			&& count( $post_objects ) < count( $post_ids )
+		);
+
+    }
+}

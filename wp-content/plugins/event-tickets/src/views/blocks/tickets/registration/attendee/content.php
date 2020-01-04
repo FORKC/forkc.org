@@ -8,15 +8,16 @@
  *
  * See more documentation about our Blocks Editor templating system.
  *
- * @link {INSERT_ARTCILE_LINK_HERE}
+ * @link {INSERT_ARTICLE_LINK_HERE}
  *
- * @version 4.9
+ * @since 4.9
+ * @version 4.11.0
  *
  */
 
 ?>
 <div
-	class="tribe-block__tickets__item__attendee__fields"
+	class="tribe-tickets__item__attendee__fields"
 >
 	<?php foreach ( $tickets as $key => $ticket ) : ?>
 		<?php $this->template( 'blocks/tickets/registration/attendee/fields', array( 'ticket' => $ticket, 'key' => $key ) ); ?>

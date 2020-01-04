@@ -15,7 +15,7 @@ class WPSEO_Post_Type_Archive_Notification_Handler extends WPSEO_Dismissible_Not
 	 *
 	 * @var array
 	 */
-	protected $option_defaults = array();
+	protected $option_defaults = [];
 
 	/**
 	 * Sets the notification identifier.
@@ -42,7 +42,7 @@ class WPSEO_Post_Type_Archive_Notification_Handler extends WPSEO_Dismissible_Not
 			return false;
 		}
 
-		return $this->get_post_types() !== array();
+		return $this->get_post_types() !== [];
 	}
 
 	/**
@@ -64,7 +64,7 @@ class WPSEO_Post_Type_Archive_Notification_Handler extends WPSEO_Dismissible_Not
 			/* translators: %1$s is the archive template link start tag, %2$s is the link closing tag, %3$s is a comma separated string with content types. */
 			_n(
 				'Please check the %1$sarchive template%2$s for the following content type: %3$s.',
-				' Please check the %1$sarchive templates%2$s for the following content types: %3$s.',
+				'Please check the %1$sarchive templates%2$s for the following content types: %3$s.',
 				count( $post_types ),
 				'wordpress-seo'
 			),
@@ -73,19 +73,14 @@ class WPSEO_Post_Type_Archive_Notification_Handler extends WPSEO_Dismissible_Not
 			implode( ', ', $post_types )
 		);
 		$message .= PHP_EOL . PHP_EOL;
-		$message .= sprintf(
-			/* translators: %1$s is the notification dismissal link start tag, %2$s is the link closing tag. */
-			__( '%1$sRemove this message%2$s', 'wordpress-seo' ),
-			'<a class="button" href="' . admin_url( '?page=' . WPSEO_Admin::PAGE_IDENTIFIER . '&yoast_dismiss=' . $this->notification_identifier ) . '">',
-			'</a>'
-		);
+		$message .= '<a class="button" href="' . admin_url( '?page=' . WPSEO_Admin::PAGE_IDENTIFIER . '&yoast_dismiss=' . $this->notification_identifier ) . '">' . __( 'Remove this message', 'wordpress-seo' ) . '</a>';
 
-		$notification_options = array(
+		$notification_options = [
 			'type'         => Yoast_Notification::WARNING,
 			'id'           => 'wpseo-' . $this->notification_identifier,
 			'priority'     => 1.0,
 			'capabilities' => 'wpseo_manage_options',
-		);
+		];
 
 		return new Yoast_Notification( $message, $notification_options );
 	}
@@ -93,7 +88,7 @@ class WPSEO_Post_Type_Archive_Notification_Handler extends WPSEO_Dismissible_Not
 	/**
 	 * Checks if the first activation is done before the release of 7.9.
 	 *
-	 * @return bool True whether the install is 'new'.
+	 * @return bool True when the install is 'new'.
 	 *
 	 * @codeCoverageIgnore
 	 */
@@ -114,11 +109,11 @@ class WPSEO_Post_Type_Archive_Notification_Handler extends WPSEO_Dismissible_Not
 		if ( $post_types === null ) {
 			$this->option_defaults = WPSEO_Option_Titles::get_instance()->get_defaults();
 
-			$post_types = get_post_types( array( 'public' => true ) );
+			$post_types = get_post_types( [ 'public' => true ] );
 			$post_types = WPSEO_Post_Type::filter_attachment_post_type( $post_types );
 			$post_types = $this->filter_woocommerce_product_type( $post_types );
-			$post_types = array_filter( $post_types, array( $this, 'has_custom_archive_slug' ) );
-			$post_types = array_filter( $post_types, array( $this, 'has_default_templates_set' ) );
+			$post_types = array_filter( $post_types, [ $this, 'has_custom_archive_slug' ] );
+			$post_types = array_filter( $post_types, [ $this, 'has_default_templates_set' ] );
 		}
 
 		return $post_types;
@@ -146,7 +141,7 @@ class WPSEO_Post_Type_Archive_Notification_Handler extends WPSEO_Dismissible_Not
 	 *
 	 * @param string $post_type_name The post type's name.
 	 *
-	 * @return bool True whether the archive slug is overridden.
+	 * @return bool True when the archive slug is overridden.
 	 *
 	 * @codeCoverageIgnore
 	 */
@@ -165,7 +160,7 @@ class WPSEO_Post_Type_Archive_Notification_Handler extends WPSEO_Dismissible_Not
 	 *
 	 * @param string $post_type_name The post type name.
 	 *
-	 * @return bool True whether the default templates are set.
+	 * @return bool True when the default templates are set.
 	 *
 	 * @codeCoverageIgnore
 	 */
@@ -181,7 +176,7 @@ class WPSEO_Post_Type_Archive_Notification_Handler extends WPSEO_Dismissible_Not
 	 *
 	 * @param string $option_name The option name to check.
 	 *
-	 * @return bool True whethere the option value is equal to the default value.
+	 * @return bool True when the option value is equal to the default value.
 	 *
 	 * @codeCoverageIgnore
 	 */

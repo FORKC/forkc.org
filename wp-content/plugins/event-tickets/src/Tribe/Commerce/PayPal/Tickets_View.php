@@ -50,26 +50,14 @@ class Tribe__Tickets__Commerce__PayPal__Tickets_View extends Tribe__Tickets__Tic
 	 * @return array                   Array with the PayPal tickets attendees
 	 */
 	public function get_post_ticket_attendees( $event_id, $user_id ) {
-		$all_attendees = Tribe__Tickets__Tickets::get_event_attendees( $event_id );
-		$attendees     = array();
+		/** @var Tribe__Tickets__Commerce__PayPal__Main $paypal */
+		$paypal = tribe( 'tickets.commerce.paypal' );
 
-		foreach ( $all_attendees as $key => $attendee ) {
-			// Skip Non PayPal tickets
-			if ( 'tpp' !== $attendee['provider_slug'] ) {
-				continue;
-			}
-
-			// If we have a user_id then test it and ignore the ones that don't have it
-			if ( ! is_null( $user_id ) ) {
-				if ( empty( $attendee['user_id'] ) || $attendee['user_id'] != $user_id ) {
-					continue;
-				}
-			}
-
-			$attendees[] = $attendee;
+		if ( $user_id ) {
+			return $paypal->get_attendees_by_user_id( $user_id, $event_id );
 		}
 
-		return $attendees;
+		return $paypal->get_attendees_by_id( $event_id );
 	}
 
 	/**
@@ -149,13 +137,14 @@ class Tribe__Tickets__Commerce__PayPal__Tickets_View extends Tribe__Tickets__Tic
 		$ticket_status = __( 'unavailable', 'event-tickets' );
 
 		if ( ! empty( $status ) ) {
-			$status_strings = array(
-				Tribe__Tickets__Commerce__PayPal__Stati::$undefined => __( 'undefined', 'event-tickets' ),
-				Tribe__Tickets__Commerce__PayPal__Stati::$completed => __( 'completed', 'event-tickets' ),
-				Tribe__Tickets__Commerce__PayPal__Stati::$pending   => __( 'pending', 'event-tickets' ),
-				Tribe__Tickets__Commerce__PayPal__Stati::$refunded  => __( 'refunded', 'event-tickets' ),
-				Tribe__Tickets__Commerce__PayPal__Stati::$denied    => __( 'denied', 'event-tickets' ),
-			);
+			/** @var Tribe__Tickets__Status__Manager $status_mgr */
+			$status_mgr = tribe( 'tickets.status' );
+
+			$statuses       = $status_mgr->get_all_provider_statuses( 'tpp' );
+			$status_strings = [];
+			foreach ( $statuses as $s ) {
+				$status_strings[ $s->provider_name ] = _x( $s->name, 'a PayPal ticket order status', 'event-tickets' );
+			}
 
 			$ticket_status = Tribe__Utils__Array::get( $status_strings, $status, reset( $status_strings ) );
 		}

@@ -25,10 +25,11 @@ if (!class_exists('TC_Better_Orders')) {
             global $post;
 
             if (!isset($post)) {
-                $post = isset($_GET['post']) ? $_GET['post'] : '';
+                $post_id = isset($_GET['post']) ? $_GET['post'] : '';
+                $post_type = get_post_type($post_id);
+            }else{
+                $post_type = get_post_type($post);
             }
-
-            $post_type = get_post_type($post);
 
             if (empty($post_type)) {
                 $post_type = isset($_GET['post_type']) ? $_GET['post_type'] : '';
@@ -215,14 +216,14 @@ if (!class_exists('TC_Better_Orders')) {
             global $wpdb;
             $order_id = $post_id;
 
-            if (!isset($_POST['order_status_change'])) {//Make sure the edit comes from the order details page
+            if (!isset($_POST['order_status_change']) || get_post_type($post_id) !== 'tc_orders') {//Make sure the edit comes from the order details page
                 return;
             }
 
             $post_status = sanitize_key($_POST['order_status_change']);
             $order = new TC_Order($order_id);
 
-            $old_post_status = $order->details->post_status;
+            $old_post_status = isset($_POST['original_post_status']) ? sanitize_key($_POST['original_post_status']) : 'pending';//$order->details->post_status;
 
             if ($post_status == 'trash') {
                 $order->delete_order(false);
@@ -230,6 +231,13 @@ if (!class_exists('TC_Better_Orders')) {
                 if ($old_post_status == 'trash') {//untrash attendees & tickets only in case that order was in the trash
                     $order->untrash_order();
                 }
+
+                if ($post_status == 'order_cancelled') {
+                    $current_user = wp_get_current_user();
+                    TC_Order::add_order_note($order_id, sprintf(__('Order cancelled by %s'), $current_user->user_login));
+                    do_action('tc_order_cancelled', $order_id, $old_post_status, $post_status);
+                }
+
                 $wpdb->update(
                         $wpdb->posts, array(
                     'post_status' => $post_status
@@ -247,7 +255,7 @@ if (!class_exists('TC_Better_Orders')) {
                     do_action('tc_order_paid_change', $order_id, $post_status, '', '', $payment_info);
                 } else {
                     //echo 'already was paid!';
-                    exit;
+                    //exit;
                 }
             } else {
                 //echo 'post status is not order_paid';
@@ -271,11 +279,11 @@ if (!class_exists('TC_Better_Orders')) {
             if (is_admin() && $pagenow == 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] == 'tc_orders') {
                 if (((isset($_REQUEST['tc_event_filter']) && $_REQUEST['tc_event_filter'] != 0))) {
                     $joined = true;
-                    $join .=' LEFT JOIN ' . $wpdb->postmeta . ' ON ' . $wpdb->posts . '.ID = ' . $wpdb->postmeta . '.post_id ';
+                    $join .= ' LEFT JOIN ' . $wpdb->postmeta . ' ON ' . $wpdb->posts . '.ID = ' . $wpdb->postmeta . '.post_id ';
                 }
                 if ((isset($_REQUEST['s']) && $_REQUEST['s'] != '')) {
                     if (!$joined) {
-                        $join .=' LEFT JOIN ' . $wpdb->postmeta . ' ON ' . $wpdb->posts . '.ID = ' . $wpdb->postmeta . '.post_id';
+                        $join .= ' LEFT JOIN ' . $wpdb->postmeta . ' ON ' . $wpdb->posts . '.ID = ' . $wpdb->postmeta . '.post_id';
                     }
                 }
             }
@@ -451,7 +459,7 @@ function tc_order_details_metabox() {
     $fields = TC_Orders::get_order_fields();
 
     $columns = $orders->get_columns();
-    $order = new TC_Order(isset($_REQUEST['post']) ? (int) $_REQUEST['post'] : 0 );
+    $order = new TC_Order(isset($_REQUEST['post']) ? (int) $_REQUEST['post'] : 0);
     ?>
     <script type="text/javascript">
         jQuery(document).ready(function ($) {
@@ -468,7 +476,7 @@ function tc_order_details_metabox() {
         <table class="order-table">
             <tbody>
                 <?php foreach ($fields as $field) { ?>
-                    <?php if ($orders->is_valid_order_field_type($field['field_type'])) { ?>    
+                    <?php if ($orders->is_valid_order_field_type($field['field_type'])) { ?>
                         <tr valign="top">
 
                             <?php if ($field['field_type'] !== 'separator') { ?>

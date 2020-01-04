@@ -50,8 +50,10 @@ if (!class_exists('TC_Ticket')) {
         }
 
         public static function is_sales_available($ticket_type_id = false) {
+          $is_sales_available = true;
+
             if (!$ticket_type_id) {
-                return false;
+                $is_sales_available = false;
             } else {
 
                 $ticket_availability = get_post_meta($ticket_type_id, '_ticket_availability', true);
@@ -64,23 +66,25 @@ if (!class_exists('TC_Ticket')) {
                     $to_date = get_post_meta($ticket_type_id, '_ticket_availability_to_date', true);
 
                     if ((date('U', current_time('timestamp', false)) >= date('U', strtotime($from_date))) && (date('U', current_time('timestamp', false)) <= date('U', strtotime($to_date)))) {
-                        return true;
+                        $is_sales_available = true;
                     } else {
-                        return false;
+                        $is_sales_available = false;
                     }
                 } else {//open-ended
-                    return true;
+                    $is_sales_available = true;
                 }
             }
+
+            return apply_filters('tc_is_ticket_type_sales_available', $is_sales_available, $ticket_type_id);
         }
 
-        public static function is_checkin_available($ticket_type_id = false, $order = false) {
-     
+        public static function is_checkin_available($ticket_type_id = false, $order = false, $ticket_id = false) {
+
             if (!$ticket_type_id) {
                 return false;
             } else {
-      
                 $ticket_checkin_availability = get_post_meta($ticket_type_id, '_ticket_checkin_availability', true);
+
                 if (empty($ticket_checkin_availability)) {
                     $ticket_checkin_availability = 'open_ended';
                 }
@@ -95,25 +99,74 @@ if (!class_exists('TC_Ticket')) {
                         return false;
                     }
                 } else if ($ticket_checkin_availability == 'time_after_order') {
-           
+
                     $days_selected = get_post_meta($ticket_type_id, '_time_after_order_days', true);
                     $hours_selected = get_post_meta($ticket_type_id, '_time_after_order_hours', true);
                     $minutes_selected = get_post_meta($ticket_type_id, '_time_after_order_minutes', true);
-                    
-                    $total_seconds = (int)($days_selected * 60 * 60 * 60) + ($hours_selected * 60 * 60) + ($minutes_selected * 60);
-                    
-                    $order_date = $order->details->post_date;//date
-                    
+
+                    $total_seconds = (int) ($days_selected * 24 * 60 * 60) + ($hours_selected * 60 * 60) + ($minutes_selected * 60);
+
+                    $order_date = $order->details->post_date; //date
+
                     $order_limit_timestamp = strtotime($order_date) + $total_seconds;
                     $current_site_timestamp = current_time('timestamp', false);
-                    
-                    if($order_limit_timestamp > $current_site_timestamp){
+
+                    if ($order_limit_timestamp > $current_site_timestamp) {
                         return true;
-                    }else{
+                    } else {
                         return false;
                     }
-                 
-                } else {//open-ended
+                } else if ($ticket_checkin_availability == 'time_after_first_checkin') {
+                    //return true;
+
+                    $days_selected = get_post_meta($ticket_type_id, '_time_after_first_checkin_days', true);
+                    $hours_selected = get_post_meta($ticket_type_id, '_time_after_first_checkin_hours', true);
+                    $minutes_selected = get_post_meta($ticket_type_id, '_time_after_first_checkin_minutes', true);
+
+                    $total_seconds = (int) ($days_selected * 24 * 60 * 60) + ($hours_selected * 60 * 60) + ($minutes_selected * 60);
+
+                    $ticket_instance = new TC_Ticket_Instance((int) $ticket_id);
+                    $ticket_checkins = $ticket_instance->get_ticket_checkins();
+
+                    if ($ticket_checkins) {
+                        foreach ($ticket_checkins as $ticket_key => $ticket_checkin) {
+
+                            if ($ticket_checkin['status'] == 'Pass') {
+                                $first_checkin_date = $ticket_checkin['date_checked'];
+                                break;
+                            } else {
+                               //continue finding valid value
+                            }
+                        }
+                    } else {//there is no a single check-in so we'll allow the first checkin to happens
+                        return true;
+                    }
+
+                    if (empty($first_checkin_date)) {
+                        return true;
+                    }
+
+                    $first_checkin_limit_timestamp = ($first_checkin_date) + $total_seconds;
+
+                    $current_site_timestamp = current_time('timestamp', 1);
+
+                    if ($first_checkin_limit_timestamp > $current_site_timestamp) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else if($ticket_checkin_availability == 'upon_event_starts'){
+                  $current_site_timestamp = current_time('timestamp', 1);
+                  $ticket_type = new TC_Ticket($ticket_type_id);
+                  $event_id = $ticket_type->get_ticket_event();
+                  $event_date = get_post_meta($event_id, 'event_date_time', true);
+                  
+                  if ((date('U', current_time('timestamp', false)) >= date('U', strtotime($event_date))) ) {
+                    return true;//event starts already
+                  }else{
+                    return false;//event didn't start yet
+                  }
+                }else {//open-ended
                     return true;
                 }
             }

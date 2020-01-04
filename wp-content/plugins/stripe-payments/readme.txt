@@ -3,9 +3,9 @@ Contributors: Tips and Tricks HQ, wptipsntricks, alexanderfoxc
 Donate link: https://s-plugins.com
 Tags: stripe, stripe payments, stripe gateway, payment, payments, button, shortcode, digital goods, payment gateway, instant payment, commerce, digital downloads, downloads, e-commerce, e-store, ecommerce, eshop, donation
 Requires at least: 4.7
-Tested up to: 5.0
+Tested up to: 5.3
 Requires PHP: 5.4
-Stable tag: 1.9.14.1
+Stable tag: 2.0.16
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,11 +25,11 @@ The transaction info is also captured in the orders menu of the plugin. You can 
 
 = Setup and Usage Video =
 
-https://www.youtube.com/watch?v=yQB6IKz73g4
+https://www.youtube.com/watch?v=L0n_jlEhmoA
 
 = Checkout Demo Video =
 
-https://www.youtube.com/watch?v=upWqk069Khg
+https://www.youtube.com/watch?v=b6owgRBTUwA
 
 = Features =
 
@@ -58,12 +58,15 @@ https://www.youtube.com/watch?v=upWqk069Khg
 * Ability to have custom thank you page on a per product basis.
 * Ability to customize the message on the thank you page using tags.
 * Ability to customize the price display with currency symbol.
+* Ability to use a link URL to create custom payment button for your products.
 * Option to send receipt email to your customers from Stripe for each transaction.
 * Option to collect a custom input from your customers for products (useful if you are selling products that need special instructions from the customers).
 * Stock control option. You can limit the number of quantity available for a product.
 * Option to enable Alipay payments. So your customers can pay using their Alipay accounts.
 * Option to enable Terms and Conditions that your customers have to accept before they can make a purchase.
 * Ability to configure variable products. You can charge different amount for different options of the product.
+* 3D Secure payments compatible.
+* Strong Customer Authentication (SCA) Compliant.
 
 The setup is very easy. Once you have installed the plugin, all you need to do is enter your Stripe API credentials in the plugin settings and your website will be ready to accept credit card payments.
 
@@ -151,38 +154,119 @@ None.
 
 == Changelog ==
 
-= 1.9.14.1 =
-- Fixed Stripe mode was improperly set during subscriptions payment processing sometimes (requires Subscriptions addon 1.3.5+).
-
-= 1.9.14 =
-- Added product option that lets the customers select payment currency.
-- Added support for variable amount subscriptions (requires Subscriptions addon version 1.3.4+).
-- Added order info link to seller email.
-- Fixed [accept_stripe_payment] shortcode was ignoring shipping_address option.
-- Fixed quantity set for a product was ignored under some circumstances.
-
-= 1.9.13 =
-- Payment buttons are now replaced by a spinner during payment processing for better user experience.
-- Added option to disable Order creation after purchase. Useful if you don't want to save purchase info on your website.
-- Variable amount input is now considers only two digits after decimal separator.
-- Customer shipping address is added to payment metadata if available. You can see it in your Stripe Dashboard.
-- Added dismissible notice if PHP version is older than 5.4.
-- Fixed a couple of issues with variations.
-
-= 1.9.12 =
-- Fixed product price could not be set to zero or empty value (for donation purposes).
-- Added option to send buyer and seller emails in HTML format.
-- Added spinner for settings page to indicate it's being loaded.
-- Added support for upcoming Additional Custom Fields addon.
-- If custom field enabled but its name is not set, it would be called "Custom Field".
+= 2.0.16 =
+- Replaced deprecated stripe.js functions to prevent potential issues with payments.
+- Forced payment token regeneration if payment amount or currency changed.
 - Made more strings available for translation.
-- Minor bigfixes and imporvements.
+- Fixed "Incomplete" subscription status when 3D Secure card is used for payments.
+- Fixed an issue with email duplication (caused by multiple execution of some code parts).
 
-= 1.9.11 =
-- Price and shipping cost is being converted to appropriate format on product edit page.
-- Fixed some buttons were not clickable when TOS enabled.
+= 2.0.15 =
+- Payment popup now considers "Stripe Checkout Language" settings option.
+- Made most admin interface pages responsive.
+- Added MailerLite addon to addons listing menu.
+- Fixed potential addon update checking issues on some servers.
+- Some minor bugfixes and optimizations.
+- Fixed issues with zero-cents currency amounts display and payment processing.
 
-= 1.9.10 =
-- Added {tax}, {tax_amt}, {currency} and {shipping_amt} checkout page customization tags. More tags [can be found here](https://s-plugins.com/customize-the-thank-page-message-of-stripe-payments-plugin/).
-- Added {item_name} and {item_quantity} email tags.
-- Added position settings options for custom field and TOS. You can display those below payment button now.
+= 2.0.14 =
+- Added "Embed Product" metabox to product edit page with available options to embed/attach payment buttons to any page or HTML element.
+- Added a new feature that allows you to use a URL to make the payment button. Tutorial https://s-plugins.com/using-a-text-link-instead-of-the-buy-now-button-shortcode/
+- Fixed payment popup issue when variable currency was set for subscription product.
+- Addons update checker library is now bundled with core plugin.
+
+= 2.0.13 =
+- Fixed malformed download URL when [accept_stripe_payment] shortcode is used with new API.
+- Added custom field validation support on payment popup.
+- Added "Prefetch Payment Popup Scripts" option to speed up payment popup display when customer clicks payment button.
+- Proper error message is now displayed if error occurs during frontend Stripe scripts init on payment popup.
+- Removed excess output when payment button is displayed.
+
+= 2.0.12 =
+- Fixed subscription payment with tax validity check.
+- Fixed subscription payment invalid tax amount displayed on checkout results page.
+- Added support for [iDEAL](https://s-plugins.com/stripe-ideal-payment-addon/) and [Country Autodetect](https://s-plugins.com/stripe-country-autodetect-addon/) addons.
+
+= 2.0.11 =
+- Fixed an issue with duplicate buy emails being sent on some browsers.
+- Fixed "Processing" text was showing in the product insert block.
+- Added the Spanish language translation file.
+- Fixed subscription payment with tax not processing correctly.
+
+= 2.0.10 =
+- [New API]: Fixed selected variations weren't properly passed upon payment form submission.
+- [New API]: Fixed "Invalid email address" error when APM addon is installed and "Send Receipt Email From Stripe" option enabled.
+- [New API]: Added Alipay addon support. Requires Alipay addon version 2.0.0+.
+- Legacy API is disabled by default for fresh plugin installations.
+- Added admin area notice regarding SCA compatibility.
+- Added Bosnia and Herzegovina Convertible Mark (BAM) currency.
+
+= 2.0.9 =
+- [New API]: Fixed zero cents currencies were divided by 100 on payments result page and order info.
+- [New API]: Fixed Stripe receipt wasn't sent if "Do Not Save Card Data on Stripe" option enabled.
+- [New API]: ZIP\postal code is now requested on credit card input when "Validate ZIP Code" option enabled and address collection disabled for a product.
+- [New API]: Product name and ID are now saved in payment metadata on Stripe Dashboard.
+- [New API]: If product short description is empty, product name is used for payment details "Description" on Stripe Dashboard.
+- [New API]: Added spinner after payment popup form submission.
+- [New API]: Single variation in a row is now full-width (instead of half-width before).
+- [New API]: Adjusted payment popup display on mobile devices.
+
+= 2.0.8 =
+- [New API]: Added compatibility with optimization plugins that do minify\combine JavaScript.
+- [New API]: Fixed currency wasn't properly updated for variable currency payments in some situations. 
+- [New API]: Fixed product with stock control enabled could produce fatal error during payment process under some circumstances. 
+- [New API]: Fixed checkbox custom field display issue.
+- [New API]: Added mandatory inputs validation for browsers that don't provide it.
+- [New API]: Fixed rare issue that could break payment process if payment button was clicked multiple times.
+- [New API]: Added per-product "Show Order Total On Payment Popup" option. When enabled, it displays detailed financial info (tax, variations, coupon etc) on payment popup.
+- [New API]: Added support for reCaptcha addon. reCatpcha addon version 2.0.0+ is required to work with new payment popup.
+- [New API]: Added support for Additional Payment Methods addon. APM addon version 2.0.0+ is required to work with new payment popup.
+- [New API]: Some visual tweaks and fixes for payment popup.
+- Fixed custom input wasn't properly validating and honoring "Mandatory" option if position was "Below Button" (legacy API only).
+- Added new product edit interface. To see it in action, check the "Enable Compact Product Edit Interface" checkbox in the Advanced Settings tab.
+
+= 2.0.7.1 =
+- [New API]: Fixed visual bug on payment popup when coupons are enabled.
+
+= 2.0.7 =
+- [New API]: Moved process_ipn action to wp_loaded hook. Should fix issues with "The site is experiencing technical problems" error during payment processing on some configurations.
+- [New API]: Restyled payment popup for better responsiveness on mobile devices.
+- [New API]: Updated Stripe PHP SDK library to 6.43.1.
+- [New API]: Added debug log warning when another Stripe PHP SDK is loaded. Warning is logged once per 6 hours in order to not flood the log.
+- [New API]: Payment popup server interaction errors are now more informative.
+- [New Api]: Removed excess "Coupon is invalid for the product" debug log message when no coupon code provided.
+
+= 2.0.6 =
+- [New API]: Customer info and card data is now saved on Stripe unless "Do Not Save Card Data on Stripe" option is enabled.
+- [New API]: Added "Prefill Logged In User Name and Email" option to prefill corresponding payment popup fields with logged in user's name and email.
+- Added 'asp_stripe_order_register_post_type_args' filter to override 'stripe-order' post type args.
+
+= 2.0.5 =
+- [New API]: Fixed payment popup was not scrollable on Apple devices.
+- [New API]: Added "Send Emails In Parallel" option that should speed up checkout process.
+- [New API]: Removed excess output for buttons when new API is used.
+
+= 2.0.4 =
+- [New API]: Added "Popup Default Country" option that sets default country on payment popup for billing and shipping address.
+- Minor bugfixes for the new API.
+
+= 2.0.3 =
+- [New API]: Fixed new API was enabled by default. Now you need to disable "Enable Legacy Checkout API" option on Advanced Settings tab to use new API. 
+- [New API]: Fixed popup button text was empty on plugin update. 
+- [New API]: Fixed popup form was not scrollable on some mobile devices.
+- [New API]: Added white background for popup item logo.
+- [New API]: Fixed product description wasn't passed to Stripe.
+- [New API]: Fixed customer_email shortcode parameter was ignored.
+- [New API]: Added customer_name shortcode parameter to prefill customer name in payment popup.
+
+= 2.0.2 =
+- [New API]: Fixed checkout error when both billing and shipping address collection enabled.
+- [New API]: Fixed popup JavaScript caching issue.
+
+= 2.0.1 =
+- Important: This is a major upgrade. We advise that you backup your site before upgrading the plugin.
+- Added new SCA compliant API for checkout. There is a new payment popup that utilizes SCA-complaint payment process.
+- You can enable the new SCA compliant checkout by going to the "Advanced Settings Menu" of the plugin then unchecking the "Enable Legacy Checkout API" checkbox.
+- By default it uses the legacy API to ensure that it is a smooth upgrade. We don't want your checkout process to be broken after the upgrade.
+
+Older versions changelog available in changelog.txt file.

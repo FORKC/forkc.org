@@ -21,23 +21,18 @@ import './style.pcss';
 
 class RSVP extends PureComponent {
 	static propTypes = {
+		clientId: PropTypes.string.isRequired,
 		created: PropTypes.bool.isRequired,
-		deleteRSVP: PropTypes.func.isRequired,
 		initializeRSVP: PropTypes.func.isRequired,
 		isInactive: PropTypes.bool.isRequired,
 		isLoading: PropTypes.bool.isRequired,
 		isModalShowing: PropTypes.bool.isRequired,
 		isSelected: PropTypes.bool.isRequired,
 		rsvpId: PropTypes.number.isRequired,
-		clientId: PropTypes.string.isRequired,
 	};
 
 	componentDidMount() {
 		! this.props.rsvpId && this.props.initializeRSVP();
-	}
-
-	componentWillUnmount() {
-		this.props.deleteRSVP();
 	}
 
 	render() {
@@ -50,24 +45,28 @@ class RSVP extends PureComponent {
 			isModalShowing,
 		} = this.props;
 
-		return [
-			! isSelected && ( ( created && isInactive ) || ! created )
-				? <RSVPInactiveBlock />
-				: (
-					<div className={
-						classNames(
-							'tribe-editor__rsvp',
-							{ 'tribe-editor__rsvp--selected': isSelected },
-							{ 'tribe-editor__rsvp--loading': isLoading },
-						) }
-					>
-						<RSVPContainer isSelected={ isSelected } clientId={ clientId } />
-						<RSVPDashboard isSelected={ isSelected } />
-						{ isLoading && <Spinner /> }
-					</div>
-				),
-			isModalShowing && <MoveModal />,
-		];
+		return (
+			<Fragment>
+				{
+					! isSelected && ( ( created && isInactive ) || ! created )
+						? <RSVPInactiveBlock />
+						: (
+							<div className={
+								classNames(
+									'tribe-editor__rsvp',
+									{ 'tribe-editor__rsvp--selected': isSelected },
+									{ 'tribe-editor__rsvp--loading': isLoading },
+								) }
+							>
+								<RSVPContainer isSelected={ isSelected } clientId={ clientId } />
+								<RSVPDashboard isSelected={ isSelected } />
+								{ isLoading && <Spinner /> }
+							</div>
+						)
+					}
+					{ isModalShowing && <MoveModal /> }
+			</Fragment>
+		);
 	}
 }
 

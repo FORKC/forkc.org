@@ -1,5 +1,4 @@
 <?php
-
 //============================================================+
 // File name   : bul.php
 // Begin       : 2004-03-03
@@ -25,6 +24,7 @@
  * @author Nicola Asuni
  * @since 2012-03-22
  */
+
 // Bulgarian
 
 global $l;
@@ -32,12 +32,12 @@ $l = Array();
 
 // PAGE META DESCRIPTORS --------------------------------------
 
-$l[ 'a_meta_charset' ]	 = 'UTF-8';
-$l[ 'a_meta_dir' ]		 = 'ltr';
-$l[ 'a_meta_language' ]	 = 'bg';
+$l['a_meta_charset'] = 'UTF-8';
+$l['a_meta_dir'] = 'ltr';
+$l['a_meta_language'] = 'bg';
 
 // TRANSLATIONS --------------------------------------
-$l[ 'w_page' ] = 'страница';
+$l['w_page'] = 'страница';
 
 //============================================================+
 // END OF FILE

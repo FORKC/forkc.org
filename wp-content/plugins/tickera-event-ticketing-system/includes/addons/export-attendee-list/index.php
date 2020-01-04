@@ -46,7 +46,11 @@ if ( !class_exists( 'TC_Export_Mix' ) ) {
 					error_reporting( 0 );
 				}
 				include_once( $tc->plugin_dir . 'includes/tcpdf/config/lang/eng.php' );
-				require_once( $tc->plugin_dir . 'includes/tcpdf/tcpdf.php' );
+                                
+                                if(!class_exists('TCPDF')){
+                                    require_once( $tc->plugin_dir . 'includes/tcpdf/tcpdf.php' );
+                                }
+                                
 				ob_end_clean();
 				ob_start();
 
@@ -99,6 +103,15 @@ if ( !class_exists( 'TC_Export_Mix' ) ) {
 					$rows .= '<th align="center">' . __( 'QR Code', 'tc' ) . '</th>';
 				}
 
+                                if ( isset( $_POST[ 'col_checked_in' ] ) ) {
+					$rows .= '<th align="center">' . __( 'Checked-in', 'tc' ) . '</th>';
+				}
+                                
+                                if ( isset( $_POST[ 'col_checkins' ] ) ) {
+					$rows .= '<th align="center">' . __( 'Check-ins', 'tc' ) . '</th>';
+				}
+
+                                
 				$rows = apply_filters( 'tc_pdf_additional_column_titles', $rows, $_POST );
 
 				$rows .= '</tr>';
@@ -146,7 +159,7 @@ if ( !class_exists( 'TC_Export_Mix' ) ) {
                                                             if (apply_filters('tc_bridge_for_woocommerce_is_active', false) == true && is_plugin_active('woocommerce/woocommerce.php') && get_post_type( $order->details->ID ) == 'shop_order' ) {
                                                                 $wc_post = get_post(  $instance->details->ID, 'OBJECT' );                        
                                                                 $format = get_option('date_format') . ' - ' . get_option('time_format');;
-                                                                $rows .= date($format, strtotime( $wc_post->post_date ));
+                                                                $rows .= '<td>'.date($format, strtotime( $wc_post->post_date )).'</td>';
                                                             } else {
 								$rows .= '<td>' . $payment_date . '</td>';
                                                             }
@@ -170,6 +183,44 @@ if ( !class_exists( 'TC_Export_Mix' ) ) {
 							}
 							if ( isset( $_POST[ 'col_qrcode' ] ) ) {
 								$rows .= '<td>QRCODE</td>';
+							}
+                                                        
+                                                        if ( isset( $_POST[ 'col_checked_in' ] ) ) {
+								$checkins = get_post_meta($instance->details->ID, 'tc_checkins', true);
+
+                                                                if (count($checkins) > 0 && is_array($checkins)) {
+                                                                    $checked_in = __('Yes', 'tccsv');
+                                                                } else {
+                                                                    $checked_in = __('No', 'tccsv');
+                                                                }
+                                                                
+                                                                $rows .= '<td>' . $checked_in . '</td>';
+							}
+                                                        
+                                                        if ( isset( $_POST[ 'col_checkins' ] ) ) {
+								
+                                                            $checkins = get_post_meta($instance->details->ID, 'tc_checkins', true);
+                                                            $checkins_list = array();
+                                                            if (count($checkins) > 0 && is_array($checkins)) {
+                                                                foreach ($checkins as $checkin) {
+                                                                    $api_key = $checkin['api_key_id'];
+                                                                    $api_key_obj = new TC_API_Key((int) $api_key);
+                                                                    $api_key_name = $api_key_obj->details->api_key_name;
+                                                                    if (apply_filters('tc_show_checkins_api_key_names', true) == true) {
+                                                                        $api_key_name = !empty($api_key_name) ? $api_key_name : $api_key;
+                                                                        $api_key_title = ' (' . $api_key_name . ')';
+                                                                    } else {
+                                                                        $api_key_title = '';
+                                                                    }
+                                                                    $checkins_list[] = tc_format_date($checkin['date_checked']) . $api_key_title;
+                                                                }
+                                                                $checkins = implode("\r\n", $checkins_list);
+                                                            } else {
+                                                                $checkins = '';
+                                                            }
+                                                            
+                                                            $rows .= '<td>' . $checkins . '</td>';
+                                                            
 							}
 
 							$rows = apply_filters( 'tc_pdf_additional_column_values', $rows, $order, $instance, $_POST );

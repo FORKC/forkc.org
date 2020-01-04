@@ -7,9 +7,11 @@
  *
  * See more documentation about our Blocks Editor templating system.
  *
- * @link {INSERT_ARTCILE_LINK_HERE}
+ * @link {INSERT_ARTICLE_LINK_HERE}
  *
- * @version 4.9
+ * @since 4.9
+ *
+ * @version 4.11.0
  *
  */
 
@@ -23,7 +25,7 @@ if ( ! is_array( $attendees ) ) {
 ?>
 <div
 	id="tribe-block__attendees"
-	class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+	<?php tribe_classes( $classes ); ?>
 
 	<?php $this->template( 'blocks/attendees/title', array( 'title' => $title ) ); ?>
 

@@ -163,9 +163,10 @@ class TC_Gateway_Custom_Offline_Payments extends TC_Gateway_API {
         global $tc;
         ?>
         <div id="<?php echo esc_attr($this->plugin_name); ?>" class="postbox" <?php echo (!$visible ? 'style="display:none;"' : ''); ?>>
-            <h3 class='hndle'><span><?php printf(__('%s Settings', 'tc'), wp_unslash($this->admin_name)); ?></span></h3>
-            <div class="inside">
+            <h3><span><?php printf(__('%s Settings', 'tc'), wp_unslash($this->admin_name)); ?></span>
                 <span class="description"><?php _e('Track offline / custom payments (Cash on Delivery, Money Orders, Bank Deposits, Cheques etc.) manually.', 'tc') ?></span>
+            </h3>
+            <div class="inside">
                 <?php
                 $fields = array(
                     'public_name' => array(

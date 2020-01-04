@@ -1,5 +1,4 @@
 <?php
-
 //============================================================+
 // File name   : swa.php
 // Begin       : 2004-03-03
@@ -25,6 +24,7 @@
  * @author Nicola Asuni
  * @since 2004-03-03
  */
+
 // Swahili
 
 global $l;
@@ -32,12 +32,12 @@ $l = Array();
 
 // PAGE META DESCRIPTORS --------------------------------------
 
-$l[ 'a_meta_charset' ]	 = 'UTF-8';
-$l[ 'a_meta_dir' ]		 = 'ltr';
-$l[ 'a_meta_language' ]	 = 'sw';
+$l['a_meta_charset'] = 'UTF-8';
+$l['a_meta_dir'] = 'ltr';
+$l['a_meta_language'] = 'sw';
 
 // TRANSLATIONS --------------------------------------
-$l[ 'w_page' ] = 'ukurasa';
+$l['w_page'] = 'ukurasa';
 
 //============================================================+
 // END OF FILE

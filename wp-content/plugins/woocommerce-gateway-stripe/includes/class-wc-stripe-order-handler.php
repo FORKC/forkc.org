@@ -24,10 +24,10 @@ class WC_Stripe_Order_Handler extends WC_Stripe_Payment_Gateway {
 		$this->retry_interval = 1;
 
 		add_action( 'wp', array( $this, 'maybe_process_redirect_order' ) );
-		add_action( 'woocommerce_order_status_on-hold_to_processing', array( $this, 'capture_payment' ) );
-		add_action( 'woocommerce_order_status_on-hold_to_completed', array( $this, 'capture_payment' ) );
-		add_action( 'woocommerce_order_status_on-hold_to_cancelled', array( $this, 'cancel_payment' ) );
-		add_action( 'woocommerce_order_status_on-hold_to_refunded', array( $this, 'cancel_payment' ) );
+		add_action( 'woocommerce_order_status_processing', array( $this, 'capture_payment' ) );
+		add_action( 'woocommerce_order_status_completed', array( $this, 'capture_payment' ) );
+		add_action( 'woocommerce_order_status_cancelled', array( $this, 'cancel_payment' ) );
+		add_action( 'woocommerce_order_status_refunded', array( $this, 'cancel_payment' ) );
 	}
 
 	/**
@@ -69,7 +69,7 @@ class WC_Stripe_Order_Handler extends WC_Stripe_Payment_Gateway {
 				return;
 			}
 
-			if ( 'processing' === $order->get_status() || 'completed' === $order->get_status() || 'on-hold' === $order->get_status() ) {
+			if ( $order->has_status( array( 'processing', 'completed', 'on-hold' ) ) ) {
 				return;
 			}
 
@@ -237,29 +237,58 @@ class WC_Stripe_Order_Handler extends WC_Stripe_Payment_Gateway {
 					$order_total = $order_total - $order->get_total_refunded();
 				}
 
-				// First retrieve charge to see if it has been captured.
-				$result = WC_Stripe_API::retrieve( 'charges/' . $charge );
+				$intent = $this->get_intent_from_order( $order );
+				if ( $intent ) {
+					// If the order has a Payment Intent, then the Intent itself must be captured, not the Charge
+					if ( ! empty( $intent->error ) ) {
+						/* translators: error message */
+						$order->add_order_note( sprintf( __( 'Unable to capture charge! %s', 'woocommerce-gateway-stripe' ), $intent->error->message ) );
+					} elseif ( 'requires_capture' === $intent->status ) {
+						$result = WC_Stripe_API::request(
+							array(
+								'amount'   => WC_Stripe_Helper::get_stripe_amount( $order_total ),
+								'expand[]' => 'charges.data.balance_transaction',
+							),
+							'payment_intents/' . $intent->id . '/capture'
+						);
 
-				if ( ! empty( $result->error ) ) {
-					/* translators: error message */
-					$order->add_order_note( sprintf( __( 'Unable to capture charge! %s', 'woocommerce-gateway-stripe' ), $result->error->message ) );
-				} elseif ( false === $result->captured ) {
-					$result = WC_Stripe_API::request(
-						array(
-							'amount'   => WC_Stripe_Helper::get_stripe_amount( $order_total ),
-							'expand[]' => 'balance_transaction',
-						),
-						'charges/' . $charge . '/capture'
-					);
+						if ( ! empty( $result->error ) ) {
+							/* translators: error message */
+							$order->update_status( 'failed', sprintf( __( 'Unable to capture charge! %s', 'woocommerce-gateway-stripe' ), $result->error->message ) );
+						} else {
+							$is_stripe_captured = true;
+							$result = end( $result->charges->data );
+						}
+					} elseif ( 'succeeded' === $intent->status ) {
+						$is_stripe_captured = true;
+					}
+				} else {
+					// The order doesn't have a Payment Intent, fall back to capturing the Charge directly
+
+					// First retrieve charge to see if it has been captured.
+					$result = WC_Stripe_API::retrieve( 'charges/' . $charge );
 
 					if ( ! empty( $result->error ) ) {
 						/* translators: error message */
-						$order->update_status( 'failed', sprintf( __( 'Unable to capture charge! %s', 'woocommerce-gateway-stripe' ), $result->error->message ) );
-					} else {
+						$order->add_order_note( sprintf( __( 'Unable to capture charge! %s', 'woocommerce-gateway-stripe' ), $result->error->message ) );
+					} elseif ( false === $result->captured ) {
+						$result = WC_Stripe_API::request(
+							array(
+								'amount'   => WC_Stripe_Helper::get_stripe_amount( $order_total ),
+								'expand[]' => 'balance_transaction',
+							),
+							'charges/' . $charge . '/capture'
+						);
+
+						if ( ! empty( $result->error ) ) {
+							/* translators: error message */
+							$order->update_status( 'failed', sprintf( __( 'Unable to capture charge! %s', 'woocommerce-gateway-stripe' ), $result->error->message ) );
+						} else {
+							$is_stripe_captured = true;
+						}
+					} elseif ( true === $result->captured ) {
 						$is_stripe_captured = true;
 					}
-				} elseif ( true === $result->captured ) {
-					$is_stripe_captured = true;
 				}
 
 				if ( $is_stripe_captured ) {
@@ -269,6 +298,10 @@ class WC_Stripe_Order_Handler extends WC_Stripe_Payment_Gateway {
 
 					// Store other data such as fees
 					WC_Stripe_Helper::is_wc_lt( '3.0' ) ? update_post_meta( $order_id, '_transaction_id', $result->id ) : $order->set_transaction_id( $result->id );
+
+					if ( is_callable( array( $order, 'save' ) ) ) {
+						$order->save();
+					}
 
 					$this->update_fees( $order, $result->balance_transaction->id );
 				}
@@ -283,14 +316,19 @@ class WC_Stripe_Order_Handler extends WC_Stripe_Payment_Gateway {
 	 * Cancel pre-auth on refund/cancellation.
 	 *
 	 * @since 3.1.0
-	 * @version 4.0.0
+	 * @version 4.2.2
 	 * @param  int $order_id
 	 */
 	public function cancel_payment( $order_id ) {
 		$order = wc_get_order( $order_id );
 
 		if ( 'stripe' === ( WC_Stripe_Helper::is_wc_lt( '3.0' ) ? $order->payment_method : $order->get_payment_method() ) ) {
-			$this->process_refund( $order_id );
+			$captured = WC_Stripe_Helper::is_wc_lt( '3.0' )
+				? get_post_meta( $order_id, '_stripe_charge_captured', true )
+				: $order->get_meta( '_stripe_charge_captured', true );
+			if ( 'no' === $captured ) {
+				$this->process_refund( $order_id );
+			}
 
 			// This hook fires when admin manually changes order status to cancel.
 			do_action( 'woocommerce_stripe_process_manual_cancel', $order );

@@ -23,7 +23,7 @@ if ( !class_exists( 'TC_Ticket_Instance' ) ) {
 			foreach ( $fields as $field ) {
 
 				if ( !isset( $this->details->{$field[ 'field_name' ]} ) ) {
-					$this->details->{$field[ 'field_name' ]} = get_post_meta( $this->id, $field[ 'field_name' ], true );
+					@$this->details->{$field[ 'field_name' ]} = get_post_meta( $this->id, $field[ 'field_name' ], true );
 				}
 			}
 		}

@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import React from 'react';
+import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import AutosizeInput from 'react-input-autosize';
 
@@ -13,7 +13,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { SUFFIX, PRICE_POSITIONS } from '@moderntribe/tickets/data/blocks/ticket/constants';
+import { PREFIX, SUFFIX, PRICE_POSITIONS } from '@moderntribe/tickets/data/blocks/ticket/constants';
 import './style.pcss';
 
 const TicketContainerHeaderPriceInput = ( {
@@ -23,22 +23,29 @@ const TicketContainerHeaderPriceInput = ( {
 	onTempPriceChange,
 	tempPrice,
 } ) => {
-	const priceInput = [
-		<span className="tribe-editor__ticket__container-header-price-currency">
-			{ currencySymbol }
-		</span>,
-		<AutosizeInput
-			className="tribe-editor__ticket__container-header-price-input"
-			value={ tempPrice }
-			placeholder={ __( '0', 'event-tickets' ) }
-			onChange={ onTempPriceChange }
-			disabled={ isDisabled }
-			type="number"
-			min="0"
-		/>,
-	];
-
-	return currencyPosition === SUFFIX ? priceInput.reverse() : priceInput;
+	return (
+		<Fragment>
+			{ currencyPosition === PREFIX && (
+				<span className="tribe-editor__ticket__container-header-price-currency">
+					{ currencySymbol }
+				</span>
+			) }
+			<AutosizeInput
+				className="tribe-editor__ticket__container-header-price-input"
+				value={ tempPrice }
+				placeholder={ __( '0', 'event-tickets' ) }
+				onChange={ onTempPriceChange }
+				disabled={ isDisabled }
+				type="number"
+				min="0"
+			/>
+			{ currencyPosition === SUFFIX && (
+				<span className="tribe-editor__ticket__container-header-price-currency">
+					{ currencySymbol }
+				</span>
+			) }
+		</Fragment>
+	);
 };
 
 TicketContainerHeaderPriceInput.propTypes = {
@@ -54,19 +61,26 @@ const TicketContainerHeaderPriceLabel = ( {
 	currencySymbol,
 	price,
 } ) => {
-	const priceLabel = [
-		<span className="tribe-editor__ticket__container-header-price-currency">
-			{ currencySymbol }
-		</span>,
-		<span className="tribe-editor__ticket__container-header-price-value">
-			{ price }
-		</span>,
-	];
-
-	return currencyPosition === SUFFIX ? priceLabel.reverse() : priceLabel;
+	return (
+		<Fragment>
+			{ currencyPosition === PREFIX && (
+				<span className="tribe-editor__ticket__container-header-price-currency">
+					{ currencySymbol }
+				</span>
+			) }
+			<span className="tribe-editor__ticket__container-header-price-value">
+				{ price }
+			</span>
+			{ currencyPosition === SUFFIX && (
+				<span className="tribe-editor__ticket__container-header-price-currency">
+					{ currencySymbol }
+				</span>
+			) }
+		</Fragment>
+	);
 };
 
-TicketContainerHeaderPriceInput.propTypes = {
+TicketContainerHeaderPriceLabel.propTypes = {
 	currencyPosition: PropTypes.oneOf( PRICE_POSITIONS ),
 	currencySymbol: PropTypes.string,
 	price: PropTypes.string,

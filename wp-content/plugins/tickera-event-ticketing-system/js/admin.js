@@ -1,11 +1,36 @@
 jQuery(document).ready(function ($) {
 
+
+    $('body').on('keyup change keydown', '#tc_options_search_val', function (e) {
+        var searched_option = $(this).val();
+        //console.log(searched_option);
+        if (searched_option == '') {
+            $(".form-table tr").show();
+        } else {
+            try {
+                var search_key_match = new RegExp(searched_option, 'i');
+            } catch (e) {
+                var search_key_match = '';
+            }
+            
+            $(".form-table label").each(function () {
+                if (($(this).html().match(search_key_match))) {
+                    $(this).parent().parent().show();
+                }else{
+                    $(this).parent().parent().hide();
+                }
+            });
+           /* if ((items[i].id.match(search_key_match))) {
+
+            }*/
+            //show only those which match with the keyword
+            //hide others
+        }
+        // $(this).parent().find('.quantity').val(parseInt(quantity) + 1);
+    });
+
     //$form.find( '#publish, #save-post,.save-bulk-form, [type="submit"]' ).click( function( e ) {
-
-
-    jQuery(".post-type-tc_tickets #post, .post-type-tc_events #post").validate({ ignore: '[id^="acf"]' });
-
-
+    jQuery(".post-type-tc_tickets #post, .post-type-tc_events #post").validate({ignore: '[id^="acf"], #us_portfolio_settings input'});
     jQuery("#tc-general-settings, #tc_ticket_type_form, #tc_discount_code_form, .tc_form_validation_required").validate({
         rules: {
             /* field: {
@@ -44,8 +69,8 @@ jQuery(document).ready(function ($) {
 
     //jQuery( '#tc-general-settings' ).validate();
 
-    $('.has_conditional').live('change', function ( ) {
-        tc_conditionals_init( );
+    $(document).on('change','.has_conditional', function ( ) {
+        tc_conditionals_init();
     });
 
     function tc_conditionals_init( ) {
@@ -448,6 +473,9 @@ jQuery(document).ready(function ($) {
         e.preventDefault( );
     });
 
+
+
+
     function save_attendee_info(ticket_id, meta_name, meta_value) {
         var data = {
             action: 'save_attendee_info',
@@ -465,5 +493,26 @@ jQuery(document).ready(function ($) {
      });*/
 
 
+    jQuery(document).ready(function () {
+
+        if (tc_vars.tc_check_page == 'tc_settings') {
+            jQuery(".nav-tab-wrapper").sticky({
+                topSpacing: 30,
+                bottomSpacing: 50
+            });
+        }
+
+    });
+
+
+    jQuery(window).resize(function () {
+        tc_page_names_width();
+    });
+
+    function tc_page_names_width() {
+        jQuery('.tc_wrap .nav-tab-wrapper ul').width(jQuery('.tc_wrap .nav-tab-wrapper').width());
+    }
+
+    tc_page_names_width();
 });
 

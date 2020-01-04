@@ -2,9 +2,9 @@
     display: inline-block;
 }
 
-.misc-pub-post-status, .misc-pub-visibility{
+/*.misc-pub-post-status, .misc-pub-visibility{
     display: none;
-}
+}*/
 
 .misc-pub-section.event_date_time,
 .misc-pub-section.event_end_date_time{

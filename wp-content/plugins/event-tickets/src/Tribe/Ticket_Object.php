@@ -215,7 +215,7 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		public $end_time;
 
 		/**
-		 * Purchase limite for the ticket
+		 * Purchase limit for the ticket
 		 *
 		 * @var
 		 * @deprecated 4.7.5
@@ -291,47 +291,48 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		/**
 		 * Determines if the given date is within the ticket's start/end date range
 		 *
-		 * @param string $datetime The date/time that we want to determine if it falls within the start/end date range
+		 * @param string|int|null $datetime The date/time that we want to determine if it falls within the start/end date range.
 		 *
 		 * @return boolean Whether or not the provided date/time falls within the start/end date range
 		 */
-		public function date_in_range( $datetime = 'now' ) {
-			$timestamp = is_numeric( $datetime ) ? $datetime : strtotime( $datetime );
-			// Attempt to convert the timestamp to a Date object.
-			try {
-				$timezone = $this->get_event_timezone();
-				if ( 'now' === $datetime ) {
-					$now = new DateTime( 'now', $timezone  );
-				} else {
-					$now = new DateTime( '@' . $timestamp );
-					if ( $timezone instanceof DateTimeZone ) {
-						$now->setTimezone( $timezone );
-					}
-				}
-			} catch ( Exception $exception ) {
-				return false;
-			}
+		public function date_in_range( $datetime = null ) {
+			$date = $this->get_date( $datetime, false );
 
 			$start = $this->start_date( false );
 			$end   = $this->end_date( false );
 
-			if ( ! $start instanceof DateTime || ! $end instanceof DateTime || ! $now instanceof DateTime ) {
-				$now   = $timestamp;
+			if ( ! $start instanceof DateTime ) {
 				$start = $this->start_date();
-				$end   = $this->end_date();
+			}
+
+			if ( ! $end instanceof DateTime ) {
+				$end = $this->end_date();
 			}
 
 			// Bail if we don't have an end date and the event has passed
 			// Check if the event has passed in case we're using TEC
-			$is_past_event = function_exists( 'tribe_is_past_event' )
-				? tribe_is_past_event( tribe_events_get_event( $this->event_id ) )
-				: false;
+			$is_past_event = false;
+
+			$event = $this->get_event();
+
+			if ( function_exists( 'tribe_is_past_event' ) && $event instanceof WP_Post ) {
+				$is_past_event = tribe_is_past_event( $event );
+			}
 
 			if ( empty( $end ) && $is_past_event ) {
 				return false;
 			}
 
-			return ( empty( $start ) || $now >= $start ) && ( empty( $end ) || $now <= $end );
+			return (
+				(
+					empty( $start )
+					|| $start <= $date
+				)
+				&& (
+					empty( $end )
+					|| $date <= $end
+				)
+			);
 		}
 
 
@@ -348,17 +349,31 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		 * @return DateTime|false|int
 		 */
 		public function get_date( $date = '', $as_timestamp = true ) {
+			if ( '' === $date ) {
+				return false;
+			}
 
-			if ( $as_timestamp ) {
-				return strtotime( $date );
+			if ( null === $date ) {
+				$date = time();
 			}
 
 			try {
 				$timezone = $this->get_event_timezone();
-				return new DateTime( $date, $timezone );
+
+				$datetime = Tribe__Date_Utils::build_date_object( $date, $timezone );
+
+				if ( Tribe__Date_Utils::is_timestamp( $datetime ) ) {
+					$datetime = Tribe__Date_Utils::build_date_object( $datetime->format( Tribe__Date_Utils::DBDATETIMEFORMAT ), $timezone );
+				}
 			} catch ( Exception $exception ) {
 				return strtotime( $date );
 			}
+
+			if ( $as_timestamp ) {
+				return $datetime->getTimestamp();
+			}
+
+			return $datetime;
 		}
 
 
@@ -370,7 +385,6 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		 * @return DateTimeZone|null
 		 */
 		public function get_event_timezone() {
-
 			if (
 				class_exists( 'Tribe__Events__Timezones' )
 				&& ! is_null( $this->get_event_id() )
@@ -395,41 +409,41 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		}
 
 		/**
-		 * Determines if the given date is smaller than the ticket's start date
+		 * Determines if the given date is before the ticket's start date
 		 *
-		 * @param string $datetime The date/time that we want to determine if it is smaller than the ticket's start date
+		 * @param null|string $datetime The date/time that we want to compare to the ticket's start date
 		 *
-		 * @return boolean Whether or not the provided date/time is smaller than the ticket's start date
+		 * @return boolean Whether or not the provided date/time is before than the ticket's start date
 		 */
-		public function date_is_earlier( $datetime ) {
-			if ( is_numeric( $datetime ) ) {
-				$timestamp = $datetime;
-			} else {
-				$timestamp = strtotime( $datetime );
+		public function date_is_earlier( $datetime = null ) {
+			$date = $this->get_date( $datetime, false );
+
+			$start = $this->start_date( false );
+
+			if ( ! $start instanceof DateTime ) {
+				$start = $this->start_date();
 			}
 
-			$start_date = $this->start_date();
-
-			return empty( $start_date ) || $timestamp < $start_date;
+			return empty( $start ) || $date < $start;
 		}
 
 		/**
-		 * Determines if the given date is greater than the ticket's end date
+		 * Determines if the given date is after the ticket's end date
 		 *
-		 * @param string $datetime The date/time that we want to determine if it is smaller than the ticket's start date
+		 * @param null|string $datetime The date/time that we want to compare to the ticket's start date
 		 *
-		 * @return boolean Whether or not the provided date/time is greater than the ticket's end date
+		 * @return boolean Whether or not the provided date/time is after than the ticket's end date
 		 */
-		public function date_is_later( $datetime ) {
-			if ( is_numeric( $datetime ) ) {
-				$timestamp = $datetime;
-			} else {
-				$timestamp = strtotime( $datetime );
+		public function date_is_later( $datetime = null ) {
+			$date = $this->get_date( $datetime, false );
+
+			$end = $this->end_date( false );
+
+			if ( ! $end instanceof DateTime ) {
+				$end = $this->end_date();
 			}
 
-			$end_date = $this->end_date();
-
-			return empty( $end_date ) || $timestamp > $end_date;
+			return empty( $end ) || $date > $end;
 		}
 
 		/**
@@ -438,23 +452,16 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		 * The availability slug is used for CSS class names and filter helper strings
 		 *
 		 * @since 4.2
+		 * @param int (null) $datetime the timestamp to test
 		 *
 		 * @return string
 		 */
 		public function availability_slug( $datetime = null ) {
-			if ( is_numeric( $datetime ) ) {
-				$timestamp = $datetime;
-			} elseif ( $datetime ) {
-				$timestamp = strtotime( $datetime );
-			} else {
-				$timestamp = current_time( 'timestamp' );
-			}
-
 			$slug = 'available';
 
-			if ( $this->date_is_earlier( $timestamp ) ) {
+			if ( $this->date_is_earlier( $datetime ) ) {
 				$slug = 'availability-future';
-			} elseif ( $this->date_is_later( $timestamp ) ) {
+			} elseif ( $this->date_is_later( $datetime ) ) {
 				$slug = 'availability-past';
 			}
 
@@ -493,7 +500,7 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 
 			$remaining = $this->inventory();
 
-			$is_unlimited = $remaining === - 1;
+			$is_unlimited = $remaining === -1;
 
 			return false === $remaining || $remaining > 0 || $is_unlimited;
 		}
@@ -534,24 +541,34 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 			$provider = $this->get_provider();
 			$capacity = $this->capacity();
 
-			// If we dont have the provider we fetch from inventory
-			if ( is_null( $provider ) || ! method_exists( $provider, 'get_attendees_by_id' ) ) {
+			// If we don't have the provider we fetch from inventory
+			if (
+				is_null( $provider )
+				|| ! method_exists( $provider, 'get_attendees_by_id' )
+			) {
 				return $capacity - $this->qty_sold() - $this->qty_pending();
 			}
 
-			// if we aren't tracking stock, then always assume it is in stock or capacity is unlimited
-			if ( ! $this->managing_stock() || -1 === $capacity ) {
+			// If we aren't tracking stock, then always assume it is in stock or capacity is unlimited.
+			if (
+				! $this->managing_stock()
+				|| -1 === $capacity
+			) {
 				return -1;
 			}
+
+			/** @var Tribe__Tickets__Status__Manager $status_mgr */
+			$status_mgr = tribe( 'tickets.status' );
 
 			// Fetch the Attendees
 			$attendees = $this->provider->get_attendees_by_id( $this->ID );
 			$attendees_count = 0;
+			$not_going_arr = $status_mgr->get_statuses_by_action( 'count_not_going', 'rsvp' );
 
 			// Loop on All the attendees, allowing for some filtering of which will be removed or not
 			foreach ( $attendees as $attendee ) {
 				// Prevent RSVP with Not Going Status to decrease Inventory
-				if ( 'rsvp' === $attendee['provider_slug'] && 'no' === $attendee['order_status'] ) {
+				if ( ! empty( $attendee['provider_slug'] ) && 'rsvp' === $attendee['provider_slug'] && in_array( $attendee[ 'order_status' ], $not_going_arr, true ) ) {
 					continue;
 				}
 
@@ -575,8 +592,13 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 				$event_attendees_count = 0;
 
 				foreach ( $event_attendees as $attendee ) {
-					$attendee_ticket_stock = new Tribe__Tickets__Global_Stock( $attendee['product_id'] );
-					$attendee_ticket_stock_mode = get_post_meta( $this->ID, Tribe__Tickets__Global_Stock::TICKET_STOCK_MODE, true );
+					$attendee_ticket_stock = new Tribe__Tickets__Global_Stock( $attendee['event_id'] );
+					// bypass any potential weirdness (RSVPs or such)
+					if ( empty( $attendee[ 'product_id' ] ) ) {
+						continue;
+					}
+
+					$attendee_ticket_stock_mode = get_post_meta( $attendee[ 'product_id' ], Tribe__Tickets__Global_Stock::TICKET_STOCK_MODE, true );
 
 					// On all cases of indy stock we don't add
 					if (
@@ -612,9 +634,11 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		}
 
 		/**
-		 * Provides the quantity of Avaiable tickets based on the Attendees number
+		 * Provides the quantity of Available tickets based on the Attendees number
 		 *
-		 * @todo   Create a way to get the Available for an Event (currenty impossible)
+		 * @todo   Create a way to get the Available for an Event (currently impossible)
+		 *
+		 * @see \Tribe__Tickets__Tickets_Handler::get_ticket_max_purchase() Use instead to get the front-end quantity.
 		 *
 		 * @since  4.6
 		 *
@@ -622,7 +646,10 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		 */
 		public function available() {
 			// if we aren't tracking stock, then always assume it is in stock or capacity is unlimited
-			if ( ! $this->managing_stock() || -1 === $this->capacity() ) {
+			if (
+				! $this->managing_stock()
+				|| -1 === $this->capacity()
+			) {
 				return -1;
 			}
 
@@ -630,7 +657,7 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 			$values[] = $this->capacity();
 			$values[] = $this->stock();
 
-			// What ever is the lowest we use it
+			// Whatever is the lowest we use it
 			$available = min( $values );
 
 			// Prevents Negative
@@ -675,7 +702,7 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 
 		/**
 		 * Method to manage the protected `stock` property of the Object
-		 * Prevents setting `stock` lower then zero.
+		 * Prevents setting `stock` lower then zero but may return `-1`.
 		 *
 		 * Returns the current ticket stock level: either an integer or an
 		 * empty string (Tribe__Tickets__Ticket_Object::UNLIMITED_STOCK)
@@ -693,12 +720,18 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 			}
 
 			// if we aren't tracking stock, then always assume it is in stock or capacity is unlimited
-			if ( ! $this->managing_stock() || -1 === $this->capacity() ) {
+			if (
+				! $this->managing_stock()
+				|| -1 === $this->capacity()
+			) {
 				return -1;
 			}
 
 			// If the Value was passed as numeric value overwrite
-			if ( is_numeric( $value ) || $value === self::UNLIMITED_STOCK ) {
+			if (
+				is_numeric( $value )
+				|| $value === self::UNLIMITED_STOCK
+			) {
 				$this->stock = $value;
 			}
 
@@ -840,6 +873,9 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 				case 'qty_refunded':
 					return $this->qty_refunded();
 					break;
+				case 'qty_completed':
+					return $this->qty_completed();
+					break;
 				case 'qty_cancelled':
 					return $this->qty_cancelled();
 					break;
@@ -883,7 +919,7 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		 * @param int|null $value This will overwrite the old value
 		 * @return int
 		 */
-		public function qty_cancelled(  $value = null ) {
+		public function qty_cancelled( $value = null ) {
 			// If the Value was passed as numeric value overwrite
 			if ( is_numeric( $value ) ) {
 				$this->qty_cancelled = $value;
@@ -905,7 +941,7 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		 * @param int|null $value This will overwrite the old value
 		 * @return int
 		 */
-		public function qty_refunded(  $value = null ) {
+		public function qty_refunded( $value = null ) {
 			// If the Value was passed as numeric value overwrite
 			if ( is_numeric( $value ) ) {
 				$this->qty_refunded = $value;
@@ -916,6 +952,28 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 
 			// return the new Qty Refunded
 			return $this->qty_refunded;
+		}
+
+		/**
+		 * Method to manage the protected `qty_completed` property of the Object
+		 * Prevents setting `qty_completed` lower then zero
+		 *
+		 * @since 4.7.3
+		 *
+		 * @param int|null $value This will overwrite the old value
+		 * @return int
+		 */
+		public function qty_completed( $value = null ) {
+			// If the Value was passed as numeric value, overwrite.
+			if ( is_numeric( $value ) ) {
+				$this->qty_completed = $value;
+			}
+
+			// Prevents qty_completed from going negative.
+			$this->qty_completed = max( (int) $this->qty_completed, 0 );
+
+			// Return the new quantity completed.
+			return $this->qty_completed;
 		}
 
 		/**
@@ -963,7 +1021,10 @@ if ( ! class_exists( 'Tribe__Tickets__Ticket_Object' ) ) {
 		 * @return boolean
 		 */
 		public function show_description() {
-			$key = tribe( 'tickets.handler' )->key_show_description;
+			/** @var Tribe__Tickets__Tickets_Handler $tickets_handler */
+			$tickets_handler = tribe( 'tickets.handler' );
+
+			$key = $tickets_handler->key_show_description;
 
 			$show = true;
 			if ( metadata_exists( 'post', $this->ID, $key ) ) {

@@ -28,9 +28,9 @@ class Tribe__Editor {
 	 */
 	public function should_load_blocks() {
 		return (
-			       $this->is_gutenberg_active() || $this->is_wp_version()
-		       )
-		       && $this->is_blocks_editor_active();
+			$this->is_gutenberg_active() || $this->is_wp_version()
+		)
+		&& $this->is_blocks_editor_active();
 	}
 
 	/**
@@ -161,7 +161,15 @@ class Tribe__Editor {
 	 * @return bool
 	 */
 	public function is_classic_plugin_active() {
-		return function_exists( 'classic_editor_replace' ) || class_exists( 'Classic_Editor' );
+		$is_plugin_active = function_exists( 'classic_editor_replace' ) || class_exists( 'Classic_Editor' );
+		/**
+		 * Filter to change the output of calling: `is_classic_plugin_active`
+		 *
+		 * @since 4.9.12
+		 *
+		 * @param $is_plugin_active bool Value that indicates if the plugin is active or not.
+		 */
+		return apply_filters( 'tribe_is_classic_editor_plugin_active', $is_plugin_active );
 	}
 
 	/**
@@ -190,8 +198,16 @@ class Tribe__Editor {
 	 */
 	public function is_classic_editor() {
 		$disabled_by_plugin        = $this->is_classic_plugin_active() && $this->is_classic_option_active();
+		/**
+		 * Allow other addons to disabled classic editor based on options
+		 *
+		 * @since  4.8.5
+		 *
+		 * @param bool $classic_is_active Whether the classic editor should be used.
+		 */
+		$disabled_by_filter        = apply_filters( 'tribe_editor_classic_is_active', false );
 		$is_classic_editor_request = tribe_get_request_var( 'classic-editor', null );
 
-		return $is_classic_editor_request || $disabled_by_plugin;
+		return $is_classic_editor_request || $disabled_by_plugin || $disabled_by_filter;
 	}
 }

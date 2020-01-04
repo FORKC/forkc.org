@@ -261,6 +261,12 @@ if (!class_exists('TC_Orders')) {
             } else {
                 $show_owner_fields = apply_filters('tc_get_owner_info_fields_front_show', false);
             }
+            
+            if (!isset($tc_general_settings['show_attendee_first_and_last_name_fields']) || (isset($tc_general_settings['show_attendee_first_and_last_name_fields']) && $tc_general_settings['show_attendee_first_and_last_name_fields'] == 'yes')) {
+                $show_attendee_first_and_last_name_fields = apply_filters('tc_show_attendee_first_and_last_name_fields', true);
+            } else {
+                $show_attendee_first_and_last_name_fields = apply_filters('tc_show_attendee_first_and_last_name_fields', false);
+            }
 
             $default_fields = array(
                 array(
@@ -308,7 +314,7 @@ if (!class_exists('TC_Orders')) {
                 ),
             );
 
-            if (!$show_owner_fields) {
+            if (!$show_owner_fields || !$show_attendee_first_and_last_name_fields) {
                 $i = 0;
                 foreach ($default_fields as $default_field) {
                     if ($default_field['id'] == 'first_name' || $default_field['id'] == 'last_name') {
@@ -359,7 +365,7 @@ if (!class_exists('TC_Orders')) {
         public static function get_user_orders($user_id = false) {
             $user_id = $user_id ? $user_id : get_current_user_id();
             $args = array(
-                'author' => $user_id,
+                'author__in' => (array($user_id)),
                 'posts_per_page' => -1,
                 'orderby' => 'post_date',
                 'order' => 'DESC',

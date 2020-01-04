@@ -8,9 +8,10 @@
  *
  * See more documentation about our Blocks Editor templating system.
  *
- * @link {INSERT_ARTCILE_LINK_HERE}
+ * @link {INSERT_ARTICLE_LINK_HERE}
  *
- * @version 4.9.3
+ * @since 4.9.3
+ * @version 4.10.4
  *
  */
 
@@ -31,10 +32,16 @@ $show_not_going = tribe_is_truthy(
 if ( ! $show_not_going ) {
     return;
 }
+
+$must_login = ! is_user_logged_in() && tribe( 'tickets.rsvp' )->login_required();
+$going = $must_login ? false : $this->get( 'going' );
 ?>
 <span>
-	<button class="tribe-block__rsvp__status-button tribe-block__rsvp__status-button--not-going">
-		<?php $this->template( 'blocks/rsvp/status/not-going-icon' ); ?>
+	<button
+		class="tribe-block__rsvp__status-button tribe-block__rsvp__status-button--not-going<?php if ( 'no' === $going ) { echo ' tribe-active'; }?>"
+		<?php echo disabled( 'no', $going, false ); ?>
+	>
 		<span><?php esc_html_e( 'Not going', 'event-tickets' ); ?></span>
+		<?php $this->template( 'blocks/rsvp/status/not-going-icon' ); ?>
 	</button>
 </span>

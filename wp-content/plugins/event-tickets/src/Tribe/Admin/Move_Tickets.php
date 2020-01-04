@@ -157,23 +157,26 @@ class Tribe__Tickets__Admin__Move_Tickets {
 	 * $this->attendees, to determine which ticket provider we're using
 	 * or if the range of tickets includes more than one provider.
 	 *
-	 * @param array $ticket_ids
+	 * @param array $attendee_ids
 	 * @param int   $event_id
 	 */
-	protected function build_attendee_list( array $ticket_ids, $event_id ) {
+	protected function build_attendee_list( array $attendee_ids, $event_id ) {
 		$this->attendees = array();
 		$this->ticket_provider = '';
 		$this->has_multiple_providers = false;
 
-		foreach ( Tribe__Tickets__Tickets::get_event_attendees( $event_id ) as $attendee ) {
+		$args = [
+			'in' => $attendee_ids,
+		];
+
+		$attendee_data = Tribe__Tickets__Tickets::get_event_attendees_by_args( $event_id, $args );
+
+		foreach ( $attendee_data['attendees'] as $attendee ) {
 			$attendee_id = (int) $attendee['attendee_id'];
 
-			if ( ! in_array( $attendee_id, $ticket_ids ) ) {
-				continue;
-			}
+			$this->attendees[ $attendee_id ] = $attendee;
 
 			$provider = $this->get_ticket_provider( $attendee );
-			$this->attendees[ $attendee_id ] = $attendee;
 
 			if ( ! empty( $this->ticket_provider ) && $this->ticket_provider !== $provider ) {
 				$this->has_multiple_providers = true;
@@ -221,7 +224,10 @@ class Tribe__Tickets__Admin__Move_Tickets {
 	 * @return array
 	 */
 	public function bulk_actions( array $actions ) {
-		$actions['move'] = _x( 'Move', 'attendee screen bulk actions', 'event-tickets' );
+		if ( tribe( 'tickets.attendees' )->user_can_manage_attendees() && is_admin() ) {
+			$actions['move'] = _x( 'Move', 'attendee screen bulk actions', 'event-tickets' );
+		}
+
 		return $actions;
 	}
 
@@ -407,8 +413,9 @@ class Tribe__Tickets__Admin__Move_Tickets {
 	}
 
 	/**
-	 * Listens for and handles requests to reassign tickets from one ticket type
-	 * to another.
+	 * Listens for and handles requests to reassign tickets from one ticket type to another.
+	 *
+	 * @since 4.10.9 Use customizable ticket name functions.
 	 */
 	public function move_tickets_request() {
 		if ( ! wp_verify_nonce( $_POST['check'], 'move_tickets' ) ) {
@@ -429,7 +436,13 @@ class Tribe__Tickets__Admin__Move_Tickets {
 
 		if ( ! $ticket_ids || ! $target_type_id ) {
 			wp_send_json_error( array(
-				'message' => __( 'Tickets could not be moved: valid ticket IDs or a destination ID were not provided.', 'event-tickets' ),
+				'message' => esc_html(
+					sprintf(
+						__( '%1$s could not be moved: valid %2$s IDs or a destination ID were not provided.', 'event-tickets' ),
+						tribe_get_ticket_label_plural( 'move_tickets_request_error' ),
+						tribe_get_ticket_label_singular( 'move_tickets_request_error' )
+					)
+				)
 			) );
 		}
 
@@ -437,7 +450,8 @@ class Tribe__Tickets__Admin__Move_Tickets {
 
 		if ( ! $moved_tickets ) {
 			wp_send_json_error( array(
-				'message' => __( 'Tickets could not be moved: there was an unexpected failure during reassignment.', 'event-tickets' ),
+				'message' => esc_html( sprintf( __( '%s could not be moved: there was an unexpected failure during reassignment.', 'event-tickets' ), tribe_get_ticket_label_plural( 'move_tickets_request_error' )
+				) )
 			) );
 		}
 
@@ -460,8 +474,8 @@ class Tribe__Tickets__Admin__Move_Tickets {
 		wp_send_json_success( array(
 			'message' => sprintf(
 				_n(
-					'%1$d attendee for %2$s was successfully %3$s. Please adjust capacity and stock manually as needed. This attendee will receive an email notifying them of the change.',
-					'%1$d attendees for %2$s were successfully %3$s. Please adjust capacity and stock manually as needed. These attendees will receive an email notifying them of the change.',
+					'%1$d attendee for %2$s was successfully %3$s. By default, we adjust capacity and stock, however, we recommend reviewing each as needed to ensure numbers are correct. This attendee will receive an email notifying them of the change.',
+					'%1$d attendees for %2$s were successfully %3$s. By default, we adjust capacity and stock, however, we recommend reviewing each as needed to ensure numbers are correct. These attendees will receive an email notifying them of the change.',
 					$moved_tickets,
 					'event-tickets'
 				),
@@ -497,14 +511,22 @@ class Tribe__Tickets__Admin__Move_Tickets {
 			return 0;
 		}
 
-		$ticket_objects = array();
-		$providers = array();
+		$ticket_objects = [];
+		$providers      = [];
 
-		foreach ( Tribe__Tickets__Tickets::get_event_attendees( $src_event_id ) as $issued_ticket ) {
-			if ( in_array( absint( $issued_ticket['attendee_id'] ), $ticket_ids ) ) {
-				$ticket_objects[] = $issued_ticket;
-				$providers[ $issued_ticket['provider'] ] = call_user_func( array( $issued_ticket['provider'], 'get_instance' ) );
-			}
+		$args = [
+			'in' => $ticket_ids,
+		];
+
+		/** @var Tribe__Tickets__Tickets_Handler $tickets_handler */
+		$tickets_handler = tribe( 'tickets.handler' );
+
+		$attendee_data = Tribe__Tickets__Tickets::get_event_attendees_by_args( $src_event_id, $args );
+
+		foreach ( $attendee_data['attendees'] as $issued_ticket ) {
+			$ticket_objects[] = $issued_ticket;
+
+			$providers[ $issued_ticket['provider'] ] = call_user_func( array( $issued_ticket['provider'], 'get_instance' ) );
 		}
 
 		// We expect to have found as many tickets as were specified
@@ -512,7 +534,7 @@ class Tribe__Tickets__Admin__Move_Tickets {
 			return 0;
 		}
 
-		// Check that the tickets are homogenous in relation to the ticket provider
+		// Check that the tickets are homogeneous in relation to the ticket provider.
 		if ( 1 !== count( $providers ) ) {
 			return 0;
 		}
@@ -526,8 +548,17 @@ class Tribe__Tickets__Admin__Move_Tickets {
 		}
 
 		foreach ( $ticket_objects as $ticket ) {
-			$ticket_id = $ticket['attendee_id'];
+			$ticket_id          = $ticket['attendee_id'];
+			$product_id         = $ticket['product_id'];
 			$src_ticket_type_id = get_post_meta( $ticket_id, $ticket_type_key, true );
+			$src_qty_sold       = (int) get_post_meta( $src_ticket_type_id, 'total_sales', true );
+			$tgt_qty_sold       = (int) get_post_meta( $tgt_ticket_type_id, 'total_sales', true );
+
+			//get stock levels for RSVP Tickets
+			if ( 'Tribe__Tickets__RSVP' === $ticket['provider'] ) {
+				$src_stock = (int) get_post_meta( $src_ticket_type_id, '_stock', true );
+				$tgt_stock = (int) get_post_meta( $tgt_ticket_type_id, '_stock', true );
+			}
 
 			/**
 			 * Fires immediately before a ticket is moved.
@@ -542,10 +573,9 @@ class Tribe__Tickets__Admin__Move_Tickets {
 			/**
 			 * Actual moving happens
 			 */
-			$src_event_cap = new Tribe__Tickets__Global_Stock( $src_event_id );
 			$tgt_event_cap = new Tribe__Tickets__Global_Stock( $tgt_event_id );
 
-			$src_mode = get_post_meta( $ticket_id, Tribe__Tickets__Global_Stock::TICKET_STOCK_MODE, true );
+			$src_mode = get_post_meta( $product_id, Tribe__Tickets__Global_Stock::TICKET_STOCK_MODE, true );
 
 			// When the Mode is not `own` we have to check and modify some stuff
 			if ( Tribe__Tickets__Global_Stock::OWN_STOCK_MODE !== $src_mode ) {
@@ -560,21 +590,35 @@ class Tribe__Tickets__Admin__Move_Tickets {
 					$tgt_event_cap->set_stock_level( $src_event_capacity );
 
 					// Update the Target event with the Capacity from the Source
-					update_post_meta( $tgt_event_id, tribe( 'tickets.handler' )->key_capacity, $src_event_capacity );
+					update_post_meta( $tgt_event_id, $tickets_handler->key_capacity, $src_event_capacity );
 				} elseif ( Tribe__Tickets__Global_Stock::CAPPED_STOCK_MODE === $src_mode || Tribe__Tickets__Global_Stock::GLOBAL_STOCK_MODE === $src_mode ) {
 					// Check if we have capped to avoid ticket cap over event cap
-					$src_ticket_capacity = tribe_tickets_get_capacity( $ticket_id );
+					$src_ticket_capacity = tribe_tickets_get_capacity( $product_id );
 					$tgt_event_capacity = tribe_tickets_get_capacity( $tgt_event_id );
 
 					// Don't allow ticket capacity to be bigger than Target Event Cap
 					if ( $src_ticket_capacity > $tgt_event_capacity ) {
-						update_post_meta( $ticket_id, tribe( 'tickets.handler' )->key_capacity, $tgt_event_capacity );
+						update_post_meta( $ticket_id, $tickets_handler->key_capacity, $tgt_event_capacity );
 					}
 				}
 			}
 
 			update_post_meta( $ticket_id, $ticket_type_key, $tgt_ticket_type_id );
 			update_post_meta( $ticket_id, $ticket_event_key, $tgt_event_id );
+
+			// adjust sales numbers - don't allow negatives
+			$src_qty_sold--;
+			$tgt_qty_sold++;
+			update_post_meta( $src_ticket_type_id, 'total_sales', $src_qty_sold );
+			update_post_meta( $tgt_ticket_type_id, 'total_sales', $tgt_qty_sold );
+
+			//adjust stock numbers for RSVP Tickets
+			if ( 'Tribe__Tickets__RSVP' === $ticket['provider'] ) {
+				$src_stock ++;
+				$tgt_stock --;
+				update_post_meta( $src_ticket_type_id, '_stock', $src_stock );
+				update_post_meta( $tgt_ticket_type_id, '_stock', $tgt_stock );
+			}
 
 			$history_message = sprintf(
 				__( 'This ticket was moved to %1$s %2$s from %3$s %4$s', 'event-tickets' ),
@@ -640,13 +684,17 @@ class Tribe__Tickets__Admin__Move_Tickets {
 	public function notify_attendees( $ticket_ids, $tgt_ticket_type_id, $src_event_id, $tgt_event_id ) {
 		$to_notify = array();
 
-		// Build a list of email addresses we want to send notifications of the change to
-		foreach ( Tribe__Tickets__Tickets::get_event_attendees( $tgt_event_id ) as $attendee ) {
-			// We're not interested in attendees who were already attending this event
-			if ( ! in_array( (int) $attendee['attendee_id'], $ticket_ids ) ) {
-				continue;
-			}
+		$args = [
+			'in' => $ticket_ids,
+			'by' => [
+				'ticket' => $tgt_ticket_type_id,
+			],
+		];
 
+		$attendee_data = Tribe__Tickets__Tickets::get_event_attendees_by_args( $tgt_event_id, $args );
+
+		// Build a list of email addresses we want to send notifications of the change to
+		foreach ( $attendee_data['attendees'] as $attendee ) {
 			// Skip if an email address isn't available
 			if ( ! isset( $attendee['purchaser_email'] ) ) {
 				continue;
@@ -739,12 +787,15 @@ class Tribe__Tickets__Admin__Move_Tickets {
 	 * @param int $instigator_id
 	 */
 	public function move_all_tickets_for_type( $ticket_type_id, $destination_post_id, $src_post_id, $instigator_id ) {
-		foreach (  Tribe__Tickets__Tickets::get_event_attendees( $src_post_id ) as $issued_ticket ) {
-			// We're only interested in tickets of the specified type
-			if ( (int) $ticket_type_id !== (int) $issued_ticket['product_id'] ) {
-				continue;
-			}
+		$args = [
+			'by' => [
+				'ticket' => $ticket_type_id,
+			],
+		];
 
+		$attendee_data = Tribe__Tickets__Tickets::get_event_attendees_by_args( $src_post_id, $args );
+
+		foreach ( $attendee_data['attendees'] as $issued_ticket ) {
 			if ( ! class_exists( $issued_ticket['provider'] ) ) {
 				continue;
 			}

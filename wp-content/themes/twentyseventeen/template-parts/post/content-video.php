@@ -2,7 +2,7 @@
 /**
  * Template part for displaying video posts
  *
- * @link https://codex.wordpress.org/Template_Hierarchy
+ * @link https://developer.wordpress.org/themes/basics/template-hierarchy/
  *
  * @package WordPress
  * @subpackage Twenty_Seventeen
@@ -77,9 +77,9 @@
 
 		if ( is_single() || empty( $video ) ) {
 
-			/* translators: %s: Name of current post */
 			the_content(
 				sprintf(
+					/* translators: %s: Post title. */
 					__( 'Continue reading<span class="screen-reader-text"> "%s"</span>', 'twentyseventeen' ),
 					get_the_title()
 				)
@@ -104,4 +104,4 @@
 	}
 	?>
 
-</article><!-- #post-## -->
+</article><!-- #post-<?php the_ID(); ?> -->

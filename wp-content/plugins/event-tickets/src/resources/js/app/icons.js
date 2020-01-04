@@ -82,19 +82,26 @@ var tribe = typeof tribe === "object" ? tribe : {}; tribe["tickets"] = tribe["ti
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 26);
+/******/ 	return __webpack_require__(__webpack_require__.s = 30);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 26:
+/***/ 13:
+/***/ (function(module, exports) {
+
+module.exports = React;
+
+/***/ }),
+
+/***/ 30:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: external "React"
-var external_React_ = __webpack_require__(9);
+var external_React_ = __webpack_require__(13);
 var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_);
 
 // CONCATENATED MODULE: ./src/modules/icons/active/clock.svg
@@ -399,13 +406,6 @@ function orders_objectWithoutProperties(obj, keys) {
 
 
 
-
-/***/ }),
-
-/***/ 9:
-/***/ (function(module, exports) {
-
-module.exports = React;
 
 /***/ })
 

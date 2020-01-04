@@ -12,31 +12,43 @@
 class Yoast_Notification {
 
 	/**
-	 * @var string Type of capability check.
+	 * Type of capability check.
+	 *
+	 * @var string
 	 */
 	const MATCH_ALL = 'all';
 
 	/**
-	 * @var string Type of capability check.
+	 * Type of capability check.
+	 *
+	 * @var string
 	 */
 	const MATCH_ANY = 'any';
 
 	/**
-	 * @var string Notification type.
+	 * Notification type.
+	 *
+	 * @var string
 	 */
 	const ERROR = 'error';
 
 	/**
-	 * @var string Notification type.
+	 * Notification type.
+	 *
+	 * @var string
 	 */
 	const WARNING = 'warning';
 
 	/**
-	 * @var string Notification type.
+	 * Notification type.
+	 *
+	 * @var string
 	 */
 	const UPDATED = 'updated';
 
 	/**
+	 * Options of this Notification.
+	 *
 	 * Contains optional arguments:
 	 *
 	 * -             type: The notification type, i.e. 'updated' or 'error'
@@ -48,22 +60,26 @@ class Yoast_Notification {
 	 * - capability_check: How to check capability pass: all or any.
 	 * -  wpseo_page_only: Only display on wpseo page or on every page.
 	 *
-	 * @var array Options of this Notification.
+	 * @var array
 	 */
-	private $options = array();
+	private $options = [];
 
-	/** @var array Contains default values for the optional arguments */
-	private $defaults = array(
+	/**
+	 * Contains default values for the optional arguments.
+	 *
+	 * @var array
+	 */
+	private $defaults = [
 		'type'             => self::UPDATED,
 		'id'               => '',
 		'nonce'            => null,
 		'priority'         => 0.5,
-		'data_json'        => array(),
+		'data_json'        => [],
 		'dismissal_key'    => null,
-		'capabilities'     => array(),
+		'capabilities'     => [],
 		'capability_check' => self::MATCH_ALL,
 		'yoast_branding'   => false,
-	);
+	];
 
 	/**
 	 * The message for the notification.
@@ -78,7 +94,7 @@ class Yoast_Notification {
 	 * @param string $message Message string.
 	 * @param array  $options Set of options.
 	 */
-	public function __construct( $message, $options = array() ) {
+	public function __construct( $message, $options = [] ) {
 		$this->message = $message;
 		$this->options = $this->normalize_options( $options );
 	}
@@ -106,7 +122,7 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Make sure the nonce is up to date
+	 * Make sure the nonce is up to date.
 	 */
 	public function refresh_nonce() {
 		if ( $this->options['id'] ) {
@@ -115,7 +131,7 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Get the type of the notification
+	 * Get the type of the notification.
 	 *
 	 * @return string
 	 */
@@ -124,7 +140,7 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Priority of the notification
+	 * Priority of the notification.
 	 *
 	 * Relative to the type.
 	 *
@@ -135,7 +151,7 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Get the User Meta key to check for dismissal of notification
+	 * Get the User Meta key to check for dismissal of notification.
 	 *
 	 * @return string User Meta Option key that registers dismissal.
 	 */
@@ -148,7 +164,7 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Is this Notification persistent
+	 * Is this Notification persistent.
 	 *
 	 * @return bool True if persistent, False if fire and forget.
 	 */
@@ -159,9 +175,9 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Check if the notification is relevant for the current user
+	 * Check if the notification is relevant for the current user.
 	 *
-	 * @return bool True if a user needs to see this Notification, False if not.
+	 * @return bool True if a user needs to see this notification, false if not.
 	 */
 	public function display_for_current_user() {
 		// If the notification is for the current page only, always show.
@@ -174,7 +190,7 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Does the current user match required capabilities
+	 * Does the current user match required capabilities.
 	 *
 	 * @return bool
 	 */
@@ -187,12 +203,12 @@ class Yoast_Notification {
 		/**
 		 * Filter capabilities that enable the displaying of this notification.
 		 *
-		 * @since 3.2
-		 *
-		 * @param array              $capabilities The capabilities that must be present for this Notification.
+		 * @param array              $capabilities The capabilities that must be present for this notification.
 		 * @param Yoast_Notification $notification The notification object.
 		 *
-		 * @return array of capabilities or empty for no restrictions.
+		 * @return array Array of capabilities or empty for no restrictions.
+		 *
+		 * @since 3.2
 		 */
 		$capabilities = apply_filters( 'wpseo_notification_capabilities', $this->options['capabilities'], $this );
 
@@ -204,22 +220,22 @@ class Yoast_Notification {
 		/**
 		 * Filter capability check to enable all or any capabilities.
 		 *
-		 * @since 3.2
-		 *
 		 * @param string             $capability_check The type of check that will be used to determine if an capability is present.
 		 * @param Yoast_Notification $notification     The notification object.
 		 *
 		 * @return string self::MATCH_ALL or self::MATCH_ANY.
+		 *
+		 * @since 3.2
 		 */
 		$capability_check = apply_filters( 'wpseo_notification_capability_check', $this->options['capability_check'], $this );
 
-		if ( ! in_array( $capability_check, array( self::MATCH_ALL, self::MATCH_ANY ), true ) ) {
+		if ( ! in_array( $capability_check, [ self::MATCH_ALL, self::MATCH_ANY ], true ) ) {
 			$capability_check = self::MATCH_ALL;
 		}
 
 		if ( ! empty( $capabilities ) ) {
 
-			$has_capabilities = array_filter( $capabilities, array( $this, 'has_capability' ) );
+			$has_capabilities = array_filter( $capabilities, [ $this, 'has_capability' ] );
 
 			switch ( $capability_check ) {
 				case self::MATCH_ALL:
@@ -233,7 +249,7 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Array filter function to find matched capabilities
+	 * Array filter function to find matched capabilities.
 	 *
 	 * @param string $capability Capability to test.
 	 *
@@ -244,19 +260,19 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Return the object properties as an array
+	 * Return the object properties as an array.
 	 *
 	 * @return array
 	 */
 	public function to_array() {
-		return array(
+		return [
 			'message' => $this->message,
 			'options' => $this->options,
-		);
+		];
 	}
 
 	/**
-	 * Adds string (view) behaviour to the Notification
+	 * Adds string (view) behaviour to the notification.
 	 *
 	 * @return string
 	 */
@@ -270,12 +286,12 @@ class Yoast_Notification {
 	 * @return string The rendered notification.
 	 */
 	public function render() {
-		$attributes = array();
+		$attributes = [];
 
 		// Default notification classes.
-		$classes = array(
+		$classes = [
 			'yoast-alert',
-		);
+		];
 
 		// Maintain WordPress visualisation of alerts when they are not persistent.
 		if ( ! $this->is_persistent() ) {
@@ -288,7 +304,7 @@ class Yoast_Notification {
 		}
 
 		// Combined attribute key and value into a string.
-		array_walk( $attributes, array( $this, 'parse_attributes' ) );
+		array_walk( $attributes, [ $this, 'parse_attributes' ] );
 
 		$message = null;
 		if ( $this->options['yoast_branding'] ) {
@@ -325,7 +341,7 @@ class Yoast_Notification {
 	}
 
 	/**
-	 * Get the JSON if provided
+	 * Get the JSON if provided.
 	 *
 	 * @return false|string
 	 */
@@ -334,11 +350,11 @@ class Yoast_Notification {
 			return '';
 		}
 
-		return wp_json_encode( $this->options['data_json'] );
+		return WPSEO_Utils::format_json_encode( $this->options['data_json'] );
 	}
 
 	/**
-	 * Make sure we only have values that we can work with
+	 * Make sure we only have values that we can work with.
 	 *
 	 * @param array $options Options to normalize.
 	 *
@@ -351,20 +367,20 @@ class Yoast_Notification {
 		$options['priority'] = min( 1, max( 0, $options['priority'] ) );
 
 		// Set default capabilities when not supplied.
-		if ( empty( $options['capabilities'] ) || array() === $options['capabilities'] ) {
-			$options['capabilities'] = array( 'wpseo_manage_options' );
+		if ( empty( $options['capabilities'] ) || [] === $options['capabilities'] ) {
+			$options['capabilities'] = [ 'wpseo_manage_options' ];
 		}
 
 		return $options;
 	}
 
 	/**
-	 * Format HTML element attributes
+	 * Format HTML element attributes.
 	 *
 	 * @param string $value Attribute value.
 	 * @param string $key   Attribute name.
 	 */
-	private function parse_attributes( & $value, $key ) {
-		$value = sprintf( '%s="%s"', $key, esc_attr( $value ) );
+	private function parse_attributes( &$value, $key ) {
+		$value = sprintf( '%s="%s"', sanitize_key( $key ), esc_attr( $value ) );
 	}
 }

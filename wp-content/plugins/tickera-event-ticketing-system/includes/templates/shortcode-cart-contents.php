@@ -77,7 +77,7 @@ if (isset($tc_general_settings['force_login']) && $tc_general_settings['force_lo
                                     ?>
                                     <tr>
                                         <?php do_action('tc_cart_col_value_before_ticket_type', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
-                                        <td class="ticket-type"><?php echo $ticket->details->post_title; ?> <?php do_action('tc_cart_col_after_ticket_type', $ticket); ?><input type="hidden" name="ticket_cart_id[]" value="<?php echo (int) $ticket_type; ?>"></td>
+                                        <td class="ticket-type"><?php echo apply_filters('tc_cart_col_before_ticket_name', $ticket->details->post_title, $ticket->details->ID ); ?> <?php do_action('tc_cart_col_after_ticket_type', $ticket, false); ?><input type="hidden" name="ticket_cart_id[]" value="<?php echo (int) $ticket_type; ?>"></td>
                                         <?php do_action('tc_cart_col_value_before_ticket_price', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
                                         <td class="ticket-price"><span class="ticket_price"><?php echo apply_filters('tc_cart_currency_and_format', apply_filters('tc_cart_price_per_ticket', tc_get_ticket_price($ticket->details->ID), $ticket_type)); ?></span></td>
                                         <?php do_action('tc_cart_col_value_before_quantity', $ticket_type, $ordered_count, tc_get_ticket_price($ticket->details->ID)); ?>
@@ -272,8 +272,18 @@ if (isset($tc_general_settings['force_login']) && $tc_general_settings['force_lo
                              $owner_form = new TC_Cart_Form($ticket_type);
                              $owner_form_fields = $owner_form->get_owner_info_fields($ticket_type);
 
-                             ?>
-                        <h2><?php
+                             $tc_get_custom_form = get_post_meta($ticket_type, 'owner_form_template', true);
+
+ 
+                        if (($tc_general_settings['show_attendee_first_and_last_name_fields'] !== 'no' || $tc_general_settings['show_owner_email_field'] !== 'no' ) || (!empty($tc_get_custom_form) && $tc_get_custom_form !== 0 && is_plugin_active('custom-forms/tickera-custom-forms.php'))) {
+
+                                        $tc_display_fields = '';
+                                    } else {
+                                        $tc_display_fields = 'style="display: none"';
+                                    }
+                    ?>
+                    <div class="tc-form-ticket-fields-wrap" <?php echo $tc_display_fields; ?>>  
+                    <h2><?php
                             do_action('tc_before_checkout_owner_info_ticket_title', $ticket_type, $cart_contents);
                             echo apply_filters('tc_checkout_owner_info_ticket_title', $ticket->details->post_title, $ticket_type, $cart_contents, false);
                             do_action('tc_after_checkout_owner_info_ticket_title', $ticket_type, $cart_contents);
@@ -439,10 +449,11 @@ if (isset($tc_general_settings['force_login']) && $tc_general_settings['force_lo
                             </div><!-- owner-info-wrap -->																																																															                                                                                
                              <?php } } $i++; ?>
                         <div class="tc-clearfix"></div>     
+                    </div>
 
 
-
-                    <?php } //foreach ( $cart_contents as $ticket_type => $ordered_count )       ?>
+                    <?php 
+                                } //foreach ( $cart_contents as $ticket_type => $ordered_count )       ?>
 
 
                         

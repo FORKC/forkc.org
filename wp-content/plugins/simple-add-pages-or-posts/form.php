@@ -14,12 +14,12 @@ die("Aren't you supposed to come here via WP-Admin?");
 global $wpdb;
 
 // Init
-$separator = ((isset($_POST['separator'])) ? sanitize_text_field( $_POST['separator'] ) :  '-');
+$separator = ( ( isset( $_POST['separator'] ) ) ? sanitize_text_field( $_POST['separator'] ) :  '-');
 
 /**
  * If submiting the form
  */
-if (isset ($_POST['submitbutton']) && isset ($_POST['postorpage'])) {
+if ( isset ( $_POST['submitbutton'] ) && isset ( $_POST['postorpage'] ) ) {
 
 	if (!isset( $_POST['nonce_check'] ) || ! wp_verify_nonce( $_POST['nonce_check'], 'mp_sapop' ) ) {
 		$message = $title = __('Sorry, your nonce did not verify.', 'mp-simpleaddpagesorposts');
@@ -70,13 +70,13 @@ if (isset ($_POST['submitbutton']) && isset ($_POST['postorpage'])) {
 
 			foreach ($titles as $title) {
 				// Remove whitespaces left and right			
-				$title = trim($title);
+				$title = trim( $title );
 
 				// Now remove minus'ses at left position
-				$title_ltrim = ltrim($title, $separator);
+				$title_ltrim = ltrim( $title, $separator );
 				
 				// The level is the difference between trim and ltrim
-				$level = strlen($title)-strlen($title_ltrim);
+				$level = strlen( $title )-strlen( $title_ltrim );
 				
 				// Fix for minus within title like: "Some-title"
 				// $level = substr_count($title, '-');
@@ -85,23 +85,29 @@ if (isset ($_POST['submitbutton']) && isset ($_POST['postorpage'])) {
 				$title = $title_ltrim;
 
 				// Init
-				$newarray[$i] = array('level' => $level,'lastlevel' => $lastlevel,'title' => $title, 'child_of_page_id' => $post_parent_org, 'page_id' => NULL);
+				$newarray[$i] = array( 
+					'level' => $level,
+					'lastlevel' => $lastlevel,
+					'title' => $title,
+					'child_of_page_id' => $post_parent_org,
+					'page_id' => NULL,
+				);
 
 				// First child?
-				if($level > $lastlevel)
+				if( $level > $lastlevel )
 				{
 					$newarray[$i]['child_of_page_id'] = $newarray[$i-1]['page_id'];
 					$newarray[$i]['child_of_page_title'] = $newarray[$i-1]['title'];
 				}
 
 				// Same sub as previous?
-				if($level == $lastlevel)
+				if( $level == $lastlevel )
 				{
 					// Go back to find sub
 					$j = $i;$continue = true;
-					while($j >= 0 && $continue)
+					while( $j >= 0 && $continue )
 					{
-						if($level > $newarray[$j]['level'])
+						if( $level > $newarray[$j]['level'] )
 						{
 							$newarray[$i]['child_of_page_id'] = $newarray[$j]['page_id'];
 							$newarray[$i]['child_of_page_title'] = $newarray[$j]['title'];
@@ -112,13 +118,13 @@ if (isset ($_POST['submitbutton']) && isset ($_POST['postorpage'])) {
 				}
 
 				// Second child, but after a child-child?
-				if($level < $lastlevel)
+				if( $level < $lastlevel )
 				{
 					// Go back to find sub
 					$j = $i;$continue = true;
-					while($j >= 0 && $continue)
+					while( $j >= 0 && $continue )
 					{
-						if($level > $newarray[$j]['level'])
+						if( $level > $newarray[$j]['level'] )
 						{
 							$newarray[$i]['child_of_page_id'] = $newarray[$j]['page_id'];
 							$newarray[$i]['child_of_page_title'] = $newarray[$j]['title'];
@@ -136,14 +142,14 @@ if (isset ($_POST['submitbutton']) && isset ($_POST['postorpage'])) {
 				$post['post_content'] = '';
 				$post['post_status'] = 'publish';
 				$post['post_author'] = $author_id;
-				if($page_or_post == 'page')
+				if( $page_or_post == 'page' )
 				{
 					// Do hierarchy
 					$post['post_parent'] = $newarray[$i]['child_of_page_id'];
 				}
 
 				// GOGOGO
-				$this_page_id = wp_insert_post($post);
+				$this_page_id = wp_insert_post( $post );
 
 				// Update
 				$newarray[$i]['page_id'] = $this_page_id;
@@ -156,12 +162,12 @@ if (isset ($_POST['submitbutton']) && isset ($_POST['postorpage'])) {
 		{
 			// Post
 			$i = 0;
-			foreach ($titles as $title) {
+			foreach ( $titles as $title ) {
 
 				// Remove spaces before and after titles
-				$title = trim($title);
+				$title = trim( $title );
 				// No empty title?
-				if (!empty ($title)) {
+				if ( !empty ( $title ) ) {
 					$i++;
 					// Create post object
 					$post = array ();
@@ -191,7 +197,7 @@ if (isset ($_POST['submitbutton']) && isset ($_POST['postorpage'])) {
 
 <br />
 <h3>Custom Post Type support</h3>
-<p><a href="http://webshop.mijnpress.nl/product-category/plugins">Buy our premium plugin to add Custom Post Type (CPT) support!</a></p> 
+<p><a href="https://webshop.mijnpress.nl/product-category/plugins">Buy our premium plugin to add Custom Post Type (CPT) support!</a></p> 
 <br/>
 
 <form id="mp_simpleaddpagesorposts" name="form1" method="post" action="" onsubmit="return confirm('<?php _e('Are you sure?', 'mp-simpleaddpagesorposts'); ?>')">
@@ -213,8 +219,7 @@ if (isset ($_POST['submitbutton']) && isset ($_POST['postorpage'])) {
 			</select></td>
 		</tr>
 		<tr class="iedit">
-         	<td><?= $info->labels->singular_name ?><br />
-         <small><?php _e('Place the', 'mp-simpleaddpagesorposts'); ?> <?= $info->labels->singular_name ?>(s) <?php _e('below another', 'mp-simpleaddpagesorposts'); ?> <?= $info->labels->singular_name ?>?</small></td>
+         	<td></td>
 			<td colspan="2"><?php wp_dropdown_pages(array('exclude_tree' => 0, 'selected' => 0, 'name' => 'post_parent', 'show_option_none' => __('No, do not use parent'), 'sort_column'=> 'menu_order, post_title')); ?></td>
 		</tr>
 		<tr class="alternate iedit">
