@@ -7,7 +7,6 @@
 // =============================================================================
 
 ?>
-
 <!DOCTYPE html>
 
 <html class="no-js" <?php language_attributes(); ?>>
@@ -17,6 +16,10 @@
 </head>
 
 <body <?php body_class(); ?>>
+
+  <?php wp_body_open(); ?>
+
+  <?php do_action( 'x_after_body_begin' ); ?>
 
   <div id="x-root" class="x-root">
 

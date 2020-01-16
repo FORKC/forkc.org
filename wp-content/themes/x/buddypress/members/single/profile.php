@@ -30,6 +30,11 @@
 	case 'change-avatar' :
 		bp_get_template_part( 'members/single/profile/change-avatar' );
 		break;
+  
+  	// Change Cover Image
+	case 'change-cover-image' :
+		bp_get_template_part( 'members/single/profile/change-cover-image' );
+		break;
 
 	// Compose
 	case 'public' :

@@ -27,8 +27,7 @@ do_action( 'x_addons_before_home' );
 <div class="tco-reset tco-wrap tco-wrap-about">
 
   <div class="tco-content">
-
-    <div class="wrap"><h2>WordPress Wrap</h2></div>
+    <div class="wrap"></div>
 
     <!--
     START MAIN
@@ -50,7 +49,7 @@ do_action( 'x_addons_before_home' );
       </div>
 
       <div class="tco-row">
-        <?php do_action( 'x_overview_main_before_theme_options_manager' ); ?>
+        <?php include( 'page-home-box-design-cloud.php' ); ?>
         <?php include( 'page-home-box-theme-options-manager.php' ); ?>
       </div>
 
@@ -87,7 +86,7 @@ do_action( 'x_addons_before_home' );
         </div>
         <?php if ( $is_validated ) : ?>
           <hr class="tco-cta-spacing">
-          <p class="tco-cta-note" data-tco-module="x-validation-revoke"><?php _e( 'Your site is validated. <a href="#" data-tco-module-target="revoke">Revoke validation</a>.', '__x__' ); ?></p>
+          <p class="tco-cta-note" data-tco-module="x-validation-revoke"><?php printf( __( 'Your site is validated. %s.', '__x__' ), '<a href="#" data-tco-module-target="revoke">' . __( 'Revoke validation', '__x__') . '</a>'); ?></p>
         <?php endif; ?>
       </div>
     </div>

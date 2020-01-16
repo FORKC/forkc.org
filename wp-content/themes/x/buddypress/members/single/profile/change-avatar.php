@@ -9,7 +9,7 @@ do_action( 'bp_before_profile_avatar_upload_content' ); ?>
 
 <?php if ( !(int)bp_get_option( 'bp-disable-avatar-uploads' ) ) : ?>
 
-  <h4><?php _e( 'Change Profile Photo', '__x__' ); ?></h4>
+  <h2><?php _e( 'Change Profile Photo', '__x__' ); ?></h2>
 	<p><?php _e( 'Your profile photo will be used on your profile and throughout the site. If there is a <a href="http://gravatar.com">Gravatar</a> associated with your account email we will use that, or you can upload an image from your computer.', '__x__' ); ?></p>
 
 	<form action="" method="post" id="avatar-upload-form" class="standard-form" enctype="multipart/form-data">

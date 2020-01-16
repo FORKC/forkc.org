@@ -1,5 +1,5 @@
 <?php
- 
+
 // =============================================================================
 // FUNCTIONS/GLOBAL/ADMIN/CUSTOMIZER/OUTPUT/BUDDYPRESS.PHP
 // -----------------------------------------------------------------------------
@@ -41,10 +41,10 @@
   .buddypress .activity-list .activity-comments .ac-form input[type="submit"],
   .buddypress .standard-form input[type="submit"],
   .buddypress .standard-form div.submit input[type="button"],
-  #wpadminbar .quicklinks li#wp-admin-bar-my-account a span.count,
-  #wpadminbar .quicklinks li#wp-admin-bar-my-account-with-avatar a span.count,
-  #wpadminbar .quicklinks li#wp-admin-bar-bp-notifications #ab-pending-notifications,
-  #wpadminbar .quicklinks li#wp-admin-bar-bp-notifications #ab-pending-notifications.alert {
+  #wp-toolbar li#wp-admin-bar-my-account a span.count,
+  #wp-toolbar li#wp-admin-bar-my-account-with-avatar a span.count,
+  #wp-toolbar li#wp-admin-bar-bp-notifications #ab-pending-notifications,
+  #wp-toolbar li#wp-admin-bar-bp-notifications #ab-pending-notifications.alert {
     background-color: <?php echo $x_site_link_color; ?>;
   }
 
@@ -68,5 +68,11 @@
   .buddypress .activity-list .x-activity-comments-inner > ul .acomment-options > a:after {
     color: <?php echo $x_body_font_color; ?>;
   }
-
+  #header-cover-image {
+    background: url(<?php echo bp_attachments_get_attachment( 'url', array( 'item_id' => bp_displayed_user_id() ) ); ?>) center;
+    background-size: cover;
+    display: block;
+    height:200px;
+    margin: 0 0 15px;
+  }
 <?php endif; ?>

@@ -21,6 +21,10 @@ $cols    = get_post_meta( $entry_id, '_x_portfolio_columns', true );
 $count   = get_post_meta( $entry_id, '_x_portfolio_posts_per_page', true );
 $filters = get_post_meta( $entry_id, '_x_portfolio_category_filters', true );
 
+if ( ! $filters ) {
+  $filters = array();
+}
+
 switch ( $cols ) {
   case 'One'   : $cols = 1; break;
   case 'Two'   : $cols = 2; break;

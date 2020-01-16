@@ -18,15 +18,14 @@
 
 // Queue Fonts
 // =============================================================================
+// 01. Check if Original / Classic Header is in use.
+// 02. If it is, remove 'logo' and 'navbar' from the assignments array.
 
 function x_google_fonts_queue() {
 
-  //
-  // Raw data.
-  //
-
-  $assignments = array( 'body', 'headings', 'logo', 'navbar');
-  $fonts = array();
+  $default_assignments = array( 'body', 'headings', 'logo', 'navbar' );
+  $assignments         = apply_filters( 'x_google_font_assignments', $default_assignments );
+  $fonts               = array();
 
   foreach ($assignments as $name) {
 
@@ -35,10 +34,10 @@ function x_google_fonts_queue() {
 
     if ( ! isset( $fonts[$family] ) ) {
       $fonts[$family] = array(
-        'family' => $family,
+        'family'  => $family,
         'weights' => array(),
-        'stack' => x_get_font_data( $family, 'stack' ),
-        'source' => x_get_font_data( $family, 'source' )
+        'stack'   => x_get_font_data( $family, 'stack' ),
+        'source'  => x_get_font_data( $family, 'source' )
       );
     }
 
@@ -55,15 +54,31 @@ function x_google_fonts_queue() {
 
 }
 
-function x_google_fonts_queue_cached() {
+function x_google_font_assignments_original_header( $assignments ){
+  
+  $header_assignments = CS()->component( 'Header_Assignments' )->get_assignments();
+  
+  if( ! is_null( $header_assignments['global'] ) ) { // 01
+    unset( $assignments[2] ); // 02: logo
+    unset( $assignments[3] ); // 02: navbar
+  }
 
+  return $assignments;
+
+}
+
+add_filter( 'x_google_font_assignments', 'x_google_font_assignments_original_header', 99 );
+
+
+function x_google_fonts_queue_cached( $force_refresh_cache = false ) {
+  
   if ( x_get_option( 'x_enable_font_manager' ) || ! function_exists('cornerstone_queue_font') ) {
     return;
   }
 
   $cached = get_option( 'x_cache_google_fonts_request', false );
 
-  if ( false === $cached || ! is_array( $cached ) ) {
+  if ( $force_refresh_cache || false === $cached || ! is_array( $cached ) || did_action( 'cs_preview_frame_load' ) ) {
 
     $cached = x_google_fonts_queue();
     update_option( 'x_cache_google_fonts_request', $cached );
@@ -115,9 +130,7 @@ add_filter('cs_google_font_config', 'x_google_fonts_subsets');
 // =============================================================================
 
 function x_bust_google_fonts_cache() {
-
   delete_option( 'x_cache_google_fonts_request' );
-
 }
 
 add_action( 'cs_theme_options_after_save', 'x_bust_google_fonts_cache' );
@@ -148,12 +161,11 @@ add_filter( 'cs_font_data', 'x_fonts_data' );
 
 // Helpers
 // =============================================================================
+// 01. Get font data.
+// 02. Check if font is italic.
+// 03. Get font weight.
 
-//
-// Get Font Data
-//
-
-function x_get_font_data( $font_family, $font_family_data_key ) {
+function x_get_font_data( $font_family, $font_family_data_key ) { // 01
 
   static $fonts_data = null;
 
@@ -171,19 +183,11 @@ function x_get_font_data( $font_family, $font_family_data_key ) {
 }
 
 
-//
-// Is Font Italic
-//
-
-function x_is_font_italic( $font_weight_and_style ) {
+function x_is_font_italic( $font_weight_and_style ) {  // 02
   return false !== strpos( $font_weight_and_style, 'italic' );
 }
 
 
-//
-// Get Font Weight
-//
-
-function x_get_font_weight( $font_weight_and_style ) {
+function x_get_font_weight( $font_weight_and_style ) {  // 03
   return str_replace( 'italic', '', $font_weight_and_style );
 }

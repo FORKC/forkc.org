@@ -3,7 +3,7 @@
 // =============================================================================
 // WOOCOMMERCE/SINGLE-PRODUCT/TABS/TABS.PHP
 // -----------------------------------------------------------------------------
-// @version 2.4.0
+// @version 3.8.0
 // =============================================================================
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -60,6 +60,7 @@ if ( ! empty( $tabs ) ) :
 
     <div class="woocommerce-tabs">
       <?php echo do_shortcode( $tabs ); ?>
+      <?php do_action( 'woocommerce_product_after_tabs' ); ?>
     </div>
 
   <?php endif; ?>

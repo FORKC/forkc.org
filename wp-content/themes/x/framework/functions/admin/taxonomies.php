@@ -60,7 +60,11 @@ function x_taxonomy_edit_meta_field( $term ) {
   $accent_display           = ( $stack == 'ethos' )     ? 'style="display: table-row;"' : 'style="display: none;"';
 
   $t_id      = $term->term_id;
-  $term_meta = get_option( 'taxonomy_' . $t_id );
+  $term_meta = wp_parse_args( get_option( 'taxonomy_' . $t_id, array() ), array(
+    'archive-title' => '',
+    'archive-subtitle' => '',
+    'accent' => '#ffffff'
+  ) );
 
   ?>
   <tr class="form-field" <?php echo $archive_title_display; ?>>
